@@ -1,0 +1,215 @@
+{
+  "myHealthScreen": {
+    "sectionTitle": "My Health",
+    "tabs": [
+      { "label": "Activity", "urlSlug": "activity", "queryExample": "/m4/my-health?tab=activity" },
+      { "label": "Medicine", "urlSlug": "medicine", "queryExample": "/m4/my-health?tab=medicine" },
+      { "label": "Care Team", "urlSlug": "care-team", "queryExample": "/m4/my-health?tab=care-team" }
+    ],
+    "legacyTabSlug": { "plan": "Maps to Care Team tab (index 2) for old deep links" }
+  },
+  "persona": {
+    "personaId": "marcus-rodriguez",
+    "personaName": "Marcus Rodriguez",
+    "userProfile": {
+      "firstName": "Marcus",
+      "lastName": "Rodriguez",
+      "initials": "MR"
+    },
+    "location": { "city": "Chicago", "state": "IL", "zip": "60601" },
+    "clinicalFocus": "Type 2 diabetes (well controlled); dyslipidemia; early neuropathy",
+    "coverageDetails": {
+      "planName": "Marcus Health Plan",
+      "useAlternativePlanDesign": true
+    }
+  },
+  "tabs": {
+    "activity": {
+      "description": "Past visits and activity list items for Marcus",
+      "items": [
+        {
+          "id": "act-marcus-1",
+          "title": "Endocrinology follow-up with Dr. James Thompson, MD",
+          "date": "2026-05-15",
+          "timeLocal": "10:30 AM",
+          "filterType": "primary_care",
+          "providerName": "Dr. James Thompson",
+          "visitTypeLabel": "In-person Visit"
+        },
+        {
+          "id": "act-marcus-2",
+          "title": "Diabetes check-in with Dr. Charlotte Han, MD",
+          "date": "2026-03-18",
+          "timeLocal": "2:00 PM",
+          "filterType": "primary_care",
+          "providerName": "Dr. Charlotte Han",
+          "visitTypeLabel": "Virtual Visit"
+        },
+        {
+          "id": "act-marcus-3",
+          "title": "Nutrition counseling with Patricia Lee, RD",
+          "date": "2026-02-08",
+          "timeLocal": "11:30 AM",
+          "filterType": "primary_care",
+          "providerName": "Patricia Lee",
+          "visitTypeLabel": "Virtual Visit"
+        },
+        {
+          "id": "act-marcus-4",
+          "title": "Lipid panel results posted",
+          "date": "2026-03-19",
+          "filterType": "documents",
+          "providerName": "Lab",
+          "visitTypeLabel": "Lab results"
+        },
+        {
+          "id": "act-marcus-5",
+          "title": "Prescription refill ready",
+          "date": "2026-04-01",
+          "timeLocal": "9:00 AM",
+          "filterType": "prescriptions",
+          "providerName": "CVS Pharmacy",
+          "visitTypeLabel": "Prescription"
+        }
+      ],
+      "filterTypesUsed": ["primary_care", "documents", "prescriptions"],
+      "allPossibleFilterTypeIds": [
+        "urgent_care", "primary_care", "therapy", "psychiatry", "external_provider",
+        "documents", "messages", "prescriptions", "recommendations", "cases", "goal"
+      ]
+    },
+    "medicine": {
+      "description": "Parsed from persona.medicationsSummary: split on ' — ' into name + subline; UI marks Needs attention only when index===0 AND line matches refill|remaining|rash|PUPPP",
+      "sourceLines": [
+        "Metformin 1000mg twice daily",
+        "Atorvastatin 20mg once daily",
+        "Lisinopril 10mg once daily",
+        "Gabapentin 300mg three times daily (neuropathy)",
+        "Aspirin 81mg once daily"
+      ],
+      "resolvedRows": [
+        {
+          "id": "med-marcus-rodriguez-0",
+          "name": "Metformin 1000mg twice daily",
+          "isActive": true,
+          "statusTag": { "variant": "just_started", "label": "Active" },
+          "subline": "As prescribed",
+          "leadingTone": "success"
+        },
+        {
+          "id": "med-marcus-rodriguez-1",
+          "name": "Atorvastatin 20mg once daily",
+          "isActive": true,
+          "statusTag": { "variant": "just_started", "label": "Active" },
+          "subline": "As prescribed",
+          "leadingTone": "success"
+        },
+        {
+          "id": "med-marcus-rodriguez-2",
+          "name": "Lisinopril 10mg once daily",
+          "isActive": true,
+          "statusTag": { "variant": "just_started", "label": "Active" },
+          "subline": "As prescribed",
+          "leadingTone": "success"
+        },
+        {
+          "id": "med-marcus-rodriguez-3",
+          "name": "Gabapentin 300mg three times daily (neuropathy)",
+          "isActive": true,
+          "statusTag": { "variant": "just_started", "label": "Active" },
+          "subline": "As prescribed",
+          "leadingTone": "success"
+        },
+        {
+          "id": "med-marcus-rodriguez-4",
+          "name": "Aspirin 81mg once daily",
+          "isActive": true,
+          "statusTag": { "variant": "just_started", "label": "Active" },
+          "subline": "As prescribed",
+          "leadingTone": "success"
+        }
+      ],
+      "medicineFilters": ["active", "inactive"]
+    },
+    "careTeam": {
+      "description": "Members from persona.careTeam.members + clinical catalog; schedule slots from rotating templates by member index mod 3",
+      "members": [
+        {
+          "id": "marcus-rodriguez-james-thompson",
+          "relationshipLabel": "Your endocrinologist",
+          "displayName": "Dr. James Thompson",
+          "nameSuffix": ", MD",
+          "specialtyLine": "Endocrinology",
+          "headshotFile": "james-thompson.jpg",
+          "providerCatalogId": "james-thompson",
+          "slots": [
+            { "timeLabel": "9:00 AM", "dayLabel": "Tomorrow" },
+            { "timeLabel": "11:00 AM", "dayLabel": "Sat" },
+            { "timeLabel": "2:20 PM", "dayLabel": "Mon" }
+          ]
+        },
+        {
+          "id": "marcus-rodriguez-charlotte-han",
+          "relationshipLabel": "Your PCP",
+          "displayName": "Dr. Charlotte Han",
+          "nameSuffix": ", MD",
+          "specialtyLine": "Primary Care",
+          "headshotFile": "charlotte-han.jpg",
+          "providerCatalogId": "charlotte-han",
+          "slots": [
+            { "timeLabel": "8:30 AM", "dayLabel": "Wed" },
+            { "timeLabel": "3:15 PM", "dayLabel": "Thu" },
+            { "timeLabel": "10:45 AM", "dayLabel": "Next week" }
+          ]
+        },
+        {
+          "id": "marcus-rodriguez-patricia-lee-rd",
+          "relationshipLabel": "Your dietitian",
+          "displayName": "Patricia Lee",
+          "nameSuffix": ", RD",
+          "specialtyLine": "Nutrition",
+          "headshotFile": "patricia-lee-rd.jpg",
+          "providerCatalogId": "patricia-lee-rd",
+          "slots": [
+            { "timeLabel": "7:15 AM", "dayLabel": "Friday" },
+            { "timeLabel": "12:30 PM", "dayLabel": "Mon" },
+            { "timeLabel": "4:00 PM", "dayLabel": "Tue" }
+          ]
+        },
+        {
+          "id": "marcus-rodriguez-michael-chen-pharmd",
+          "relationshipLabel": "Your clinical pharmacist",
+          "displayName": "Michael Chen",
+          "nameSuffix": ", PharmD",
+          "specialtyLine": "Pharmacy",
+          "headshotFile": "michael-chen-pharmd.jpg",
+          "providerCatalogId": "michael-chen-pharmd",
+          "slots": [
+            { "timeLabel": "9:00 AM", "dayLabel": "Tomorrow" },
+            { "timeLabel": "11:00 AM", "dayLabel": "Sat" },
+            { "timeLabel": "2:20 PM", "dayLabel": "Mon" }
+          ]
+        },
+        {
+          "id": "marcus-rodriguez-rachel-kim-lcsw",
+          "relationshipLabel": "Your therapist",
+          "displayName": "Dr. Rachel Kim",
+          "nameSuffix": ", LCSW",
+          "specialtyLine": "Mental Health · Therapy",
+          "headshotFile": "rachel-kim-lcsw.jpg",
+          "providerCatalogId": "rachel-kim-lcsw",
+          "slots": [
+            { "timeLabel": "8:30 AM", "dayLabel": "Wed" },
+            { "timeLabel": "3:15 PM", "dayLabel": "Thu" },
+            { "timeLabel": "10:45 AM", "dayLabel": "Next week" }
+          ]
+        }
+      ]
+    }
+  },
+  "implementationNotes": {
+    "medicineSublineDefault": "When no ' — ' in source line, subline is 'As prescribed'",
+    "careTeamSpecialtyLine": "Joined catalog specialties with ' · ' (single specialty = no separator)",
+    "headshotBasePath": "/images/m4-care-team/"
+  }
+}

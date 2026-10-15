@@ -1,0 +1,66 @@
+import svgPaths from "./svg-0ubu7w81j1";
+
+function Text() {
+  return (
+    <div className="relative shrink-0 w-full" data-name="Text">
+      <div className="flex flex-row items-center size-full">
+        <div className="content-center flex flex-wrap gap-y-px items-center px-[16px] relative size-full">
+          <p className="flex-[1_0_0] font-['Figtree:Medium',sans-serif] font-medium leading-[0] min-w-px relative text-[16px] text-black">
+            <span className="leading-[24px]">{`I have been feeling `}</span>
+            <span className="leading-[24px] text-[#0012e7]">|</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UiRight() {
+  return (
+    <div className="content-stretch flex items-center relative shrink-0" data-name="UI right">
+      <div className="relative shrink-0 size-[48px]" data-name="Chat Input - Send button">
+        <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 size-[32px] top-1/2" data-name="Background">
+          <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 32 32">
+            <circle cx="16" cy="16" fill="var(--fill-0, #001048)" id="Background" r="16" />
+          </svg>
+        </div>
+        <div className="-translate-x-1/2 -translate-y-1/2 absolute content-stretch flex flex-col items-center justify-center left-[calc(50%+0.2px)] size-[14.4px] top-[calc(50%+0.2px)]" data-name="send">
+          <div className="h-[12px] relative shrink-0 w-[13.091px]" data-name="Vector">
+            <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 13.0909 12">
+              <path d={svgPaths.p28106800} fill="var(--fill-0, white)" id="Vector" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Buttons() {
+  return (
+    <div className="content-stretch flex items-center justify-between relative shrink-0 w-full" data-name="Buttons">
+      <div className="relative shrink-0 size-[48px]" data-name="Icon Button">
+        <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 size-[32px] top-1/2" data-name="Background">
+          <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 32 32">
+            <circle cx="16" cy="16" fill="var(--fill-0, #F2F2F2)" id="Background" r="16" />
+          </svg>
+        </div>
+        <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 overflow-clip size-[14px] top-1/2" data-name="plus">
+          <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14 14">
+            <path d={svgPaths.p12d51800} fill="var(--fill-0, #3B3B3B)" id="Vector" />
+          </svg>
+        </div>
+      </div>
+      <UiRight />
+    </div>
+  );
+}
+
+export default function ChatInput() {
+  return (
+    <div className="bg-white content-stretch drop-shadow-[0px_0px_7.5px_rgba(0,0,0,0.12)] flex flex-col gap-[8px] items-start pb-[8px] pt-[16px] px-[8px] relative rounded-[24px] size-full" data-name="Chat Input">
+      <Text />
+      <Buttons />
+    </div>
+  );
+}

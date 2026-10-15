@@ -1,0 +1,61 @@
+Using the story template content read from the Google Doc in the previous step and the Script Formatter spec, extract facts, placeholders, beats, cast metadata, and any defined action gates from the Google Doc and generate a single self-contained TypeScript file that:
+- Declares the ConversationTurn interface **exactly** as follows:
+  export interface ConversationTurn {
+    id: string;
+    speaker: 'dot' | 'sarah' | 'care_team' | 'user' | 'system';
+    type: 'utterance' | 'user_input' | 'ui_embed' | 'transition' | 'action_gate';
+    text?: string;
+    component?: string;
+    expectation?: string;
+    note?: string;
+    requiredAction?: string;  // Required when type === 'action_gate'
+  }
+- Declares the CastMember interface exactly as follows, to represent rows from the Cast table separately from facts:
+  export interface CastMember {
+    key: string;
+    roleType: string;
+    displayName: string;
+    description: string;
+  }
+- Exports chapterNScript (N = Chapter # from §1) as a ConversationTurn[] array.
+  - Map §3 Beats strictly 1:1 to ConversationTurn objects: **never** invent, merge, or append beats beyond the rows provided in the Beats table.
+  - Preserve the order of beats exactly as in the Beats table.
+  - Preserve the authored wording of "Exact words" fields verbatim (including placeholders) except for minimal escaping to form valid TypeScript string literals.
+  - Only draft missing "Exact words" when that cell is completely blank **and the Kind is not an Action gate**; in that case, infer copy solely from the corresponding "What happens" description and clearly note this in the `note` field for that turn.
+  - Map template Speaker values to the required speaker union: "Dot" → 'dot'; "Sarah" → 'sarah'; "Member" → 'user'; "CareTeam" or "Care Team" → 'care_team'; "System" → 'system'.
+  - Map Kind to `type` as: Say → 'utterance'; Ask → 'user_input'; Show → either:
+    * 'ui_embed' when the UI is informational/non-blocking and the script should continue immediately, or
+    * 'action_gate' when the UI component is interactive and must be used (e.g., a ServiceCard button) **before** the script can advance; in this case, set `requiredAction` as described below.
+    Go → 'transition'; and any beats explicitly labeled as an action gate / exploration pause (for example Kind values like 'Action gate', 'Action Gate', 'ACTION GATE', 'Pause for exploration', or 'Explore') → 'action_gate'.
+  - Treat Kind cell values **case-insensitively** when detecting action gates so that any capitalization variant of "action gate" is recognized and mapped to `type: 'action_gate'`.
+  - For user_input turns, set `speaker: 'user'`, `type: 'user_input'`, populate `expectation` with a short description or example of the expected input, and **omit `text`** so the app can collect free-form or tapped input.
+  - For ui_embed turns, set `speaker: 'system'`, `type: 'ui_embed'`, and populate `component` with the UI component name from the template; use `text` only when the template provides explicit user-facing copy for that system message, and `note` only for implementation notes. These turns must **not** block progression.
+  - For action_gate turns (whether authored as "Action gate" / "Action Gate" / any capitalization variant, or inferred from an interactive UI beat):
+    * Set `type: 'action_gate'`.
+    * Populate `component` with the UI component name when applicable (e.g., 'ServiceCard').
+    * Populate `requiredAction` with the exact action identifier string from the template (format `namespace:action_name`, such as `service_card:next_steps_clicked` or `navigation:get_care_clicked`). This field is required when `type === 'action_gate'` and is what the runtime will pass to `triggerAction`.
+    * If the template includes explicit user-facing copy in "Exact words" for this beat, set that in `text` so it displays to the member (for example, the body and button copy for a ServiceCard). Do **not** synthesize new `text` for action_gate beats; only use what the template clearly authored as user-facing content.
+    * Use `note` only for implementation notes or internal guidance (e.g., "Wait for Get Care button click before proceeding"), never for requiredAction semantics.
+    The script should pause at an action_gate until `triggerAction(requiredAction)` is called in the app, then continue with the next beat.
+  - Insert `// Phase n: …` comments inside the array before the first turn of each inferred phase; phases must be inferred only from topic/setting shifts in the existing beats and must not introduce new story content.
+- Exports chapterNCast: CastMember[] built from the "Cast" table in the story template (with columns like Key, Role type, Display name in UI, Description):
+  - For each row in the Cast table, create a CastMember object with `key` from the Key column, `roleType` from the Role type column, `displayName` from the Display name in UI column, and `description` from the Description column.
+  - Preserve the order of rows exactly as in the Cast table.
+  - Preserve authored wording for displayName and description verbatim, subject only to the string quoting rules below.
+  - Keep cast entries **separate** from facts: do not merge Cast keys or values into chapterNDefaultVariables or chapterNStoryBible.facts.
+- For all string literals in the generated TypeScript file (including `text`, `expectation`, `component`, `note`, disclaimer text, cast display names and descriptions, and any header comments that must be represented as strings), follow these quoting rules to avoid apostrophe escaping issues:
+  - Use **single quotes** by default when the string contains **no** apostrophes.
+  - If the string contains one or more apostrophes or contractions (e.g., "it's", "you're", "Sarah's"), wrap the string in **double quotes** instead of single quotes, without escaping the apostrophes.
+  - If the string contains **both** apostrophes and double quotes, use a **template literal** (backticks) to wrap the string so no apostrophes need escaping.
+  - Do **not** emit invalid single-quoted strings such as 'Sarah's response'; apply the above rules instead so that JavaScript/TypeScript parses the file without manual escape characters.
+  - When converting bulleted or multi-line lists from the source document into a single `text` string, preserve structure using explicit `\n` line breaks inside the string (for example: "Here are the steps:\n\n• First item\n\n• Second item\n\n• Third item").
+- Implements interpolateText as:
+  export function interpolateText(text: string, variables: Record<string, string>): string {
+    return text.replace(/\{(\w+)\}/g, (match, key) => variables[key] || match);
+  }
+- Exports chapterNDefaultVariables: Record<string, string> with a string value for every placeholder key referenced in any `text`, `expectation`, or `note` field, resolving and inferring values according to the Fact extraction rules (A1–A3); when a value must be assumed, choose a sensible prototype default and document the assumption in the file header comment.
+- Exports chapterNStoryBible with chapter, flowId, title, facts (identical key/value pairs to chapterNDefaultVariables), and labelsByKey mapping each key to its human-readable label from §2 Facts when available.
+- Exports chapterNDisclaimer from §5 Disclaimer, or a generic one-line prototype disclaimer if §5 is empty.
+- Determine a flowId: if an explicit Flow ID is present in the template, use it; otherwise generate a flowId derived from the story title and/or recurring phrases in the beats (for example, convert the main concept into lower_snake_case like "My Health Exploration" → "my_health_exploration"). Use that flowId in the file header and ID prefix, and record any inference as an assumption.
+Ensure that all placeholder keys in the script match the keys in chapterNDefaultVariables and chapterNStoryBible.facts, that speaker and type values match the unions above (including 'action_gate'), that `text`/`component`/`expectation`/`note`/`requiredAction` are used as described, that the string quoting rules above are applied consistently so apostrophes never break parsing, that bulleted lists are rendered with explicit `\n` line breaks as described, that branches from §4 are represented as linear turns with notes describing alternates, that action gate beats are correctly mapped to `type: 'action_gate'` with a populated `requiredAction` (and optional `text` only when the template provides user-facing copy), and that Cast table rows are faithfully represented in chapterNCast without being merged into facts.
+Return the full TypeScript file wrapped in a Markdown code block with language tag `ts` (```ts ... ```), followed by a short paragraph listing any assumptions made, including how the flowId was determined or inferred, where (if anywhere) missing "Exact words" were drafted from "What happens" (never for Action gate beats), how bulleted lists were rendered with `\n` breaks, how any ambiguous string-quoting cases were handled, how action gate beats were mapped (including any assumptions about `requiredAction` IDs), and how the Cast table was interpreted and mapped into chapterNCast.
