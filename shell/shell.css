@@ -1,0 +1,586 @@
+/*
+ * Demo shell. Every demo uses this: a 300px side panel on the left and a flat
+ * stage that holds a phone or desktop frame. Values follow the Demo shell spec
+ * and sit on the Included Health type ramp, spacing scale and color tokens.
+ */
+
+:root {
+  /* Color tokens */
+  --text-primary: #000;
+  --text-secondary: #3b3b3b;
+  --text-tertiary: #6d6d6d;
+  --text-inverse: #fff;
+  --border-weakest: #e1e1e1;
+  --border-weak: #c6c6c6;
+  --surface-default: #fff;
+  --surface-neutral-weakest: #fafafa;
+  --surface-neutral-weak: #f2f2f2;
+  --surface-brand-weak: #e6effe;
+  --surface-brand: #0012e7;
+  --surface-brand-hover: #002380;
+
+  --font: "Figtree", system-ui, sans-serif;
+  --font-ios: -apple-system, "SF Pro Text", "SF Pro", BlinkMacSystemFont, system-ui, sans-serif;
+
+  --panel-width: 300px;
+  --reshape-ease: cubic-bezier(0.65, 0, 0.25, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text-primary);
+  background: var(--surface-neutral-weak);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* ---------- Layout ---------- */
+
+.panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--panel-width);
+  padding: 48px 24px 24px;
+  overflow-y: auto;
+  background: var(--surface-default);
+  border-right: 1px solid var(--border-weakest);
+}
+
+.stage {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--panel-width);
+  overflow: hidden;
+  background: var(--surface-neutral-weak);
+}
+
+/* ---------- Side panel ---------- */
+
+.panel-title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+
+.panel-summary {
+  margin: 8px 0 24px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.device-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--surface-neutral-weak);
+}
+
+.device-switch button {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.device-switch button[aria-checked="true"] {
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--surface-default);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.section {
+  border-top: 1px solid var(--border-weakest);
+}
+
+.section:last-of-type {
+  border-bottom: 1px solid var(--border-weakest);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+  padding: 16px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  margin-left: 16px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: var(--surface-neutral-weak);
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.section-chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  transition: transform 200ms ease;
+}
+
+.section-header[aria-expanded="true"] .section-chevron {
+  transform: rotate(180deg);
+}
+
+.section-body {
+  padding-bottom: 24px;
+}
+
+/* Scenario */
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.step:hover {
+  background: var(--surface-neutral-weakest);
+}
+
+.step[aria-current="step"] {
+  font-weight: 700;
+  background: var(--surface-brand-weak);
+}
+
+.step-number {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--border-weak);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.step.is-done .step-number {
+  background: var(--surface-neutral-weak);
+  box-shadow: none;
+}
+
+.step[aria-current="step"] .step-number {
+  background: var(--surface-brand);
+  box-shadow: none;
+  color: var(--text-inverse);
+}
+
+.next-card {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-weakest);
+  border-radius: 16px;
+}
+
+.next-card-label {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.next-card-text {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.step-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.btn-secondary {
+  border: 1px solid var(--border-weak);
+  background: var(--surface-default);
+  color: var(--text-primary);
+}
+
+.btn-primary {
+  border: 0;
+  background: var(--surface-brand);
+  color: var(--text-inverse);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--surface-brand-hover);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn-restart {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.keys-line {
+  margin: 16px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
+/* Specs */
+
+.spec-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.spec-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  line-height: 24px;
+  cursor: pointer;
+}
+
+.spec-option input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--surface-brand);
+  cursor: pointer;
+}
+
+/* Annotations */
+
+.annotation-name {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.annotation-notes {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.annotation-notes li + li {
+  margin-top: 8px;
+}
+
+/* ---------- Device frames ---------- */
+
+.frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  overflow: hidden;
+  background: var(--surface-default);
+  transform: translate(-50%, -50%) scale(var(--frame-scale, 1));
+}
+
+.frame.is-desktop {
+  width: 1280px;
+  height: 800px;
+  border-radius: 12px;
+  /* Three shadows in both modes so the reshape can interpolate between them. */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(58, 62, 71, 0),
+    0 30px 70px rgba(0, 0, 0, 0.22);
+}
+
+.frame.is-mobile {
+  width: 375px;
+  height: 812px;
+  border-radius: 48px;
+  box-shadow:
+    0 0 0 10px #15171c,
+    0 0 0 11px #3a3e47,
+    0 30px 60px rgba(0, 0, 0, 0.25);
+}
+
+.frame.is-reshaping {
+  transition:
+    width 500ms var(--reshape-ease),
+    height 500ms var(--reshape-ease),
+    border-radius 500ms var(--reshape-ease),
+    box-shadow 500ms var(--reshape-ease),
+    transform 500ms var(--reshape-ease);
+}
+
+.frame-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.window-bar,
+.status-bar,
+.home-bar {
+  display: none;
+  flex: none;
+}
+
+.is-desktop .window-bar,
+.is-mobile .status-bar,
+.is-mobile .home-bar {
+  display: flex;
+}
+
+.window-bar {
+  position: relative;
+  align-items: center;
+  height: 36px;
+  padding: 0 16px;
+  background: var(--surface-neutral-weak);
+  border-bottom: 1px solid var(--border-weakest);
+}
+
+.window-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.window-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d5d5d9;
+}
+
+.address-pill {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 480px;
+  height: 24px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--surface-default);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: translateX(-50%);
+}
+
+/* iOS system chrome is set in SF Pro, not Figtree. */
+.status-bar {
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 24px 0 32px;
+  background: var(--surface-default);
+  font-family: var(--font-ios);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.status-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-bar {
+  align-items: flex-end;
+  justify-content: center;
+  height: 34px;
+  padding-bottom: 8px;
+  background: var(--surface-default);
+}
+
+.home-bar span {
+  width: 134px;
+  height: 5px;
+  border-radius: 3px;
+  background: #000;
+}
+
+.frame-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.frame-content-inner {
+  position: relative;
+  min-height: 100%;
+}
+
+/* ---------- Spec overlay ---------- */
+
+.spec-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  font-family: var(--font);
+}
+
+.spec-box {
+  position: absolute;
+}
+
+.spec-tag {
+  position: absolute;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.spec-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+  vertical-align: -1px;
+}
+
+/* ---------- Real phones: no panel or frame ---------- */
+
+body.is-real-phone {
+  overflow: auto;
+  background: var(--surface-default);
+}
+
+.is-real-phone .panel {
+  display: none;
+}
+
+.is-real-phone .stage {
+  position: static;
+  background: none;
+}
+
+.is-real-phone .frame {
+  position: static;
+  width: 100%;
+  height: 100dvh;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+}
+
+.is-real-phone .status-bar,
+.is-real-phone .home-bar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame.is-reshaping,
+  .section-chevron {
+    transition: none;
+  }
+}
