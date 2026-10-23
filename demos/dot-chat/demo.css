@@ -159,6 +159,17 @@
   margin-top: 16px;
 }
 
+/* Preferred badge note between Dot's reply and the provider cards. */
+.chat-column > .turn + .results-note,
+.chat-column > .results-note + .dot-results {
+  margin-top: 16px;
+}
+
+.note-badge {
+  display: inline-block;
+  vertical-align: -2px;
+}
+
 /* Quick prompts after the results. */
 .chat-column > .dot-results + .chip-buttons-after {
   margin-top: 16px;
@@ -776,4 +787,135 @@
   height: 32px;
   border-radius: 24px;
   background: #f2f2f2;
+}
+
+/* Clinic preview card: one recommended imaging center under Dot's reply. */
+.clinic-preview {
+  max-width: 360px;
+}
+
+.clinic-preview-card {
+  gap: 12px;
+}
+
+/* Service cards (Figma 2653:31518): kinds of care Dot suggests. */
+.dot-results.is-services .carousel-item {
+  flex-basis: 300px;
+}
+
+.service-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border-weakest);
+  border-radius: 24px;
+  background: #fff;
+}
+
+.service-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.service-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  background: #e6effe;
+}
+
+.service-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #e6effe;
+  color: #002380;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.service-title {
+  margin: 0;
+  color: #001048;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.service-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #3b3b3b;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.service-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 24px;
+  padding: 12px 16px;
+  border: 1px solid #6a4cde;
+  border-radius: 24px;
+  background: #fff;
+  color: #002380;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.service-cta:not(:disabled):hover {
+  background: #f6f8ff;
+}
+
+.service-cta:disabled {
+  cursor: default;
+}
+
+/* Live chat input on the "what kind of provider" step. */
+.chat-text {
+  width: 100%;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: #000;
+  font: inherit;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  outline: none;
+}
+
+.chat-text::placeholder {
+  color: #6d6d6d;
+}
+
+.chat-input.is-live:focus-within {
+  box-shadow: 0 0 0 2px #0012e7;
 }

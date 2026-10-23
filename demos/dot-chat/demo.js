@@ -9,18 +9,17 @@
   // markup verbatim, so the in-chat cards are the same design as the results page.
   var PS = "../provider-search/assets/";
 
-  // Provider matches for the member's search. The provider path asks for "a
-  // primary care doctor", so these are primary-care providers; each record
-  // keeps the care-search card shape so the in-chat cards render identically.
+  // Orthopedist matches for the member's knee pain search. Each record keeps
+  // the care-search card shape so the in-chat cards render identically.
   var PROVIDERS = [
     {
       name: "Dr. Alex Johnson, MD",
       photo: true,
       offerings: ["telehealth"],
       preferred: true,
-      specialties: "Family Medicine · Primary Care",
-      summary: "Committed to comprehensive primary care with an emphasis on preventive health and building long-term relationships with patients.",
-      clinic: "Bright Futures Primary Care",
+      specialties: "Orthopedic Surgery · Sports Medicine",
+      summary: "Specializes in knee and sports injuries, starting with conservative care like physical therapy before considering surgery.",
+      clinic: "Bay Area Orthopedics & Sports Medicine",
       address: "321 Main Blvd, Oakland, CA 94612",
       distance: "8 mi",
     },
@@ -28,19 +27,19 @@
       name: "Dr. Jessica Yu, MD",
       preferred: true,
       careKey: true,
-      specialties: "Internal Medicine · Primary Care",
-      summary: "Focuses on preventive care and chronic-condition management, prioritizes clear follow-up, and stays engaged in your long-term health.",
-      clinic: "Golden State Primary Care",
-      address: "123 State St, San Francisco, CA 95118",
-      distance: "17 mi",
+      specialties: "Orthopedic Surgery · Knee & Hip",
+      summary: "Treats knee pain from meniscus and ligament injuries to arthritis, and walks you through every option before you decide.",
+      clinic: "Golden State Orthopedics",
+      address: "123 State St, San Francisco, CA 94110",
+      distance: "3 mi",
     },
     {
       name: "Dr. Emily Tran, NP",
       preferred: true,
       offerings: ["lgbtq"],
-      specialties: "Primary Care · Family Practice · Wellness",
-      summary: "Advocates for holistic health practices while providing compassionate primary care and education to families.",
-      clinic: "Healthy Living Clinic",
+      specialties: "Orthopedics · Sports Medicine",
+      summary: "Helps active patients recover from overuse injuries like runner's knee with home exercise plans and steady follow-up.",
+      clinic: "Healthy Motion Orthopedics",
       address: "654 Care St, Fremont, CA 94536",
       distance: "15 mi",
     },
@@ -48,18 +47,18 @@
       name: "Dr. Marcus Reed, DO",
       photo: true,
       careKey: true,
-      specialties: "Family Medicine · Primary Care",
-      summary: "Treats patients of all ages with a focus on preventive care and same-week availability for established patients.",
-      clinic: "Eastbay Health Partners",
+      specialties: "Sports Medicine · Orthopedics",
+      summary: "Focuses on non-surgical treatment for joint and muscle injuries, with same-week visits for new knee and ankle pain.",
+      clinic: "Eastbay Sports Medicine",
       address: "2200 Broadway, Oakland, CA 94612",
       distance: "9 mi",
     },
     {
       name: "Dr. Hannah Kim, MD",
       preferred: true,
-      specialties: "Internal Medicine · Preventive Care",
-      summary: "Helps adults manage chronic conditions with clear care plans and regular check-ins between visits.",
-      clinic: "Lakeside Internal Medicine",
+      specialties: "Orthopedic Surgery · Arthroscopy",
+      summary: "Performs minimally invasive knee arthroscopy and guides patients through recovery and getting back to activity.",
+      clinic: "Lakeside Orthopedic Institute",
       address: "410 Grand Ave, Oakland, CA 94610",
       distance: "11 mi",
     },
@@ -67,11 +66,62 @@
       name: "Dr. Sofia Alvarez, MD",
       preferred: true,
       offerings: ["telehealth"],
-      specialties: "Primary Care · Family Medicine",
-      summary: "Offers whole-family primary care with flexible virtual visits and a focus on preventive screenings.",
-      clinic: "Bayview Family Practice",
+      specialties: "Orthopedics · Sports Medicine",
+      summary: "Builds rehab plans for knee, hip and shoulder injuries, with virtual follow-ups between in-person visits.",
+      clinic: "Bayview Orthopedic Care",
       address: "88 Mission St, San Francisco, CA 94105",
       distance: "6 mi",
+    },
+  ];
+
+  // Recommended freestanding imaging center for the X-ray follow-up, with the
+  // copay compared against a hospital-affiliated imaging center (placeholders).
+  var IMAGING_CENTER = { name: "Valley Diagnostic Imaging Center", type: "Freestanding imaging center", address: "7121 Stevens Dr. N", distance: "2.4 mi" };
+  var IMAGING_COPAY = { recommended: 25, hospital: 250 };
+
+  // Steps where the member answers by typing in the chat instead of a quick
+  // reply: what kind of provider (the chips only offer primary care or
+  // lab/imaging), what it's about, and a bit more about it. Sending moves the
+  // story forward; Next without typing uses the fallback.
+  var TYPED = {
+    1: "I'd like to see an orthopedist",
+    2: "Knee pain",
+    3: "I fell running a few weeks ago.",
+  };
+  var typed = {}; // step index -> what the member typed
+
+  function typedText(i) {
+    return escapeText(typed[i] || TYPED[i]);
+  }
+
+  // Kinds of care Dot suggests for the knee pain (Figma 2653:31518 "Service
+  // Card"). A PCP is recommended; the member goes with the orthopedist.
+  var CARE_OPTIONS = [
+    {
+      title: "Primary Care Provider (PCP)",
+      recommended: true,
+      body: [
+        "See a PCP to check your knee, order an X-ray if you need one, and start treatment for pain from your fall.",
+        "Acts as your home base, coordinating any referral to a specialist so your care stays connected.",
+      ],
+      cta: "Find a primary care provider",
+    },
+    {
+      title: "Orthopedist",
+      body: [
+        "See an orthopedist for a closer look at the bones, joints, ligaments and tendons in your knee.",
+        "Can diagnose injuries like a meniscus or ligament tear and recommend treatment, from bracing to surgery if needed.",
+      ],
+      cta: "Find an orthopedist",
+      action: "ortho",
+    },
+    {
+      title: "Sports Medicine Doctor",
+      body: [
+        "See a sports medicine doctor for non-surgical care of injuries from running and other activity.",
+        "Can treat sprains and strains, guide your return to running, and refer you to an orthopedist if you need surgery.",
+      ],
+      cta: "Find a sports medicine doctor",
     },
   ];
 
@@ -158,24 +208,63 @@
       scrollToLatest({ screen: screen });
     }
 
-    // Already typed earlier, no message, or reduced motion: show everything now.
-    if (!msg || typedSteps[stepName] || prefersReducedMotion()) {
+    // A reply can hold its cards back for a moment after the text (data-hold, ms),
+    // e.g. "Give me a few seconds..." before the matches appear.
+    var hold = parseInt(turn.getAttribute("data-hold"), 10) || 0;
+    function finish() {
+      if (!hold) return reveal();
+      typeTimer = setTimeout(function () {
+        typeTimer = null;
+        reveal();
+      }, hold);
+    }
+
+    // Already typed earlier: show everything now (no pause on a re-render).
+    if (!msg || typedSteps[stepName]) {
       reveal();
       return;
     }
+    // Reduced motion: no typing, but still the pause.
+    if (prefersReducedMotion()) {
+      deferred.forEach(function (el) { el.style.visibility = "hidden"; });
+      finish();
+      return;
+    }
 
-    var full = msg.innerHTML;
-    // Plain text of the reply, captured before we clear the node. Markup (bold,
-    // lists) is restored whole at the end so tags aren't revealed one at a time.
-    var text = msg.textContent || "";
+    // Type into the reply's own markup, so paragraphs, lists and bold stay in
+    // place: every text node starts empty and fills in order, and each block
+    // (paragraph, list item) stays hidden until typing reaches it, so a new
+    // paragraph starts on its own line instead of running on from the last one.
+    var walker = document.createTreeWalker(msg, NodeFilter.SHOW_TEXT);
+    var nodes = [];
+    for (var node = walker.nextNode(); node; node = walker.nextNode()) {
+      nodes.push({ node: node, chars: Array.from(node.nodeValue) }); // Array.from keeps emoji whole
+      node.nodeValue = "";
+    }
+    var hidden = [];
+    msg.querySelectorAll("p, li, ul, ol").forEach(function (el) {
+      el.style.display = "none";
+      hidden.push(el);
+    });
+    function showBlocks(textNode) {
+      for (var el = textNode.parentNode; el && el !== msg; el = el.parentNode) {
+        if (el.style && el.style.display === "none") el.style.display = "";
+      }
+    }
     deferred.forEach(function (el) { el.style.visibility = "hidden"; });
-    msg.innerHTML = "";
-    var i = 0;
+    var n = 0;
+    var c = 0;
     var lastHeight = 0;
     (function step() {
-      if (i <= text.length) {
-        msg.textContent = text.slice(0, i);
-        i += 1;
+      while (n < nodes.length && c >= nodes[n].chars.length) {
+        n += 1;
+        c = 0;
+      }
+      if (n < nodes.length) {
+        var t = nodes[n];
+        if (c === 0) showBlocks(t.node);
+        c += 1;
+        t.node.nodeValue = t.chars.slice(0, c).join("");
         // Ease down a line at a time as the reply wraps, instead of jumping at the end.
         if (msg.offsetHeight !== lastHeight) {
           lastHeight = msg.offsetHeight;
@@ -183,9 +272,9 @@
         }
         typeTimer = setTimeout(step, TYPE_SPEED_MS);
       } else {
-        msg.innerHTML = full;
+        hidden.forEach(function (el) { el.style.display = ""; });
         typeTimer = null;
-        reveal();
+        finish();
       }
     })();
   }
@@ -202,7 +291,8 @@
   function dotTurn(body, chips, opts) {
     opts = opts || {};
     return (
-      '<section class="turn dot-turn"' + (opts.id ? ' id="' + opts.id + '"' : "") + ' aria-label="Dot">' +
+      '<section class="turn dot-turn"' + (opts.id ? ' id="' + opts.id + '"' : "") +
+      (opts.holdMs ? ' data-hold="' + opts.holdMs + '"' : "") + ' aria-label="Dot">' +
       dotHeader() +
       '<div class="dot-message" data-type="Body 1 · 16/24 Medium">' + body + "</div>" +
       (chips ? '<div class="chip-buttons">' + chips + "</div>" : "") +
@@ -235,7 +325,7 @@
 
   // Send status for the member message that opens step n (null once it isn't the newest).
   function stepStatus(n, index) {
-    if (index !== n || followUps.length) return null;
+    if (index !== n || (followUps.length && n <= RESULTS.providers)) return null;
     return sendDone ? "sent" : "sending";
   }
 
@@ -306,12 +396,12 @@
   }
 
   // In-network copays: Preferred providers $10 primary care / $40 specialist;
-  // every other in-network provider $100 / $300. Cards show primary care.
+  // every other in-network provider $100 / $300. Orthopedists are specialists.
   var COPAY = { preferred: { primary: 10, specialty: 40 }, standard: { primary: 100, specialty: 300 } };
 
   function copayChip(p) {
     var preferred = !!p.preferred;
-    var amount = "$" + COPAY[preferred ? "preferred" : "standard"].primary + " copay";
+    var amount = "$" + COPAY[preferred ? "preferred" : "standard"].specialty + " copay";
     var after = copayPlan ? "" : ' <span class="chip-regular">after deductible</span>';
     return preferred
       ? '<span class="chip chip-copay"><span>' + amount + after + "</span></span>"
@@ -394,10 +484,11 @@
 
   // ---------- Conversation ----------
 
-  // Swipeable row of result cards with pagination dots.
-  function carousel(cards) {
+  // Swipeable row of result cards with pagination dots. variant adds a class
+  // (e.g. "is-services" for the narrower service cards).
+  function carousel(cards, variant) {
     return (
-      '<div class="dot-results" role="region" aria-label="Results">' +
+      '<div class="dot-results' + (variant ? " " + variant : "") + '" role="region" aria-label="Results">' +
       '<div class="carousel-track" role="list">' +
       cards.map(function (c) { return '<div class="carousel-item" role="listitem">' + c + "</div>"; }).join("") +
       "</div>" +
@@ -425,11 +516,19 @@
     return copayPlan ? "Included Health Copay-Only Plan" : "Included Health HSA Plan";
   }
 
-  // Quick prompts under the results, per path.
+  // Where each path's results land: providers after the knee pain questions,
+  // confirm and preferences; facilities straight after "Lab or imaging".
+  var RESULTS = { providers: 7, facilities: 2 };
+
+  // Dot never offers more than this many quick replies at once.
+  var MAX_QUICK_REPLIES = 3;
+
+  // Quick prompts under the results, per path. advance: the prompt moves the
+  // walkthrough to the next step instead of getting an in-place reply.
   var PROMPTS = {
     providers: [
       { id: "more", label: "Show me more providers" },
-      { id: "refine", label: "Refine provider search criteria" },
+      { id: "xray", label: "What if I need an X-ray?", advance: true },
       { id: "busy", label: "These providers don't have availability" },
     ],
     facilities: [
@@ -455,7 +554,7 @@
       return (
         dotTurn(
           providers
-            ? "<p>Here are three more in-network primary care matches near you.</p>"
+            ? "<p>Here are three more in-network orthopedists near you who treat knee pain.</p>"
             : "<p>Here are three more labs and imaging centers near you.</p>"
         ) + resultCards(kind, 1, ctx)
       );
@@ -463,49 +562,100 @@
     if (id === "refine") {
       return dotTurn(
         providers
-          ? "<p>Sure. What would you like to change? You can tell me a different ZIP code, a preferred gender, languages spoken, or an area of expertise.</p>"
+          ? "<p>Sure. What would you like to change? You can tell me a different ZIP code, a preferred gender, languages spoken, or a focus like sports injuries or knee surgery.</p>"
           : "<p>Sure. What would you like to change? You can tell me a different ZIP code, the type of test or scan, or how far you're willing to travel.</p>"
       );
     }
     return dotTurn(
       providers
-        ? "<p>Sorry about that. I can look for providers with sooner openings, or you can start a $0 virtual primary care visit through Included Health, often available today. I can also connect you with the Care Team to help you book.</p>"
+        ? "<p>Sorry about that. I can look for orthopedists with sooner openings, or you can start a $0 virtual visit with an Included Health doctor about your knee in the meantime. I can also connect you with the Care Team to help you book.</p>"
         : "<p>Sorry about that. I can look for other facilities with sooner openings, or connect you with the Care Team to help you book.</p>"
     );
   }
 
   // The member's quick-prompt messages and Dot's replies after the results.
-  // Prompts disappear once one is sent; after "Show me more" the unused ones return.
+  // Prompts disappear once one is sent; after "Show me more" the unused ones
+  // return, but only while the walkthrough is still on the results step.
+  // Returns true when the newest one is still sending or Dot is still typing.
   function followUpTurns(turns, kind, ctx) {
+    // Facilities results are its last step, so every later step is still "on results".
+    var onResults = kind === "facilities" || ctx.index === RESULTS[kind];
     for (var i = 0; i < followUps.length; i++) {
       var f = followUps[i];
-      var newest = i === followUps.length - 1;
+      var newest = onResults && i === followUps.length - 1;
+      var pending = newest && followPhase !== "done";
       turns.push(memberTurn(f.label, null, newest ? (followPhase === "sending" ? "sending" : "sent") : null));
-      if (newest && followPhase !== "done") {
+      if (pending) {
         if (followPhase === "typing") turns.push(typingTurn());
-        return turns.join("");
+        return true;
       }
       turns.push(followUpReply(kind, f.id, ctx));
     }
     var last = followUps[followUps.length - 1];
-    if (!last || last.id === "more") {
+    if (onResults && (!last || last.id === "more")) {
       var used = followUps.map(function (u) { return u.id; });
-      var open = PROMPTS[kind].filter(function (pr) {
-        return used.indexOf(pr.id) === -1;
-      });
+      var open = PROMPTS[kind]
+        .filter(function (pr) {
+          return used.indexOf(pr.id) === -1;
+        })
+        .slice(0, MAX_QUICK_REPLIES);
       if (open.length) {
         turns.push(
           '<div class="chip-buttons chip-buttons-after">' +
             open
               .map(function (pr) {
-                return '<button class="chip-button" type="button" data-followup="' + pr.id + '">' + pr.label + "</button>";
+                return (
+                  '<button class="chip-button" type="button" ' +
+                  (pr.advance ? 'data-dot="' + pr.id + '"' : 'data-followup="' + pr.id + '"') + ">" + pr.label + "</button>"
+                );
               })
               .join("") +
             "</div>"
         );
       }
     }
-    return turns.join("");
+    return false;
+  }
+
+  // Service card (Figma 2653:31518): icon, optional Recommended tag, title,
+  // two short paragraphs and a full-width button.
+  function serviceCard(o, active) {
+    return (
+      '<article class="service-card" data-space>' +
+      '<div class="service-content">' +
+      '<div class="service-top">' +
+      '<span class="service-icon"><img src="' + A + 'person-medical.svg" width="24" height="24" alt="" data-icon="person-medical"></span>' +
+      (o.recommended ? '<span class="service-tag" data-type="Caption · 12/16 Medium" data-color="surface/brand/weak">Recommended</span>' : "") +
+      "</div>" +
+      '<h3 class="service-title" data-type="Title 4 · 16/24 Bold">' + o.title + "</h3>" +
+      '<div class="service-body" data-type="Body 2 · 14/20 Medium">' +
+      o.body.map(function (t) { return "<p>" + t + "</p>"; }).join("") +
+      "</div></div>" +
+      '<button class="service-cta" type="button"' +
+      (active && o.action ? ' data-dot="' + o.action + '"' : " disabled") + ">" + o.cta + "</button>" +
+      "</article>"
+    );
+  }
+
+  // Compact facility card for the imaging recommendation: name, address,
+  // distance, and a copay + network chip.
+  function clinicPreviewCard(f) {
+    var after = copayPlan ? "" : ' <span class="chip-regular">after deductible</span>';
+    return (
+      '<div class="dot-results clinic-preview">' +
+      '<article class="provider-card clinic-preview-card">' +
+      '<div class="provider-header">' +
+      '<img class="facility-avatar" src="' + PS + 'facility-avatar.svg" width="48" height="48" alt="">' +
+      '<div class="provider-title">' +
+      '<p class="provider-name">' + f.name + "</p>" +
+      '<p class="provider-specialties">' + f.type + "</p></div></div>" +
+      '<div class="chips">' +
+      '<span class="chip chip-copay"><span>$' + IMAGING_COPAY.recommended + " copay" + after + "</span></span>" +
+      '<span class="chip chip-network"><img src="' + PS + 'check-circle.svg" width="12" height="12" alt="">In-network</span></div>' +
+      '<div class="clinic"><p class="facility-address">' + f.address + "</p>" +
+      '<p class="clinic-distance facility-distance">' + f.distance + "</p></div>" +
+      "</article></div>"
+    );
   }
 
   function conversation(ctx) {
@@ -522,19 +672,19 @@
     );
     if (index < 1) return turns.join("");
 
-    // index 1 — member starts the search; Dot asks what they need.
+    // index 1 — member starts the search; Dot asks what kind of provider.
     turns.push(memberTurn("Search for care", "turn-find", stepStatus(1, index)));
     if (index === 1 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Happy to help. What are you looking for? Choose from the options below or type what you need in the chat.</p>",
-        chip("A primary care doctor", "providers", index === 1) + chip("Lab or imaging", "facilities", index === 1)
+        "<p>Happy to help. What kind of provider would you like to see? Choose from the options below or type what you need in the chat.</p>",
+        chip("A primary care provider", null, false) + chip("Lab or imaging", "facilities", index === 1)
       )
     );
     if (index < 2) return turns.join("");
 
     var providers = path === "providers";
-    turns.push(memberTurn(providers ? "A primary care doctor" : "Lab or imaging", "turn-answer", stepStatus(2, index)));
+    turns.push(memberTurn(providers ? typedText(1) : "Lab or imaging", "turn-answer", stepStatus(2, index)));
 
     // Facilities path: keep the shorter flow straight to results.
     if (!providers) {
@@ -546,51 +696,121 @@
           { id: "turn-results" }
         ) + resultCards("facilities", 0, ctx)
       );
-      return followUpTurns(turns, "facilities", ctx);
+      followUpTurns(turns, "facilities", ctx);
+      return turns.join("");
     }
 
-    // index 2 — confirm location + plan before searching.
+    // index 2 — what the member wants to see the orthopedist about.
     if (index === 2 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Got it. I'll search for primary care near <b>" + MEMBER_ZIP + "</b> using your <b>" + planName() + "</b>. Sound good?</p>",
-        chip("Yes, search", "confirm-search", index === 2) + chip("Change ZIP code", null, false)
+        "<p>What would you like to see an orthopedist about?</p>"
       )
     );
     if (index < 3) return turns.join("");
 
-    // index 3 — ask about personal preferences.
-    turns.push(memberTurn("Yes, search", "turn-confirm", stepStatus(3, index)));
+    // index 3 — Dot asks for a little more about the knee pain.
+    turns.push(memberTurn(typedText(2), "turn-reason", stepStatus(3, index)));
     if (index === 3 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Almost there. Before I pull your matches, do you have any personal preferences?</p>" +
-          '<p class="select-help">💡 Tip: You can mention gender, languages spoken or expertise.</p>',
-        chip("No preferences", "no-preferences", index === 3)
+        "<p>I'm sorry your knee is bothering you. Can you tell me a bit more about it?</p>"
       )
     );
     if (index < 4) return turns.join("");
 
-    // index 4 — member has no preferences; Dot pulls up the matches + follow-ups.
-    turns.push(memberTurn("No preferences", "turn-preferences", stepStatus(4, index)));
+    // index 4 — Dot suggests kinds of care for the knee pain; PCP is recommended.
+    turns.push(memberTurn(typedText(3), "turn-detail", stepStatus(4, index)));
     if (index === 4 && !typingDone) return waiting(turns);
+    turns.push(
+      dotTurn(
+        "<p>Thanks for sharing that. Here are a few kinds of care that can help with knee pain like yours. A primary care provider is a good place to start, or you can go straight to a specialist.</p>"
+      ) +
+        carousel(
+          CARE_OPTIONS.map(function (o) { return serviceCard(o, index === 4); }),
+          "is-services"
+        )
+    );
+    if (index < 5) return turns.join("");
+
+    // index 5 — confirm location + plan before searching.
+    turns.push(memberTurn("Find an orthopedist", "turn-ortho", stepStatus(5, index)));
+    if (index === 5 && !typingDone) return waiting(turns);
+    turns.push(
+      dotTurn(
+        "<p>Got it. I'll look for orthopedists who treat knee and sports injuries near <b>" + MEMBER_ZIP +
+          "</b> using your <b>" + planName() + "</b>. Sound good?</p>",
+        chip("Yes, search", "confirm-search", index === 5) + chip("Change ZIP code", null, false)
+      )
+    );
+    if (index < 6) return turns.join("");
+
+    // index 6 — ask about personal preferences.
+    turns.push(memberTurn("Yes, search", "turn-confirm", stepStatus(6, index)));
+    if (index === 6 && !typingDone) return waiting(turns);
+    turns.push(
+      dotTurn(
+        "<p>Almost there. Before I pull your matches, do you have any personal preferences?</p>" +
+          '<p class="select-help">💡 Tip: You can mention gender, languages spoken or expertise.</p>',
+        chip("No preferences", "no-preferences", index === 6)
+      )
+    );
+    if (index < 7) return turns.join("");
+
+    // index 7 — Dot pulls up orthopedist matches + quick prompts.
+    turns.push(memberTurn("No preferences", "turn-preferences", stepStatus(7, index)));
+    if (index === 7 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
         "<p>Give me a few seconds to pull up your matches.</p>",
         null,
-        { id: "turn-results" }
+        { id: "turn-results", holdMs: 2000 }
       ) +
+        // Appears with the cards, after the pause.
+        '<div class="dot-message results-note" data-type="Body 1 · 16/24 Medium"><p>Here are your top matches. Providers with the purple badge ' +
+        '<img class="note-badge" src="' + PS + 'badge-preferred-star.svg" width="16" height="16" alt="">' +
+        " are <b>Preferred Providers</b>, which means they have the best patient outcomes and cost you less.</p></div>" +
         resultCards("providers", 0, ctx)
     );
-    return followUpTurns(turns, "providers", ctx);
+    if (followUpTurns(turns, "providers", ctx) || index < 8) return turns.join("");
+
+    // index 8 — member asks about an X-ray; Dot explains the savings and
+    // recommends the nearby lower-copay imaging center.
+    turns.push(memberTurn("What if I need an X-ray?", "turn-xray", stepStatus(8, index)));
+    if (!typingDone) return waiting(turns);
+    var after = copayPlan ? "" : " after your deductible";
+    turns.push(
+      dotTurn(
+        "<p>If you need imaging after your orthopedist appointment, you can save hundreds out of pocket by using one of our recommended imaging centers instead of one that is affiliated with a hospital.</p>" +
+          "<p>" + IMAGING_CENTER.name + " is nearby, and I recommend it. Your copay there is <b>$" + IMAGING_COPAY.recommended + "</b>" + after +
+          ", compared with <b>$" + IMAGING_COPAY.hospital + "</b> at a hospital-affiliated imaging center." +
+          " If your orthopedist orders an X-ray, ask them to send the order here.</p>",
+        null,
+        { id: "turn-imaging-result" }
+      ) + clinicPreviewCard(IMAGING_CENTER)
+    );
+    return turns.join("");
   }
 
-  function chatInput() {
+  function escapeText(t) {
+    return String(t).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  // On the TYPED steps the input is live: the member types their answer and
+  // sends it to move the story forward.
+  function chatInput(ctx) {
+    var live = typingDone && TYPED[ctx.index] && (ctx.index === 1 || ctx.switches.path === "providers");
     return (
-      '<div class="chat-input" data-space data-dim>' +
-      '<p class="chat-placeholder" data-type="Body 1 · 16/24 Medium">Describe what you need...</p>' +
+      '<div class="chat-input' + (live ? " is-live" : "") + '" data-space data-dim>' +
+      (live
+        ? '<input class="chat-text" type="text" aria-label="Message Dot" placeholder="Describe what you need..." data-type="Body 1 · 16/24 Medium">'
+        : '<p class="chat-placeholder" data-type="Body 1 · 16/24 Medium">Describe what you need...</p>') +
       '<div class="chat-buttons"><span class="chat-plus"><img src="' + A + 'plus.svg" width="16" height="16" alt="" data-icon="plus"></span>' +
-      '<img class="chat-send" src="' + A + 'send.svg" width="48" height="48" alt="">' +
+      (live
+        ? '<button class="chat-send-button" type="button" data-send aria-label="Send"><img class="chat-send" src="' + A + 'send.svg" width="48" height="48" alt=""></button>'
+        : '<img class="chat-send" src="' + A + 'send.svg" width="48" height="48" alt="">') +
       "</div></div>"
     );
   }
@@ -616,11 +836,13 @@
   function page(ctx) {
     copayPlan = ctx.switches.plan === "copay";
     showCareKeys = !copayPlan && ctx.toggles.careKeys !== false; // copay-only plan has no Care Keys
-    if (ctx.step !== lastStep || ctx.switches.path !== lastPath) {
+    // Keep the results-step quick prompts in the thread for the steps after it;
+    // drop them when going back before the results or switching path.
+    if (ctx.switches.path !== lastPath || (ctx.step !== lastStep && ctx.index < RESULTS[ctx.switches.path])) {
       followUps = [];
-      followPhase = "done";
       lastPath = ctx.switches.path;
     }
+    if (ctx.step !== lastStep) followPhase = "done";
     if (ctx.step !== lastStep) {
       typingDone = ctx.index === 0;
       sendDone = typingDone;
@@ -629,7 +851,7 @@
     return (
       (ctx.mode === "desktop" ? webNav() : mobileNav()) +
       '<div class="chat-scroll"><div class="chat-column">' + conversation(ctx) + "</div></div>" +
-      '<div class="chat-dock"><div class="chat-column">' + chatInput() + "</div></div>"
+      '<div class="chat-dock"><div class="chat-column">' + chatInput(ctx) + "</div></div>"
     );
   }
 
@@ -746,7 +968,40 @@
     }, SEND_MS);
   }
 
+  function currentIndex() {
+    var m = /[?&]step=(\d+)/.exec(location.search);
+    return m ? parseInt(m[1], 10) - 1 : 0;
+  }
+
+  // Send what the member typed: it becomes their message and the story continues.
+  function sendTyped() {
+    var box = document.querySelector(".screen .chat-text");
+    if (!box) return;
+    var text = box.value.trim();
+    if (!text) {
+      box.focus();
+      return;
+    }
+    var index = currentIndex();
+    typed[index] = text;
+    var sc = scroller();
+    if (sc) savedTop = sc.scrollTop;
+    if (index === 1) app.setSwitch("path", "providers");
+    app.next();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && e.target.classList && e.target.classList.contains("chat-text")) {
+      e.preventDefault();
+      sendTyped();
+    }
+  });
+
   document.addEventListener("click", function (e) {
+    if (e.target.closest("[data-send]")) {
+      sendTyped();
+      return;
+    }
     var f = e.target.closest("[data-followup]");
     if (f) {
       sendFollowUp(f.getAttribute("data-followup"), f.textContent);
@@ -790,7 +1045,7 @@
 
   app = DemoShell.mount({
     title: "Dot: find care",
-    summary: "A member asks Dot, the AI assistant, what visits cost on their plan, then finds providers or facilities.",
+    summary: "A member with knee pain asks Dot, the AI assistant, to find an orthopedist, then learns how to save on an X-ray at a freestanding imaging center.",
     demoSwitch: {
       label: "Demo",
       current: "dot",
@@ -825,6 +1080,7 @@
     ],
     onRestart: function () {
       lastStep = null;
+      typed = {};
       savedTop = 0;
       settled = { count: 0, typing: false, prompts: false };
       typedSteps = {};
@@ -851,17 +1107,65 @@
         onShow: show,
       },
       {
-        name: "What are you looking for",
+        name: "What kind of provider",
         address: ADDRESS,
         instruction: function (ctx) {
           return ctx.switches.path === "providers"
-            ? "Dot asks what they need. Select A primary care doctor."
-            : "Dot asks what they need. Select Lab or imaging.";
+            ? "Dot asks what kind of provider they want to see. Type that you'd like to see an orthopedist in the chat, then send."
+            : "Dot asks what kind of provider they want to see. Select Lab or imaging.";
         },
         notes: [
-          "The member's choice appears as their reply bubble on the right.",
-          "Dot shows a short typing indicator, then types its reply out.",
-          "Use Path (or the P key) to pick which answer the walkthrough takes.",
+          "Quick prompts offer A primary care provider or Lab or imaging.",
+          "The member types what they want instead (an orthopedist) and sends it; that's what moves the story forward.",
+          "Next without typing sends \"I'd like to see an orthopedist\". Lab or imaging takes the Facilities path.",
+        ],
+        render: page,
+        onShow: show,
+      },
+      {
+        name: "What it's about",
+        address: ADDRESS,
+        instruction: function (ctx) {
+          return ctx.switches.path === "providers"
+            ? "Dot asks what they want to see the orthopedist about. Type Knee pain in the chat, then send."
+            : "Dot shows lower cost facilities. Swipe through the facility cards.";
+        },
+        notes: function (ctx) {
+          return ctx.switches.path === "providers"
+            ? [
+                "After the provider type, Dot asks what the visit is about so it can match the right orthopedist.",
+                "No quick replies: the member answers in their own words (Knee pain).",
+              ]
+            : [
+                "Facilities path skips the orthopedist questions and goes straight to results.",
+                "Three lab and imaging facilities appear as cards in a swipeable row.",
+                "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
+                "Show me more facilities adds a second set of three cards.",
+                "Toggle Facility cost range to switch the chips to a per-visit copay range.",
+              ];
+        },
+        render: page,
+        onShow: show,
+      },
+      {
+        name: "Tell me more",
+        address: ADDRESS,
+        instruction: "Dot asks for more about the knee pain. Type I fell running a few weeks ago. in the chat, then send.",
+        notes: [
+          "Dot acknowledges the pain and asks the member to tell it a bit more.",
+          "No quick replies: the member types that they fell running a few weeks ago.",
+        ],
+        render: page,
+        onShow: show,
+      },
+      {
+        name: "Kinds of care",
+        address: ADDRESS,
+        instruction: "Dot suggests three kinds of care for the knee pain. Swipe through, then select Find an orthopedist.",
+        notes: [
+          "Service cards (Figma 2653:31518): a primary care provider is recommended, then an orthopedist and a sports medicine doctor.",
+          "Each card explains what that provider does for knee pain, with a button to find one.",
+          "The member goes with the orthopedist, so the search continues from there.",
         ],
         render: page,
         onShow: show,
@@ -869,25 +1173,13 @@
       {
         name: "Confirm location and plan",
         address: ADDRESS,
-        instruction: function (ctx) {
-          return ctx.switches.path === "providers"
-            ? "Dot confirms the ZIP and plan before searching. Select Yes, search."
-            : "Dot shows lower cost facilities. Swipe through the facility cards.";
-        },
+        instruction: "Dot confirms the ZIP and plan before searching for orthopedists. Select Yes, search.",
         notes: function (ctx) {
-          return ctx.switches.path === "providers"
-            ? [
-                ctx.switches.plan === "copay"
-                  ? "Dot confirms it will search near the member's ZIP using their Included Health Copay-Only Plan."
-                  : "Dot confirms it will search near the member's ZIP using their Included Health HSA Plan.",
-                "Facilities path skips this and goes straight to results.",
-              ]
-            : [
-                "Three lab and imaging facilities appear as cards in a swipeable row.",
-                "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
-                "Show me more facilities adds a second set of three cards.",
-                "Toggle Facility cost range to switch the chips to a per-visit copay range.",
-              ];
+          return [
+            ctx.switches.plan === "copay"
+              ? "Dot confirms it will search near the member's ZIP using their Included Health Copay-Only Plan."
+              : "Dot confirms it will search near the member's ZIP using their Included Health HSA Plan.",
+          ];
         },
         render: page,
         onShow: show,
@@ -904,19 +1196,37 @@
         onShow: show,
       },
       {
-        name: "Results",
+        name: "Orthopedist results",
         address: ADDRESS,
-        instruction: "Dot pulls up the matches. Swipe through the cards, then select Show me more providers.",
+        instruction: "Dot pulls up orthopedists. Swipe through the cards, then select What if I need an X-ray?",
         notes: function (ctx) {
           return [
-            "Three primary care providers appear as cards in a swipeable row right in the chat.",
-            "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
+            "Dot says it's pulling up matches, then pauses 2 seconds before the cards appear.",
+            "With the cards, Dot explains the purple badge: Preferred Providers have the best patient outcomes and cost less.",
+            "Three orthopedists who treat knee pain appear as cards in a swipeable row. Specialist copays: $40 Preferred, $300 Standard.",
+            "Up to three quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
             "Show me more providers adds a second set of three full cards; the other prompts come back after it.",
+            "What if I need an X-ray? continues the story to imaging.",
             ctx.switches.plan === "copay"
               ? "Copay-only plan: copay chips drop \"after deductible\" and Care Key icons are hidden."
               : ctx.toggles.careKeys !== false
               ? "The Care Key icon by the name marks Care Key providers, matching care search."
               : null,
+          ].filter(Boolean);
+        },
+        render: page,
+        onShow: show,
+      },
+      {
+        name: "Imaging recommendation",
+        address: ADDRESS,
+        instruction: "Dot explains imaging savings and recommends a nearby freestanding imaging center for the X-ray.",
+        notes: function (ctx) {
+          return [
+            "Cost-savings education: freestanding imaging centers instead of hospital-affiliated ones. This is for a scan after the orthopedist visit, not urgent care.",
+            "In the same reply, Dot recommends the nearby lower-copay center ($25, placeholder) against a hospital-affiliated one ($250).",
+            "The clinic preview card shows the name, address, distance, and a copay + network chip.",
+            ctx.switches.plan === "copay" ? "Copay-only plan: no \"after deductible\" wording." : null,
           ].filter(Boolean);
         },
         render: page,
