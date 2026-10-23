@@ -125,6 +125,47 @@ button {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
+/* Version picker: a native select so it scales to any number of versions. */
+.version-picker {
+  margin-bottom: 24px;
+}
+
+.version-select {
+  position: relative;
+}
+
+.version-select select {
+  width: 100%;
+  height: 48px;
+  padding: 0 40px 0 16px;
+  border: 1px solid var(--border-weak);
+  border-radius: 12px;
+  background: var(--surface-default);
+  font: inherit;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  appearance: none;
+  cursor: pointer;
+}
+
+.version-chevron {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.version-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-tertiary);
+}
+
 .section {
   border-top: 1px solid var(--border-weakest);
 }
@@ -376,7 +417,7 @@ button {
 
 .frame.is-desktop {
   width: 1280px;
-  height: 800px;
+  height: 880px; /* the spec says 800; made 80px taller */
   border-radius: 12px;
   /* Three shadows in both modes so the reshape can interpolate between them. */
   box-shadow:
@@ -583,4 +624,16 @@ body.is-real-phone {
   .section-chevron {
     transition: none;
   }
+}
+
+/* Demo-defined checkboxes at the end of the Scenario section */
+.scenario-toggles {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-weakest);
+}
+
+/* Demo-defined segmented switches sit under the device switch */
+.demo-switch {
+  margin-top: -12px;
 }
