@@ -105,7 +105,15 @@
   var app = null;
   var current = null; // { ctx, cfg } of the screen on show
   var showCareKeys = true; // "Show Care Keys" checkbox under Scenario
-  var copayOnly = false; // Plan B (copay only): no deductible, no Care Keys
+  // Scenario checkboxes, each on its own: Show deductible, Show Care Keys, Show copays.
+  var copayOnly = false; // "Show deductible" unchecked: a copay plan with no deductible
+  var showCopays = true; // "Show copays" unchecked: no dollar amounts on cards or plan cards
+
+  function readScenario(ctx) {
+    copayOnly = ctx.toggles.deductible === false;
+    showCareKeys = ctx.toggles.careKeys !== false;
+    showCopays = ctx.toggles.copays !== false;
+  }
 
   // ---------- Pieces ----------
 
@@ -238,7 +246,9 @@
       // Copay-only plan drops the "after deductible" qualifier.
       var afterDeductible = copayOnly ? "" : ' <span class="chip-regular">after deductible</span>';
       var afterDeductiblePlain = copayOnly ? "" : " after deductible";
-      chips = opts.top
+      chips = !showCopays
+        ? ""
+        : opts.top
         ? '<span class="chip chip-copay"' + (first ? ' data-type="Caption · 12/16 Bold" data-color="surface/accentone/weak text/accentone/strong"' : "") + "><span>$10 copay" + afterDeductible + "</span></span>"
         : '<span class="chip chip-copay-high"><span><b>$100 copay</b>' + afterDeductiblePlain + "</span></span>";
       if (opts.cfg.networkChip) {
@@ -294,7 +304,8 @@
   function planSummary(cfg) {
     var pct = Math.round((DEDUCTIBLE.met / DEDUCTIBLE.total) * 100);
     var money = function (n) { return "$" + n.toLocaleString("en-US"); };
-    var detailsLink = '<button class="text-link plan-summary-link" type="button" data-learn="deductible">Plan details</button>';
+    // Plan details explains the deductible, so there's no link without one.
+    var detailsLink = copayOnly ? "" : '<button class="text-link plan-summary-link" type="button" data-learn="deductible">Plan details</button>';
     return (
       '<section class="plan-summary" id="plan-summary" aria-labelledby="plan-summary-title" data-space data-dim>' +
       '<div class="plan-summary-head">' +
@@ -392,7 +403,7 @@
       "</span>" + (copayOnly ? "Included Health Copay Plan" : "Included Health HSA Plan") + "</p>" +
       '<p class="info-card-body" data-type="Body 1 · 16/24 Medium">' +
       (copayOnly
-        ? "This is a copay plan. The copays shown are what you pay per visit — there’s no deductible to meet first. "
+        ? "This is a copay plan. The copays shown are what you pay per visit. "
         : "This is a high deductible health plan (HDHP). The copays shown only apply after you’ve met your deductible. ") +
       "</p>" +
       "</div>"
@@ -445,10 +456,7 @@
 
   function resultsPage(ctx, cfg) {
     closeLearnMore();
-    // Copay-only plan (Plan B): no deductible, no Care Keys. The deductible plan
-    // (Plan A) keeps the Care Keys toggle under Scenario.
-    copayOnly = ctx.switches.plan === "copay";
-    showCareKeys = !copayOnly && ctx.toggles.careKeys !== false;
+    readScenario(ctx);
     // A step can set the network filter when it's entered; refreshes keep the member's choice.
     var entering = !current || current.ctx.step !== ctx.step;
     if (entering && ctx.step.network === "reset") network.includeOON = false;
@@ -698,7 +706,9 @@
     openModal(
       '<h2 class="learn-title" id="learn-title">' + (info.icon ? '<img src="' + A + info.icon + '" width="24" height="24" alt="">' : "") + info.title + "</h2>" +
         '<p class="learn-intro">' + info.intro + "</p>" +
-        '<ul class="learn-points">' + info.points.map(function (pt) { return "<li>" + pt + "</li>"; }).join("") + "</ul>" +
+        '<ul class="learn-points">' + info.points.map(function (pt) {
+          return "<li>" + (showCopays ? pt : pt.replace(/, like \$\d+ for preferred providers/, "")) + "</li>";
+        }).join("") + "</ul>" +
         '<button class="learn-done" type="button" data-learn-close>Got it</button>',
       trigger
     );
@@ -843,9 +853,13 @@
       '<img class="bar" src="' + A + 'logomark-bar.svg" width="14.7808" height="4.47185" alt="">' +
       '<img class="dot-bl" src="' + A + 'logomark-dot-left.svg" width="4.48117" height="4.47185" alt="">' +
       '<img class="dot-br" src="' + A + 'logomark-dot-right.svg" width="4.47931" height="4.47185" alt="">' +
-      "</span>Included Health HSA Plan</p>" +
-      '<p class="info-card-body">This is a high deductible health plan (HDHP). The copays shown only apply after you’ve met your deductible. </p></div>' +
-      (range
+      "</span>" + (copayOnly ? "Included Health Copay Plan" : "Included Health HSA Plan") + "</p>" +
+      '<p class="info-card-body">' +
+      (copayOnly
+        ? "This is a copay plan. You pay a copay per visit. "
+        : "This is a high deductible health plan (HDHP). The copays shown only apply after you’ve met your deductible. ") +
+      "</p></div>" +
+      (range || !showCopays
         ? ""
         : '<img class="divider" src="' + A + 'divider.svg" width="520" height="1" alt="">' +
           '<p class="facility-plan-question">How much will you pay?</p>' +
@@ -879,7 +893,9 @@
   var FACILITY_TITLE = "Diagnostic and Lab Center";
 
   function facilityPage(ctx) {
-    var range = ctx.variants && ctx.variants.facilities === "f2";
+    readScenario(ctx);
+    // Copay range chips are dollar amounts, so they fall back to cost level without copays.
+    var range = showCopays && ctx.variants && ctx.variants.facilities === "f2";
     var cards = FACILITIES.map(function (f, i) { return facilityCard(f, i === 0, range); }).join("");
     if (ctx.mode === "desktop") {
       return (
@@ -1013,9 +1029,14 @@
       {
         name: "Your plan",
         address: ADDRESS,
-        instruction: cfg.planInfo
-          ? "Read the plan summary above the providers. Select Plan details to learn about the deductible."
-          : "Read the plan card to see why copays only apply after the deductible.",
+        instruction: function (ctx) {
+          if (ctx.toggles.deductible === false) {
+            return cfg.planInfo ? "Read the plan summary above the providers." : "Read the plan card to see what you pay per visit.";
+          }
+          return cfg.planInfo
+            ? "Read the plan summary above the providers. Select Plan details to learn about the deductible."
+            : "Read the plan card to see why copays only apply after the deductible.";
+        },
         notes: cfg.planInfo
           ? [
               cfg.summaryAboveMap
@@ -1143,15 +1164,6 @@
     },
     switches: [
       {
-        key: "plan",
-        label: "Plan",
-        shortcut: "l",
-        options: [
-          { id: "deductible", label: "Deductible + Care Keys" },
-          { id: "copay", label: "Copay only" },
-        ],
-      },
-      {
         key: "search",
         label: "Search type",
         shortcut: "f",
@@ -1172,7 +1184,11 @@
         ],
       },
     ],
-    toggles: [{ key: "careKeys", label: "Show Care Keys", checked: true }],
+    toggles: [
+      { key: "deductible", label: "Show deductible", checked: true },
+      { key: "careKeys", label: "Show Care Keys", checked: true },
+      { key: "copays", label: "Show copays", checked: true },
+    ],
     summary: "A member compares primary care providers, or lab and imaging facilities, and what each visit will cost.",
     onRestart: function () {
       network.includeOON = false;

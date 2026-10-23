@@ -81,12 +81,13 @@
 
   // Steps where the member answers by typing in the chat instead of a quick
   // reply: what kind of provider (the chips only offer primary care or
-  // lab/imaging), what it's about, and a bit more about it. Sending moves the
+  // lab/imaging), what it's about, a bit more about it, and any preferences. Sending moves the
   // story forward; Next without typing uses the fallback.
   var TYPED = {
     1: "I'd like to see an orthopedist",
     2: "Knee pain",
     3: "I fell running a few weeks ago.",
+    6: "No preferences",
   };
   var typed = {}; // step index -> what the member typed
 
@@ -148,9 +149,9 @@
   var SEND_MS = 450;
   var sendDone = false;
 
-  // Plan type: "deductible" (deductible + Care Keys) or "copay" (copay only:
-  // no deductible, no Care Keys). Set by the Plan switch.
-  var copayPlan = false;
+  // Scenario checkboxes: Show deductible, Show Care Keys, Show copays.
+  var copayPlan = false; // "Show deductible" unchecked: no deductible wording
+  var showCopays = true; // "Show copays" checkbox: dollar amounts in chips and Dot's copy
 
   // Quick prompts the member sends after the results, in order. Each one gets
   // the same Sending/Sent, typing and reply sequence as a step; followPhase is
@@ -451,6 +452,7 @@
   var COPAY = { preferred: { primary: 10, specialty: 40 }, standard: { primary: 100, specialty: 300 } };
 
   function copayChip(p) {
+    if (!showCopays) return ""; // "Show copays" unchecked
     var preferred = !!p.preferred;
     var amount = "$" + COPAY[preferred ? "preferred" : "standard"].specialty + " copay";
     var after = copayPlan ? "" : ' <span class="chip-regular">after deductible</span>';
@@ -555,10 +557,13 @@
       "<p>The providers you choose can affect what you pay. Your plan has two in-network provider tiers:</p>" +
       "<ul><li><b>Preferred:</b> higher-quality care with a lower copay</li>" +
       "<li><b>Standard:</b> covered care with a higher copay</li></ul>" +
-      "<p>For <b>primary care</b>, a Preferred visit is <b>$" + COPAY.preferred.primary + "</b>" + (copayPlan ? "" : " after your deductible") +
-      " ($" + COPAY.standard.primary + " Standard). " +
-      "For <b>specialty care</b>, it's <b>$" + COPAY.preferred.specialty + "</b> Preferred ($" + COPAY.standard.specialty + " Standard). " +
-      "Virtual visits through Included Health are <b>$0</b>.</p>" +
+      (showCopays
+        ? "<p>For <b>primary care</b>, a Preferred visit is <b>$" + COPAY.preferred.primary + "</b>" + (copayPlan ? "" : " after your deductible") +
+          " ($" + COPAY.standard.primary + " Standard). " +
+          "For <b>specialty care</b>, it's <b>$" + COPAY.preferred.specialty + "</b> Preferred ($" + COPAY.standard.specialty + " Standard). " +
+          "Virtual visits through Included Health are <b>$0</b>.</p>"
+        : "<p>For both <b>primary care</b> and <b>specialty care</b>, a Preferred visit costs less than a Standard one" +
+          (copayPlan ? "" : " once you meet your deductible") + ". Virtual visits through Included Health cost less too.</p>") +
       "<p>Want me to find care for you?</p>"
     );
   }
@@ -618,7 +623,7 @@
     }
     return dotTurn(
       providers
-        ? "<p>Sorry about that. I can look for orthopedists with sooner openings, or you can start a $0 virtual visit with an Included Health doctor about your knee in the meantime. I can also connect you with the Care Team to help you book.</p>"
+        ? "<p>Sorry about that. I can look for orthopedists with sooner openings, or you can start a " + (showCopays ? "$0 " : "") + "virtual visit with an Included Health doctor about your knee in the meantime. I can also connect you with the Care Team to help you book.</p>"
         : "<p>Sorry about that. I can look for other facilities with sooner openings, or connect you with the Care Team to help you book.</p>"
     );
   }
@@ -758,7 +763,7 @@
     if (index === 4 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Thanks for sharing that. Here are two kinds of care that can help with knee pain like yours. A primary care provider is a good place to start, or you can go straight to an orthopedist.</p>"
+        "<p>Thanks for sharing that. Here are two kinds of care that can help with knee pain like yours. A primary care provider is often a good place to start.</p>"
       ) +
         carousel(
           CARE_OPTIONS.map(function (o) { return serviceCard(o, index === 4); }),
@@ -784,15 +789,14 @@
     if (index === 6 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Almost there. Before I pull your matches, do you have any personal preferences?</p>" +
-          '<p class="select-help">💡 Tip: You can mention gender, languages spoken or expertise.</p>',
-        chip("No preferences", "no-preferences", index === 6)
+        "<p>Before I pull your matches, do you have any personal preferences?</p>" +
+          '<p class="select-help">💡 Tip: You can mention gender, languages spoken or expertise.</p>'
       )
     );
     if (index < 7) return turns.join("");
 
     // index 7 — Dot pulls up orthopedist matches + quick prompts.
-    turns.push(memberTurn("No preferences", "turn-preferences", stepStatus(7, index)));
+    turns.push(memberTurn(typedText(6), "turn-preferences", stepStatus(7, index)));
     if (index === 7 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
@@ -813,8 +817,10 @@
       dotTurn(
         "<p>If your provider orders X-rays or other imaging of your knee, I highly recommend one of our lower-cost imaging centers. " +
           "You can save hundreds out of pocket compared with one that is affiliated with a hospital.</p>" +
-          "<p>" + IMAGING_CENTER.name + " is nearby. Your copay there is <b>$" + IMAGING_COPAY.recommended + "</b>" + after +
-          ", compared with <b>$" + IMAGING_COPAY.hospital + "</b> at a hospital-affiliated imaging center." +
+          "<p>" + IMAGING_CENTER.name + " is nearby. " +
+          (showCopays
+            ? "Your copay there is <b>$" + IMAGING_COPAY.recommended + "</b>" + after + ", compared with <b>$" + IMAGING_COPAY.hospital + "</b> at a hospital-affiliated imaging center."
+            : "Your copay there is lower than at a hospital-affiliated imaging center.") +
           " If your orthopedist orders an X-ray, ask them to send the order here.</p>",
         null,
         { id: "turn-imaging" }
@@ -866,8 +872,9 @@
   }
 
   function page(ctx) {
-    copayPlan = ctx.switches.plan === "copay";
-    showCareKeys = !copayPlan && ctx.toggles.careKeys !== false; // copay-only plan has no Care Keys
+    copayPlan = ctx.toggles.deductible === false;
+    showCareKeys = ctx.toggles.careKeys !== false;
+    showCopays = ctx.toggles.copays !== false;
     // Keep the results-step quick prompts in the thread for the steps after it;
     // drop them when going back before the results or switching path.
     if (ctx.switches.path !== lastPath || (ctx.step !== lastStep && ctx.index < RESULTS[ctx.switches.path])) {
@@ -1097,18 +1104,11 @@
           { id: "facilities", label: "Facilities" },
         ],
       },
-      {
-        // Prototype-wide plan type (same key and ids as care search).
-        key: "plan",
-        label: "Plan",
-        options: [
-          { id: "deductible", label: "Deductible" },
-          { id: "copay", label: "Copay only" },
-        ],
-      },
     ],
     toggles: [
+      { key: "deductible", label: "Show deductible", checked: true },
       { key: "careKeys", label: "Show Care Keys", checked: true },
+      { key: "copays", label: "Show copays", checked: true },
       { key: "costRange", label: "Facility cost range", checked: false },
     ],
     onRestart: function () {
@@ -1131,9 +1131,10 @@
           return [
             "The demo starts on Dot's message: Preferred vs Standard tiers and primary vs specialty copays.",
             "Copays: $10 Preferred / $100 Standard for primary care, $40 Preferred / $300 Standard for specialists.",
-            ctx.switches.plan === "copay"
-              ? "Copay-only plan: no deductible, so copays apply from the first visit."
-              : "Deductible plan: copays apply after the deductible.",
+            "Scenario checkboxes: Show deductible, Show Care Keys and Show copays each turn their mentions on or off.",
+            ctx.toggles.deductible === false
+              ? "Deductible off: no deductible, so copays apply from the first visit."
+              : "Deductible on: copays apply after the deductible.",
           ];
         },
         render: page,
@@ -1209,7 +1210,7 @@
         instruction: "Dot confirms the ZIP and plan before searching for orthopedists. Select Yes, search.",
         notes: function (ctx) {
           return [
-            ctx.switches.plan === "copay"
+            ctx.toggles.deductible === false
               ? "Dot confirms it will search near the member's ZIP using their Included Health Copay-Only Plan."
               : "Dot confirms it will search near the member's ZIP using their Included Health HSA Plan.",
           ];
@@ -1220,10 +1221,10 @@
       {
         name: "Personal preferences",
         address: ADDRESS,
-        instruction: "Dot asks about personal preferences. Select No preferences.",
+        instruction: "Dot asks about personal preferences. Type them (or No preferences) in the chat, then send.",
         notes: [
           "Dot offers a tip: the member can mention gender, languages, or expertise.",
-          "Selecting No preferences tells Dot to pull up the matches.",
+          "No quick reply: the member types any preferences, or No preferences, to have Dot pull up the matches.",
         ],
         render: page,
         onShow: show,
@@ -1241,11 +1242,9 @@
             "The recommended center ($25 copay, placeholder, vs $250 hospital-affiliated) uses the same card as facility search.",
             "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
             "Show me more providers adds a second set of three full cards; the other prompts come back after it.",
-            ctx.switches.plan === "copay"
-              ? "Copay-only plan: copay chips drop \"after deductible\" and Care Key icons are hidden."
-              : ctx.toggles.careKeys !== false
-              ? "The Care Key icon by the name marks Care Key providers, matching care search."
-              : null,
+            ctx.toggles.deductible === false ? "Deductible off: copay chips drop \"after deductible\"." : null,
+            ctx.toggles.copays === false ? "Copays off: no dollar amounts in the chips or Dot's messages." : null,
+            ctx.toggles.careKeys !== false ? "The Care Key icon by the name marks Care Key providers, matching care search." : null,
           ].filter(Boolean);
         },
         render: page,
