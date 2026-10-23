@@ -176,18 +176,13 @@
   }
 
   // IH Preferred badge: purple badge with a white star (Figma node 2583:24045), used everywhere.
-  // Older card design (Figma 2671:32153): purple verified badge with the IH
-  // logo (two dots and the mark) on the avatar.
+  // Avatar badge (Carrum Figma 141:1172): purple verification badge with a
+  // white star, in a 16px box that it overflows slightly top and bottom.
   function verifiedBadge(tappable) {
     var img =
-      '<span class="badge-verified badge-logo-verified"' + (tappable ? "" : ' role="img" aria-label="IH Preferred Provider"') +
-      ' title="IH Preferred Provider" data-icon="Badge Verified">' +
-      '<img class="badge-shape" src="' + A + 'badge-verified.svg" alt="">' +
-      '<span class="badge-logo">' +
-      '<img class="badge-logo-br" src="' + A + 'badge-logo-bottom-right.png" width="9.091" height="9.091" alt="">' +
-      '<img class="badge-logo-mark" src="' + A + 'badge-logo.png" width="30" height="32" alt="">' +
-      '<img class="badge-logo-tl" src="' + A + 'badge-logo-top-left.png" width="9.091" height="9.091" alt="">' +
-      "</span></span>";
+      '<span class="badge-verified badge-star-verified"' + (tappable ? "" : ' role="img" aria-label="IH Preferred Provider"') +
+      ' title="IH Preferred Provider" data-icon="Verification Badge">' +
+      '<img src="../tiering-current/assets/badge-verified-avatar.svg" width="16.0256" height="16.6718" alt=""></span>';
     // V2+: the badge is a button that explains itself.
     return tappable
       ? '<button class="badge-button badge-button-avatar" type="button" data-learn="preferred" aria-label="IH Preferred Provider, learn more">' + img + "</button>"
@@ -447,8 +442,14 @@
   function planKeyCard() {
     return (
       '<div class="tier-key" id="plan-card" data-space data-dim>' +
-      '<p class="tier-key-title" data-type="Body 1 - Bold · 16/24">Included Health Plan Key*</p>' +
-      '<p class="tier-key-intro" data-type="Body 2 · 14/20 Medium">Both tiers shown below are in-network.</p>' +
+      '<p class="tier-key-title" data-type="Body 1 - Bold · 16/24">Plan Key</p>' +
+      // Follows the Show deductible / Show copays checkboxes.
+      '<p class="tier-key-plan" data-type="Body 1 · 16/24 Medium">' +
+      (copayOnly
+        ? "You’re on a copay plan. " + (showCopays ? "The copays shown are what you pay per visit." : "You pay a copay per visit.")
+        : "You’re on a plan with a deductible. " + (showCopays ? "The copays shown only apply after you’ve met your deductible." : "Copays only apply after you’ve met your deductible.")) +
+      "</p>" +
+      '<p class="tier-key-plan" data-type="Body 1 · 16/24 Medium">Both tiers shown below are in-network.</p>' +
       '<div class="tier-key-rows" id="preferred-card">' +
       '<div class="tier-key-row"><span class="tier-key-tag is-preferred">Preferred provider</span>' +
       '<img src="../tiering-current/assets/badge-preferred-key-16.svg" width="16" height="16" alt="" data-icon="Verification Badge">' +
@@ -1197,7 +1198,7 @@
         label: "Facility cost tag",
         options: [
           { id: "range", label: "Range" },
-          { id: "level", label: "Cost level" },
+          { id: "level", label: "Level" },
           { id: "both", label: "Both" },
         ],
       },

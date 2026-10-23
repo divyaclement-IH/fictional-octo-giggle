@@ -405,17 +405,12 @@
   //     in-chat cards are the same design as the care-search results. Assets
   //     resolve from the provider-search folder (PS). ---
 
-  // Older card design (Figma 2671:32153): purple verified badge with the IH
-  // logo (two dots and the mark) on the avatar.
+  // Avatar badge (Carrum Figma 141:1172): purple verification badge with a
+  // white star, in a 16px box that it overflows slightly top and bottom.
   function verifiedBadge() {
     return (
-      '<span class="badge-verified badge-logo-verified" role="img" aria-label="IH Preferred Provider" title="IH Preferred Provider" data-icon="Badge Verified">' +
-      '<img class="badge-shape" src="' + PS + 'badge-verified.svg" alt="">' +
-      '<span class="badge-logo">' +
-      '<img class="badge-logo-br" src="' + PS + 'badge-logo-bottom-right.png" width="9.091" height="9.091" alt="">' +
-      '<img class="badge-logo-mark" src="' + PS + 'badge-logo.png" width="30" height="32" alt="">' +
-      '<img class="badge-logo-tl" src="' + PS + 'badge-logo-top-left.png" width="9.091" height="9.091" alt="">' +
-      "</span></span>"
+      '<span class="badge-verified badge-star-verified" role="img" aria-label="IH Preferred Provider" title="IH Preferred Provider" data-icon="Verification Badge">' +
+      '<img src="' + A + 'badge-verified-avatar.svg" width="16.0256" height="16.6718" alt=""></span>'
     );
   }
 
@@ -480,13 +475,16 @@
   // Plain-text tier explainer for a set of provider cards. Dot only explains
   // the tiers actually shown: Preferred, Standard, or both. (The Included
   // Health Plan Key box is only in the Traditional experience.)
-  function tierSentence(list) {
+  // lead: the sentence before it. One tier reads as one paragraph; when both
+  // show, each tier gets its own bullet.
+  function tierMessage(lead, list) {
     var preferred = list.some(function (p) { return p.preferred; });
     var standard = list.some(function (p) { return !p.preferred; });
     var parts = [];
     if (preferred) parts.push("<b>Preferred providers</b> meet our highest quality standards and usually have a lower copay.");
     if (standard) parts.push("<b>Standard providers</b> are covered too, usually with a higher copay.");
-    return parts.join(" ");
+    if (parts.length < 2) return "<p>" + lead + " " + parts.join("") + "</p>";
+    return "<p>" + lead + "</p><ul>" + parts.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
   }
 
   function providerSet(set) {
@@ -644,7 +642,7 @@
       return (
         dotTurn(
           providers
-            ? "<p>Here are three more in-network orthopedists near you who treat knee pain. " + tierSentence(providerSet(1)) + "</p>"
+            ? tierMessage("Here are three more in-network orthopedists near you who treat knee pain.", providerSet(1))
             : "<p>Here are three more labs and imaging centers near you.</p>"
         ) + resultCards(kind, 1, ctx)
       );
@@ -839,9 +837,9 @@
         null,
         { id: "turn-results", holdMs: 2000 }
       ) +
-        // The Plan Key appears with the cards, after the pause.
-        '<div class="dot-message results-note" data-type="Body 1 · 16/24 Medium"><p>Here are your top matches. ' +
-        tierSentence(providerSet(0)) + "</p></div>" +
+        // The tier explainer appears with the cards, after the pause.
+        '<div class="dot-message results-note" data-type="Body 1 · 16/24 Medium">' +
+        tierMessage("Here are your top matches.", providerSet(0)) + "</div>" +
         resultCards("providers", 0, ctx)
     );
     // Then, without waiting to be asked, Dot steers the member to a lower-cost
@@ -1146,7 +1144,7 @@
         label: "Facility cost tag",
         options: [
           { id: "range", label: "Range" },
-          { id: "level", label: "Cost level" },
+          { id: "level", label: "Level" },
           { id: "both", label: "Both" },
         ],
       },

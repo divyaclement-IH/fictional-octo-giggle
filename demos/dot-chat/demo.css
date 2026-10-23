@@ -284,11 +284,9 @@
   background: #e6effe;
 }
 
+/* The tip is a regular paragraph of Dot's message: same size and color. */
 .screen .dot-message > .select-help {
   margin-top: 16px;
-  font-size: 14px;
-  line-height: 20px;
-  color: #3b3b3b;
 }
 
 .member-turn {

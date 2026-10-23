@@ -284,11 +284,9 @@
   background: #e6effe;
 }
 
+/* The tip is a regular paragraph of Dot's message: same size and color. */
 .screen .dot-message > .select-help {
   margin-top: 16px;
-  font-size: 14px;
-  line-height: 20px;
-  color: #3b3b3b;
 }
 
 .member-turn {
@@ -957,52 +955,20 @@
   color: var(--text-warning-strong);
 }
 
-/* Purple verified badge with the IH logo, bottom-right on the avatar. */
-.badge-logo-verified {
+/* Avatar badge (Carrum Figma 141:1172): a 16px box; the badge art overflows
+   it by 2.1% top and bottom. */
+.badge-star-verified {
   position: relative;
   display: block;
 }
 
-.badge-shape {
+.badge-star-verified img {
   position: absolute;
-  top: 1.15%;
-  left: 3.11%;
-  width: 93.78%;
-  height: 97.7%;
-}
-
-.badge-logo {
-  position: absolute;
-  top: calc(50% + 0.25px);
-  left: 31.25%;
-  right: 31.25%;
-  aspect-ratio: 28.0003 / 29.8667;
-  transform: translateY(-50%);
-}
-
-.badge-logo img {
-  position: absolute;
-  display: block;
-}
-
-.badge-logo .badge-logo-mark {
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.badge-logo .badge-logo-br {
-  top: 71.59%;
-  left: 69.7%;
-  width: 30.3%;
-  height: 28.41%;
-}
-
-.badge-logo .badge-logo-tl {
-  top: 0;
+  top: -2.1%;
   left: 0;
-  width: 30.3%;
-  height: 28.41%;
+  display: block;
+  width: 100%;
+  height: 104.2%;
 }
 
 /* Longer button labels wrap instead of overflowing narrow cards. */
