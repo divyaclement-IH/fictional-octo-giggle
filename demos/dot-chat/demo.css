@@ -159,6 +159,31 @@
   margin-top: 16px;
 }
 
+/* Quick prompts after the results. */
+.chat-column > .dot-results + .chip-buttons-after {
+  margin-top: 16px;
+}
+
+.chat-column > .chip-buttons-after + .turn {
+  margin-top: 32px;
+}
+
+/* New turns settle in instead of the thread repainting all at once. */
+.chat-column > .is-entering {
+  animation: turn-enter 0.32s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@keyframes turn-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-column > .is-entering {
+    animation: none;
+  }
+}
+
 .dot-turn {
   display: flex;
   flex-direction: column;
@@ -544,6 +569,16 @@
 
 .chip-regular {
   font-weight: 500;
+}
+
+/* Standard (non-preferred) in-network copay, matching care search. */
+.chip-copay-high {
+  background: var(--surface-warning-weak);
+  color: var(--text-warning-strong);
+}
+
+.chip-copay-high b {
+  font-weight: 700;
 }
 
 .chip-network {

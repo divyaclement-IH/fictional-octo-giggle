@@ -80,7 +80,13 @@
     { name: "Marin Advanced Imaging Center", type: "Diagnostic Imaging or Radiology Center", address: "165 Rowland Way, Marin, CA 92230", distance: "17 mi", cost: "lower" },
     { name: "Quest Diagnostics", type: "Laboratory", address: "123 Maple Street, Novato, CA 94945", distance: "12 mi", cost: "lower" },
     { name: "UCSF Lab Services", type: "Laboratory", address: "400 Parnassus Ave, San Francisco, CA 94143", distance: "8 mi", cost: "higher" },
+    { name: "Bay Imaging Consultants", type: "Diagnostic Imaging or Radiology Center", address: "2125 Oak Grove Rd, Walnut Creek, CA 94598", distance: "14 mi", cost: "lower" },
+    { name: "Sutter Health Lab", type: "Laboratory", address: "3000 Colby St, Berkeley, CA 94705", distance: "10 mi", cost: "lower" },
+    { name: "Peninsula Radiology Center", type: "Diagnostic Imaging or Radiology Center", address: "1501 Trousdale Dr, Burlingame, CA 94010", distance: "19 mi", cost: "higher" },
   ];
+
+  // Results come in sets: the first set, then "Show me more" adds the next one.
+  var PAGE_SIZE = 3;
 
   var showCareKeys = true; // "Show Care Keys" checkbox under Scenario, shared with provider-search
   var MEMBER_ZIP = "94110"; // the member's ZIP, confirmed before the provider search
@@ -99,6 +105,17 @@
   // Dot's typing dots only start once it's sent.
   var SEND_MS = 450;
   var sendDone = false;
+
+  // Plan type: "deductible" (deductible + Care Keys) or "copay" (copay only:
+  // no deductible, no Care Keys). Set by the Plan switch.
+  var copayPlan = false;
+
+  // Quick prompts the member sends after the results, in order. Each one gets
+  // the same Sending/Sent, typing and reply sequence as a step; followPhase is
+  // "sending", "typing" or "done" for the newest one.
+  var followUps = [];
+  var followPhase = "done";
+  var lastPath = null;
 
   // --- Reply typewriter: after the typing dots, Dot's latest reply reveals one
   //     character at a time (20 ms/char), and any chips/cards below it stay
@@ -132,10 +149,8 @@
     var deferred = [];
     var chips = turn.querySelector(".chip-buttons");
     if (chips) deferred.push(chips);
-    var results = turn.nextElementSibling;
-    if (results && results.classList && results.classList.contains("dot-results")) {
-      deferred.push(results);
-    }
+    // Cards and quick prompts that follow the reply.
+    for (var sib = turn.nextElementSibling; sib; sib = sib.nextElementSibling) deferred.push(sib);
 
     function reveal() {
       deferred.forEach(function (el) { el.style.visibility = ""; });
@@ -156,10 +171,16 @@
     deferred.forEach(function (el) { el.style.visibility = "hidden"; });
     msg.innerHTML = "";
     var i = 0;
+    var lastHeight = 0;
     (function step() {
       if (i <= text.length) {
         msg.textContent = text.slice(0, i);
         i += 1;
+        // Ease down a line at a time as the reply wraps, instead of jumping at the end.
+        if (msg.offsetHeight !== lastHeight) {
+          lastHeight = msg.offsetHeight;
+          scrollToLatest({ screen: screen });
+        }
         typeTimer = setTimeout(step, TYPE_SPEED_MS);
       } else {
         msg.innerHTML = full;
@@ -196,11 +217,10 @@
     );
   }
 
-  // latest: this is the member's newest message, so it carries the send status
-  // (only the latest message shows one).
-  function memberTurn(text, id, latest) {
-    var sending = latest && !sendDone;
-    var status = !latest
+  // status: "sending" | "sent" | null. Only the member's newest message shows one.
+  function memberTurn(text, id, status) {
+    var sending = status === "sending";
+    status = !status
       ? ""
       : sending
       ? '<p class="send-status is-sending" data-type="Caption · 12/16 Medium" role="status">Sending...</p>'
@@ -211,6 +231,12 @@
       '<p class="member-bubble' + (sending ? " is-sending" : "") + '" data-type="Body 1 · 16/24 Medium" data-color="surface/brand/weak">' +
       text + "</p>" + status + "</div>"
     );
+  }
+
+  // Send status for the member message that opens step n (null once it isn't the newest).
+  function stepStatus(n, index) {
+    if (index !== n || followUps.length) return null;
+    return sendDone ? "sent" : "sending";
   }
 
   // While the member's message is still sending, Dot hasn't started typing.
@@ -279,9 +305,22 @@
     );
   }
 
+  // In-network copays: Preferred providers $10 primary care / $40 specialist;
+  // every other in-network provider $100 / $300. Cards show primary care.
+  var COPAY = { preferred: { primary: 10, specialty: 40 }, standard: { primary: 100, specialty: 300 } };
+
+  function copayChip(p) {
+    var preferred = !!p.preferred;
+    var amount = "$" + COPAY[preferred ? "preferred" : "standard"].primary + " copay";
+    var after = copayPlan ? "" : ' <span class="chip-regular">after deductible</span>';
+    return preferred
+      ? '<span class="chip chip-copay"><span>' + amount + after + "</span></span>"
+      : '<span class="chip chip-copay-high"><span><b>' + amount + "</b>" + after + "</span></span>";
+  }
+
   function providerCard(p) {
     var chips =
-      '<span class="chip chip-copay"><span>$30 copay <span class="chip-regular">after deductible</span></span></span>' +
+      copayChip(p) +
       '<span class="chip chip-network"><img src="' + PS + 'check-circle.svg" width="12" height="12" alt="">In-network</span>';
     return (
       '<article class="provider-card">' +
@@ -369,13 +408,105 @@
   }
 
   // Dot opens by explaining how provider tier affects primary vs specialty cost.
-  var INTRO =
-    "<p>The providers you choose can affect what you pay. Your plan has two in-network provider tiers:</p>" +
-    "<ul><li><b>Preferred:</b> higher-quality care with a lower copay</li>" +
-    "<li><b>Standard:</b> covered care with a higher copay</li></ul>" +
-    "<p>For <b>primary care</b>, a Preferred visit is <b>$30</b> after your deductible ($300 Standard). " +
-    "For <b>specialty care</b>, it's <b>$50</b> Preferred ($350 Standard). Virtual visits through Included Health are <b>$0</b>.</p>" +
-    "<p>Want me to find care for you?</p>";
+  function intro() {
+    return (
+      "<p>The providers you choose can affect what you pay. Your plan has two in-network provider tiers:</p>" +
+      "<ul><li><b>Preferred:</b> higher-quality care with a lower copay</li>" +
+      "<li><b>Standard:</b> covered care with a higher copay</li></ul>" +
+      "<p>For <b>primary care</b>, a Preferred visit is <b>$" + COPAY.preferred.primary + "</b>" + (copayPlan ? "" : " after your deductible") +
+      " ($" + COPAY.standard.primary + " Standard). " +
+      "For <b>specialty care</b>, it's <b>$" + COPAY.preferred.specialty + "</b> Preferred ($" + COPAY.standard.specialty + " Standard). " +
+      "Virtual visits through Included Health are <b>$0</b>.</p>" +
+      "<p>Want me to find care for you?</p>"
+    );
+  }
+
+  function planName() {
+    return copayPlan ? "Included Health Copay-Only Plan" : "Included Health HSA Plan";
+  }
+
+  // Quick prompts under the results, per path.
+  var PROMPTS = {
+    providers: [
+      { id: "more", label: "Show me more providers" },
+      { id: "refine", label: "Refine provider search criteria" },
+      { id: "busy", label: "These providers don't have availability" },
+    ],
+    facilities: [
+      { id: "more", label: "Show me more facilities" },
+      { id: "refine", label: "Refine facility search criteria" },
+      { id: "busy", label: "These facilities don't have availability" },
+    ],
+  };
+
+  function resultCards(kind, set, ctx) {
+    var list = kind === "providers" ? PROVIDERS : FACILITIES;
+    var costRange = ctx.toggles.costRange === true;
+    return carousel(
+      list.slice(set * PAGE_SIZE, (set + 1) * PAGE_SIZE).map(function (item) {
+        return kind === "providers" ? providerCard(item) : facilityCard(item, costRange);
+      })
+    );
+  }
+
+  function followUpReply(kind, id, ctx) {
+    var providers = kind === "providers";
+    if (id === "more") {
+      return (
+        dotTurn(
+          providers
+            ? "<p>Here are three more in-network primary care matches near you.</p>"
+            : "<p>Here are three more labs and imaging centers near you.</p>"
+        ) + resultCards(kind, 1, ctx)
+      );
+    }
+    if (id === "refine") {
+      return dotTurn(
+        providers
+          ? "<p>Sure. What would you like to change? You can tell me a different ZIP code, a preferred gender, languages spoken, or an area of expertise.</p>"
+          : "<p>Sure. What would you like to change? You can tell me a different ZIP code, the type of test or scan, or how far you're willing to travel.</p>"
+      );
+    }
+    return dotTurn(
+      providers
+        ? "<p>Sorry about that. I can look for providers with sooner openings, or you can start a $0 virtual primary care visit through Included Health, often available today. I can also connect you with the Care Team to help you book.</p>"
+        : "<p>Sorry about that. I can look for other facilities with sooner openings, or connect you with the Care Team to help you book.</p>"
+    );
+  }
+
+  // The member's quick-prompt messages and Dot's replies after the results.
+  // Prompts disappear once one is sent; after "Show me more" the unused ones return.
+  function followUpTurns(turns, kind, ctx) {
+    for (var i = 0; i < followUps.length; i++) {
+      var f = followUps[i];
+      var newest = i === followUps.length - 1;
+      turns.push(memberTurn(f.label, null, newest ? (followPhase === "sending" ? "sending" : "sent") : null));
+      if (newest && followPhase !== "done") {
+        if (followPhase === "typing") turns.push(typingTurn());
+        return turns.join("");
+      }
+      turns.push(followUpReply(kind, f.id, ctx));
+    }
+    var last = followUps[followUps.length - 1];
+    if (!last || last.id === "more") {
+      var used = followUps.map(function (u) { return u.id; });
+      var open = PROMPTS[kind].filter(function (pr) {
+        return used.indexOf(pr.id) === -1;
+      });
+      if (open.length) {
+        turns.push(
+          '<div class="chip-buttons chip-buttons-after">' +
+            open
+              .map(function (pr) {
+                return '<button class="chip-button" type="button" data-followup="' + pr.id + '">' + pr.label + "</button>";
+              })
+              .join("") +
+            "</div>"
+        );
+      }
+    }
+    return turns.join("");
+  }
 
   function conversation(ctx) {
     var index = ctx.index;
@@ -385,14 +516,14 @@
     // index 0 — Dot opens with the primary/specialty cost explanation.
     turns.push(
       dotTurn(
-        INTRO,
+        intro(),
         chip("Search for care", "find", index === 0) + chip("Learn more about my plan", null, false)
       )
     );
     if (index < 1) return turns.join("");
 
     // index 1 — member starts the search; Dot asks what they need.
-    turns.push(memberTurn("Search for care", "turn-find", index === 1));
+    turns.push(memberTurn("Search for care", "turn-find", stepStatus(1, index)));
     if (index === 1 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
@@ -403,34 +534,33 @@
     if (index < 2) return turns.join("");
 
     var providers = path === "providers";
-    turns.push(memberTurn(providers ? "A primary care doctor" : "Lab or imaging", "turn-answer", index === 2));
+    turns.push(memberTurn(providers ? "A primary care doctor" : "Lab or imaging", "turn-answer", stepStatus(2, index)));
 
     // Facilities path: keep the shorter flow straight to results.
     if (!providers) {
       if (!typingDone) return waiting(turns);
-      var costRange = ctx.toggles.costRange === true;
       turns.push(
         dotTurn(
           "<p>Here are freestanding labs and imaging centers near you, with lower cost options first.</p>",
           null,
           { id: "turn-results" }
-        ) + carousel(FACILITIES.map(function (f) { return facilityCard(f, costRange); }))
+        ) + resultCards("facilities", 0, ctx)
       );
-      return turns.join("");
+      return followUpTurns(turns, "facilities", ctx);
     }
 
     // index 2 — confirm location + plan before searching.
     if (index === 2 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Got it. I'll search for primary care near <b>" + MEMBER_ZIP + "</b> using your <b>Included Health HSA Plan</b>. Sound good?</p>",
+        "<p>Got it. I'll search for primary care near <b>" + MEMBER_ZIP + "</b> using your <b>" + planName() + "</b>. Sound good?</p>",
         chip("Yes, search", "confirm-search", index === 2) + chip("Change ZIP code", null, false)
       )
     );
     if (index < 3) return turns.join("");
 
     // index 3 — ask about personal preferences.
-    turns.push(memberTurn("Yes, search", "turn-confirm", index === 3));
+    turns.push(memberTurn("Yes, search", "turn-confirm", stepStatus(3, index)));
     if (index === 3 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
@@ -442,7 +572,7 @@
     if (index < 4) return turns.join("");
 
     // index 4 — member has no preferences; Dot pulls up the matches + follow-ups.
-    turns.push(memberTurn("No preferences", "turn-preferences", index === 4));
+    turns.push(memberTurn("No preferences", "turn-preferences", stepStatus(4, index)));
     if (index === 4 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
@@ -450,14 +580,9 @@
         null,
         { id: "turn-results" }
       ) +
-        carousel(PROVIDERS.map(providerCard)) +
-        '<div class="chip-buttons chip-buttons-after">' +
-        chip("Show me more providers", null, false) +
-        chip("Refine provider search criteria", null, false) +
-        chip("These providers don't have availability", null, false) +
-        "</div>"
+        resultCards("providers", 0, ctx)
     );
-    return turns.join("");
+    return followUpTurns(turns, "providers", ctx);
   }
 
   function chatInput() {
@@ -489,7 +614,13 @@
   }
 
   function page(ctx) {
-    showCareKeys = ctx.toggles.careKeys !== false;
+    copayPlan = ctx.switches.plan === "copay";
+    showCareKeys = !copayPlan && ctx.toggles.careKeys !== false; // copay-only plan has no Care Keys
+    if (ctx.step !== lastStep || ctx.switches.path !== lastPath) {
+      followUps = [];
+      followPhase = "done";
+      lastPath = ctx.switches.path;
+    }
     if (ctx.step !== lastStep) {
       typingDone = ctx.index === 0;
       sendDone = typingDone;
@@ -516,11 +647,58 @@
     }
   }
 
+  // ---------- Smooth updates ----------
+  // Each update re-renders the screen, so keep the thread where the member was
+  // reading, ease it down to the newest message, and fade in only the turns
+  // that weren't there before (instead of the whole conversation repainting).
+
+  var savedTop = 0; // the thread's last scroll position, carried across re-renders
+  // Turns already on screen. Typing dots and quick prompts come and go, so
+  // they're tracked apart from the turns that stay.
+  var settled = { count: 0, typing: false, prompts: false };
+
+  function scroller() {
+    return document.querySelector(".screen .chat-scroll");
+  }
+
+  function settle() {
+    var col = document.querySelector(".screen .chat-scroll .chat-column");
+    if (!col) return;
+    var now = { count: 0, typing: false, prompts: false };
+    for (var i = 0; i < col.children.length; i++) {
+      var kid = col.children[i];
+      var transient =
+        kid.getAttribute("aria-label") === "Dot is typing" ? "typing" : kid.classList.contains("chip-buttons-after") ? "prompts" : null;
+      if (transient) {
+        now[transient] = true;
+        if (!settled[transient]) kid.classList.add("is-entering");
+      } else {
+        if (now.count >= settled.count) kid.classList.add("is-entering");
+        now.count += 1;
+      }
+    }
+    settled = now;
+  }
+
+  // app.refresh() rebuilds the thread at the top; put it back, settle, then ease down.
+  function refresh() {
+    var sc = scroller();
+    if (sc) savedTop = sc.scrollTop;
+    app.refresh();
+    sc = scroller();
+    if (sc) sc.scrollTop = savedTop;
+    settle();
+    scrollToLatest();
+  }
+
   // Dot "types" dots for a moment, then the reply appears and types itself out.
   // onShow only fires on a fresh render (not app.refresh, which keeps scroll),
   // so the reply typewriter is kicked off from inside the dots timer below,
   // right after the refresh that swaps the dots for the reply.
   function show(ctx) {
+    var sc = scroller();
+    if (sc) sc.scrollTop = savedTop;
+    settle();
     scrollToLatest(ctx);
     var stepName = ctx.step && ctx.step.name;
     var isReply = ctx.index > 0; // index 0 is the opening question, not a reply
@@ -528,6 +706,7 @@
       // Re-entered an already-answered step (e.g. device/path switch): reveal
       // immediately without re-animating.
       if (isReply) runReplyTypewriter(stepName);
+      for (var i = 0; i < followUps.length; i++) typedSteps[stepName + "#" + (i + 1)] = true;
       return;
     }
     var step = ctx.step;
@@ -535,26 +714,60 @@
     setTimeout(function () {
       if (lastStep !== step) return;
       sendDone = true;
-      app.refresh();
-      scrollToLatest({ screen: document.querySelector(".screen") });
+      refresh();
       setTimeout(function () {
         if (lastStep !== step) return;
         typingDone = true;
-        app.refresh();
-        scrollToLatest({ screen: document.querySelector(".screen") });
+        refresh();
         // The reply is now in the DOM; type it out and hold its chips/cards.
         if (isReply) runReplyTypewriter(stepName);
       }, 700);
     }, SEND_MS);
   }
 
+  // A quick prompt after the results: send it as the member's message (the
+  // prompts disappear), then the same Sending/Sent, typing and reply sequence.
+  function sendFollowUp(id, label) {
+    if (followPhase !== "done") return;
+    var step = lastStep;
+    followUps.push({ id: id, label: label });
+    followPhase = "sending";
+    refresh();
+    setTimeout(function () {
+      if (lastStep !== step) return;
+      followPhase = "typing";
+      refresh();
+      setTimeout(function () {
+        if (lastStep !== step) return;
+        followPhase = "done";
+        refresh();
+        runReplyTypewriter(step.name + "#" + followUps.length);
+      }, 700);
+    }, SEND_MS);
+  }
+
   document.addEventListener("click", function (e) {
+    var f = e.target.closest("[data-followup]");
+    if (f) {
+      sendFollowUp(f.getAttribute("data-followup"), f.textContent);
+      return;
+    }
     var b = e.target.closest("[data-dot]");
     if (!b) return;
+    var sc = scroller();
+    if (sc) savedTop = sc.scrollTop;
     var action = b.getAttribute("data-dot");
     if (action === "providers" || action === "facilities") app.setSwitch("path", action);
     app.next();
   });
+
+  document.addEventListener(
+    "scroll",
+    function (e) {
+      if (e.target.classList && e.target.classList.contains("chat-scroll")) savedTop = e.target.scrollTop;
+    },
+    true
+  );
 
   // Carousel pagination dots follow the swipe position.
   document.addEventListener(
@@ -596,6 +809,15 @@
           { id: "facilities", label: "Facilities" },
         ],
       },
+      {
+        // Prototype-wide plan type (same key and ids as care search).
+        key: "plan",
+        label: "Plan",
+        options: [
+          { id: "deductible", label: "Deductible" },
+          { id: "copay", label: "Copay only" },
+        ],
+      },
     ],
     toggles: [
       { key: "careKeys", label: "Show Care Keys", checked: true },
@@ -603,6 +825,8 @@
     ],
     onRestart: function () {
       lastStep = null;
+      savedTop = 0;
+      settled = { count: 0, typing: false, prompts: false };
       typedSteps = {};
       if (typeTimer) {
         clearTimeout(typeTimer);
@@ -614,11 +838,15 @@
         name: "Dot explains cost",
         address: ADDRESS,
         instruction: "Dot opens by explaining how provider tier affects cost. Select Search for care.",
-        notes: [
-          "The demo starts on Dot's message: Preferred vs Standard tiers and primary vs specialty copays.",
-          "Copays are placeholders; primary care matches care search ($30 Preferred, $300 Standard).",
-          "Select Search for care to continue.",
-        ],
+        notes: function (ctx) {
+          return [
+            "The demo starts on Dot's message: Preferred vs Standard tiers and primary vs specialty copays.",
+            "Copays: $10 Preferred / $100 Standard for primary care, $40 Preferred / $300 Standard for specialists.",
+            ctx.switches.plan === "copay"
+              ? "Copay-only plan: no deductible, so copays apply from the first visit."
+              : "Deductible plan: copays apply after the deductible.",
+          ];
+        },
         render: page,
         onShow: show,
       },
@@ -649,11 +877,15 @@
         notes: function (ctx) {
           return ctx.switches.path === "providers"
             ? [
-                "Dot confirms it will search near the member's ZIP using their Included Health HSA Plan.",
+                ctx.switches.plan === "copay"
+                  ? "Dot confirms it will search near the member's ZIP using their Included Health Copay-Only Plan."
+                  : "Dot confirms it will search near the member's ZIP using their Included Health HSA Plan.",
                 "Facilities path skips this and goes straight to results.",
               ]
             : [
-                "Lab and imaging facilities appear as cards in a swipeable row.",
+                "Three lab and imaging facilities appear as cards in a swipeable row.",
+                "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
+                "Show me more facilities adds a second set of three cards.",
                 "Toggle Facility cost range to switch the chips to a per-visit copay range.",
               ];
         },
@@ -674,12 +906,15 @@
       {
         name: "Results",
         address: ADDRESS,
-        instruction: "Dot pulls up the matches. Swipe through the six provider cards.",
+        instruction: "Dot pulls up the matches. Swipe through the cards, then select Show me more providers.",
         notes: function (ctx) {
           return [
-            "Six primary care providers appear as cards in a swipeable row right in the chat.",
-            "Below the cards, three quick prompts offer follow-up actions.",
-            ctx.toggles.careKeys !== false
+            "Three primary care providers appear as cards in a swipeable row right in the chat.",
+            "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
+            "Show me more providers adds a second set of three full cards; the other prompts come back after it.",
+            ctx.switches.plan === "copay"
+              ? "Copay-only plan: copay chips drop \"after deductible\" and Care Key icons are hidden."
+              : ctx.toggles.careKeys !== false
               ? "The Care Key icon by the name marks Care Key providers, matching care search."
               : null,
           ].filter(Boolean);
