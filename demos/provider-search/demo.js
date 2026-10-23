@@ -1107,7 +1107,7 @@
       ? {
           label: "Back to Dot",
           href:
-            "../dot-chat/?step=3&path=" + (fromParams.get("search") === "facilities" ? "facilities" : "providers") +
+            "../dot-chat/?step=4&path=" + (fromParams.get("search") === "facilities" ? "facilities" : "providers") +
             (fromParams.get("device") ? "&device=" + fromParams.get("device") : ""),
         }
       : null;

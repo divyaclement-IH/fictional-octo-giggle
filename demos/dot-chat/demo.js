@@ -9,27 +9,28 @@
   // markup verbatim, so the in-chat cards are the same design as the results page.
   var PS = "../provider-search/assets/";
 
-  // Top matches — the top-match records from demos/provider-search/demo.js, so
-  // the in-chat cards render identically. Kept in sync by hand with that demo.
+  // Provider matches for the member's search. The provider path asks for "a
+  // primary care doctor", so these are primary-care providers; each record
+  // keeps the care-search card shape so the in-chat cards render identically.
   var PROVIDERS = [
     {
-      name: "Dr. Alex Johnson, DDS",
+      name: "Dr. Alex Johnson, MD",
       photo: true,
       offerings: ["telehealth"],
       preferred: true,
-      specialties: "Dentistry · General Dentistry · Cosmetic Dentistry",
-      summary: "Committed to providing comprehensive dental care with an emphasis on patient comfort and aesthetic needs.",
-      clinic: "Bright Futures Center",
-      address: "321 Dental Blvd, Oakland, CA 94612",
+      specialties: "Primary Care · Family Medicine",
+      summary: "Committed to comprehensive primary care with an emphasis on preventive health and building long-term relationships with patients.",
+      clinic: "Bright Futures Primary Care",
+      address: "321 Main Blvd, Oakland, CA 94612",
       distance: "8 mi",
     },
     {
       name: "Dr. Jessica Yu, MD",
       preferred: true,
       careKey: true,
-      specialties: "Obstetrics & Gynecology · Obstetrics · Gynecology",
-      summary: "Has strong back and spine expertise, prioritizes safe and non-invasive care, and stays engaged in your long-term recovery, referring to trusted specialists.",
-      clinic: "Golden State Research Institute",
+      specialties: "Primary Care · Internal Medicine",
+      summary: "Focuses on preventive care and chronic-condition management, prioritizes clear follow-up, and stays engaged in your long-term health.",
+      clinic: "Golden State Primary Care",
       address: "123 State St, San Francisco, CA 95118",
       distance: "17 mi",
     },
@@ -37,8 +38,8 @@
       name: "Dr. Emily Tran, NP",
       preferred: true,
       offerings: ["lgbtq"],
-      specialties: "Nursing · Family Practice · Wellness",
-      summary: "Advocates for holistic health practices while providing compassionate care and education to families.",
+      specialties: "Primary Care · Family Practice",
+      summary: "Advocates for holistic health practices while providing compassionate primary care and education to families.",
       clinic: "Healthy Living Clinic",
       address: "654 Care St, Fremont, CA 94536",
       distance: "15 mi",
@@ -172,11 +173,13 @@
       '<div class="provider-title">' +
       '<p class="provider-name">' + p.name +
       (p.careKey && showCareKeys ? careKeyIcon() : "") + "</p>" +
-      '<p class="provider-specialties">' + p.specialties + "</p></div>" +
+      // Dot view: show only the first (primary) specialty, not the full list.
+      '<p class="provider-specialties">' + p.specialties.split(" · ")[0] + "</p></div>" +
       '<button class="bookmark-button" type="button" aria-label="Save ' + p.name + '">' +
       '<img src="' + PS + 'bookmark.svg" width="24" height="24" alt=""></button>' +
       "</div>" +
-      '<div class="chips">' + chips + offeringChips(p) + "</div>" +
+      // Dot view: cap at 2 chips (copay + network); offerings are omitted here.
+      '<div class="chips">' + chips + "</div>" +
       '<p class="provider-summary">' + p.summary + "</p>" +
       '<img class="divider" src="' + PS + 'divider.svg" width="520" height="1" alt="">' +
       '<div class="clinic"><div class="clinic-address">' +
@@ -227,44 +230,127 @@
 
   // ---------- Conversation ----------
 
-  var INTRO =
-    "<p>The providers and facilities you choose can affect what you pay.</p>" +
-    "<p><b>Providers</b><br>Your plan has two in-network provider tiers:</p>" +
-    "<ul><li><b>Preferred:</b> Higher quality care with a lower copay</li>" +
-    "<li><b>Standard:</b> Covered care with a higher copay</li></ul>" +
-    "<p><b>Facilities</b><br>Freestanding labs and imaging centers often cost less than hospital-based facilities for the same service.</p>" +
-    "<p>Here are some ways I can help you find the right care at the lowest cost:</p>";
+  // Visit types Riley can pick. Copays are placeholder figures; primary care
+  // matches the care-search demo ($30 Preferred, $300 Standard).
+  var VISIT_TYPES = [
+    {
+      id: "primary",
+      label: "Primary care",
+      copay: "If you see someone virtually through Included Health, the copay will be $0. For in-person care, the copay will be $30 for a Preferred provider or $300 for a Standard provider.",
+    },
+    {
+      id: "urgent",
+      label: "Urgent care",
+      copay: "A virtual urgent care visit through Included Health is $0. At an in-person urgent care center, the copay will be $50 for a Preferred provider or $150 for a Standard provider.",
+    },
+    {
+      id: "specialty",
+      label: "Specialty care",
+      copay: "The copay will be $50 for a Preferred provider or $350 for a Standard provider.",
+    },
+    {
+      id: "therapy",
+      label: "Therapy",
+      copay: "Virtual therapy through Included Health is $0. For in-person sessions, the copay will be $30 for a Preferred provider or $300 for a Standard provider.",
+    },
+    {
+      id: "psych",
+      label: "Psych",
+      copay: "Virtual psychiatry through Included Health is $0. For in-person visits, the copay will be $30 for a Preferred provider or $300 for a Standard provider.",
+    },
+    {
+      id: "er",
+      label: "ER",
+      copay: "The copay for an emergency room visit will be $350. It’s waived if you’re admitted to the hospital.",
+    },
+  ];
+  var DEFAULT_VISITS = ["primary", "specialty"];
+  var selectedVisits = DEFAULT_VISITS.slice();
+
+  function selectedVisitTypes() {
+    return VISIT_TYPES.filter(function (v) {
+      return selectedVisits.indexOf(v.id) !== -1;
+    });
+  }
+
+  function selectedLabel() {
+    return selectedVisitTypes()
+      .map(function (v) { return v.label; })
+      .join(", ");
+  }
+
+  // Multi-select chip: toggles in and out of the input until the member sends.
+  function visitChip(v, active) {
+    var on = selectedVisits.indexOf(v.id) !== -1;
+    return (
+      '<button class="chip-button chip-select' + (on ? " is-selected" : "") + '" type="button"' +
+      (active ? ' data-visit="' + v.id + '" aria-pressed="' + on + '"' : " disabled") + ">" + v.label + "</button>"
+    );
+  }
+
+  function copayReply() {
+    return (
+      "<p>Here are the copays for the visit types you selected:</p><ul>" +
+      selectedVisitTypes()
+        .map(function (v) { return "<li><b>" + v.label + ":</b> " + v.copay + "</li>"; })
+        .join("") +
+      "</ul><p>One thing to keep in mind: You generally don’t need to pay at the office. Wait for the claim to process so you can avoid overpaying or needing a refund.</p>"
+    );
+  }
+
+  // Swipeable row of result cards with pagination dots.
+  function carousel(cards) {
+    return (
+      '<div class="dot-results" role="region" aria-label="Results">' +
+      '<div class="carousel-track" role="list">' +
+      cards.map(function (c) { return '<div class="carousel-item" role="listitem">' + c + "</div>"; }).join("") +
+      "</div>" +
+      '<div class="carousel-dots" aria-hidden="true">' +
+      cards.map(function (_, i) { return "<span" + (i === 0 ? ' class="is-active"' : "") + "></span>"; }).join("") +
+      "</div></div>"
+    );
+  }
 
   function conversation(ctx) {
     var index = ctx.index;
     var path = ctx.switches.path;
     var turns = [];
 
+    turns.push(memberTurn("Visit costs", "turn-start"));
     turns.push(
       dotTurn(
-        INTRO,
-        chip("Find providers or facilities", "find", index === 0) +
-          chip("Explain how tiering works", null, false) +
-          chip("Learn more about my plan", null, false)
+        "<p>What kind of visits are you interested in learning about?</p>" +
+          '<p class="select-help">Select all that apply</p>',
+        '<div class="chip-row">' +
+          VISIT_TYPES.map(function (v) { return visitChip(v, index === 0); }).join("") +
+          "</div>"
       )
     );
     if (index < 1) return turns.join("");
 
-    turns.push(memberTurn("Find providers or facilities", "turn-find"));
+    turns.push(memberTurn(selectedLabel(), "turn-visits"));
     if (index === 1 && !typingDone) return turns.concat(typingTurn()).join("");
     turns.push(
       dotTurn(
-        "<p>Happy to help. What are you looking for?</p>",
-        chip("A primary care doctor", "providers", index === 1) + chip("Lab or imaging", "facilities", index === 1)
+        copayReply(),
+        chip("Search for care", "find", index === 1) + chip("Learn more about my plan", null, false)
       )
     );
     if (index < 2) return turns.join("");
 
+    turns.push(memberTurn("Search for care", "turn-find"));
+    if (index === 2 && !typingDone) return turns.concat(typingTurn()).join("");
+    turns.push(
+      dotTurn(
+        "<p>Happy to help. What are you looking for?</p>",
+        chip("A primary care doctor", "providers", index === 2) + chip("Lab or imaging", "facilities", index === 2)
+      )
+    );
+    if (index < 3) return turns.join("");
+
     var providers = path === "providers";
     turns.push(memberTurn(providers ? "A primary care doctor" : "Lab or imaging", "turn-answer"));
     if (!typingDone) return turns.concat(typingTurn()).join("");
-    var seeAll =
-      "../provider-search/?search=" + path + "&device=" + ctx.mode + "&careKeys=" + (showCareKeys ? "1" : "0") + "&from=dot";
     turns.push(
       dotTurn(
         providers
@@ -272,20 +358,23 @@
           : "<p>Here are freestanding labs and imaging centers near you, with lower cost options first.</p>",
         null,
         { id: "turn-results" }
-      ) +
-        '<div class="dot-results">' +
-        (providers ? PROVIDERS.map(providerCard) : FACILITIES.map(facilityCard)).join("") +
-        '<a class="see-all" href="' + seeAll + '">' + (providers ? "See all providers" : "See all facilities") + "</a></div>"
+      ) + carousel(providers ? PROVIDERS.map(providerCard) : FACILITIES.map(facilityCard))
     );
     return turns.join("");
   }
 
-  function chatInput() {
+  function chatInput(ctx) {
+    var draft = ctx.index === 0 && selectedVisits.length ? selectedLabel() : "";
     return (
       '<div class="chat-input" data-space data-dim>' +
-      '<p class="chat-placeholder" data-type="Body 1 · 16/24 Medium">Describe what you need...</p>' +
+      (draft
+        ? '<p class="chat-placeholder is-draft" data-type="Body 1 · 16/24 Medium">' + draft + "</p>"
+        : '<p class="chat-placeholder" data-type="Body 1 · 16/24 Medium">Describe what you need...</p>') +
       '<div class="chat-buttons"><span class="chat-plus"><img src="' + A + 'plus.svg" width="16" height="16" alt="" data-icon="plus"></span>' +
-      '<img class="chat-send" src="' + A + 'send.svg" width="48" height="48" alt=""></div></div>'
+      (draft
+        ? '<button class="chat-send-button" type="button" data-dot="send" aria-label="Send"><img class="chat-send" src="' + A + 'send.svg" width="48" height="48" alt=""></button>'
+        : '<img class="chat-send" src="' + A + 'send.svg" width="48" height="48" alt="">') +
+      "</div></div>"
     );
   }
 
@@ -316,7 +405,7 @@
     return (
       (ctx.mode === "desktop" ? webNav() : mobileNav()) +
       '<div class="chat-scroll"><div class="chat-column">' + conversation(ctx) + "</div></div>" +
-      '<div class="chat-dock"><div class="chat-column">' + chatInput() + "</div></div>"
+      '<div class="chat-dock"><div class="chat-column">' + chatInput(ctx) + "</div></div>"
     );
   }
 
@@ -339,6 +428,19 @@
   }
 
   document.addEventListener("click", function (e) {
+    var v = e.target.closest("[data-visit]");
+    if (v) {
+      var id = v.getAttribute("data-visit");
+      var at = selectedVisits.indexOf(id);
+      if (at === -1) selectedVisits.push(id);
+      else selectedVisits.splice(at, 1);
+      var scroller = document.querySelector(".screen .chat-scroll");
+      var top = scroller ? scroller.scrollTop : 0;
+      app.refresh();
+      scroller = document.querySelector(".screen .chat-scroll");
+      if (scroller) scroller.scrollTop = top;
+      return;
+    }
     var b = e.target.closest("[data-dot]");
     if (!b) return;
     var action = b.getAttribute("data-dot");
@@ -346,11 +448,28 @@
     app.next();
   });
 
+  // Carousel pagination dots follow the swipe position.
+  document.addEventListener(
+    "scroll",
+    function (e) {
+      var track = e.target;
+      if (!track.classList || !track.classList.contains("carousel-track")) return;
+      var items = track.children;
+      if (!items.length) return;
+      var step = items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : 1;
+      var atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
+      var current = atEnd ? items.length - 1 : Math.round(track.scrollLeft / step);
+      var dots = track.parentNode.querySelectorAll(".carousel-dots span");
+      for (var i = 0; i < dots.length; i++) dots[i].classList.toggle("is-active", i === current);
+    },
+    true
+  );
+
   var ADDRESS = "member.includedhealth.com/dot";
 
   app = DemoShell.mount({
     title: "Dot: find care",
-    summary: "A member asks Dot, the AI assistant, how their choice of care affects cost and to find providers or facilities.",
+    summary: "A member asks Dot, the AI assistant, what visits cost on their plan, then finds providers or facilities.",
     demoSwitch: {
       label: "Demo",
       current: "dot",
@@ -373,16 +492,29 @@
     toggles: [{ key: "careKeys", label: "Show Care Keys", checked: true }],
     onRestart: function () {
       lastStep = null;
+      selectedVisits = DEFAULT_VISITS.slice();
     },
     steps: [
       {
-        name: "Dot explains costs",
+        name: "Choose visit types",
         address: ADDRESS,
-        instruction: "Dot explains how providers and facilities affect cost. Select Find providers or facilities.",
+        instruction: "Riley asks Dot about visit costs. Pick the visit types to ask about, then select Send.",
         notes: [
-          "Dot opens with the two provider tiers (Preferred and Standard) and why freestanding facilities cost less.",
-          "Chip buttons offer next steps; the member can also type in the chat input.",
-          "Web and mobile share the same message, chip and bubble styles.",
+          "Dot asks one question and offers the visit types as multi-select chips.",
+          "Picked types move into the chat input; Primary care and Specialty care are picked for the walkthrough.",
+          "Send submits one comma-separated message.",
+        ],
+        render: page,
+        onShow: show,
+      },
+      {
+        name: "Copays",
+        address: ADDRESS,
+        instruction: "Dot lists the copays for the picked visit types. Select Search for care.",
+        notes: [
+          "Copays are placeholder figures; primary care matches care search ($30 Preferred, $300 Standard).",
+          "Virtual visits through Included Health are $0 where they apply.",
+          "Ends with options so the member can keep going.",
         ],
         render: page,
         onShow: show,
@@ -408,22 +540,19 @@
         address: ADDRESS,
         instruction: function (ctx) {
           return ctx.switches.path === "providers"
-            ? "Dot shows top preferred matches. Select See all providers to open care search."
-            : "Dot shows lower cost facilities. Select See all facilities to open care search.";
+            ? "Dot shows top preferred matches. Swipe through the provider cards."
+            : "Dot shows lower cost facilities. Swipe through the facility cards.";
         },
         notes: function (ctx) {
-          return ctx.switches.path === "providers"
-            ? [
-                "Three preferred providers ($30 copay) appear as compact cards right in the chat.",
-                ctx.toggles.careKeys !== false
-                  ? "The Care Key icon by the name marks Care Key providers, matching care search."
-                  : null,
-                "See all providers opens the care search demo on provider search, on the same device.",
-              ].filter(Boolean)
-            : [
-                "Three lower cost lab and imaging facilities appear as compact cards right in the chat.",
-                "See all facilities opens the care search demo on facility search, on the same device.",
-              ];
+          return [
+            ctx.switches.path === "providers"
+              ? "Three preferred providers ($30 copay) appear as cards in a swipeable row right in the chat."
+              : "Three lower cost lab and imaging facilities appear as cards in a swipeable row right in the chat.",
+            "The next card peeks in from the edge; pagination dots show the position.",
+            ctx.switches.path === "providers" && ctx.toggles.careKeys !== false
+              ? "The Care Key icon by the name marks Care Key providers, matching care search."
+              : null,
+          ].filter(Boolean);
         },
         render: page,
         onShow: show,
