@@ -637,3 +637,18 @@ body.is-real-phone {
 .demo-switch {
   margin-top: -12px;
 }
+
+/* Optional link back to the demo you came from */
+.panel-back {
+  display: inline-block;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  color: var(--surface-brand);
+  text-decoration: none;
+}
+
+.panel-back:hover {
+  text-decoration: underline;
+}

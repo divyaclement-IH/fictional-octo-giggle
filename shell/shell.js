@@ -31,7 +31,15 @@
  * Scenario; ctx.toggles holds their state. A step's instruction and notes
  * can be functions of ctx, so the panel text can follow the toggles.
  *
- * mount() returns { refresh, next } so a screen can re-render after its own
+ * Optional demo.backLink: { label, href } shows a link above the panel title.
+ *
+ * Optional demo.demoSwitch: { label, current, options: [{ id, label, href }] }
+ * adds a segmented control right under Mobile/Desktop that navigates between
+ * related demos (e.g. Traditional | Dot). The option whose id === current is
+ * the active page; clicking another option navigates to its href, carrying the
+ * current ?device= and toggle states so the layout mode and options are preserved.
+ *
+ * mount() returns { refresh, next, setSwitch } so a screen can re-render after its own
  * state changes. The URL keeps ?version=&step=&device= so a reload or a
  * shared link opens in the same place.
  *
@@ -169,6 +177,14 @@
       var fromUrl = params.get(t.key);
       state.toggles[t.key] = fromUrl === "0" ? false : fromUrl === "1" ? true : t.checked !== false;
     });
+    // "&key=1|0" for every toggle, so a linked demo opens with the same options.
+    function toggleQuery() {
+      return toggles
+        .map(function (t) {
+          return "&" + t.key + "=" + (state.toggles[t.key] ? "1" : "0");
+        })
+        .join("");
+    }
     var stepParam = parseInt(params.get("step"), 10);
     if (stepParam >= 1) state.index = Math.min(stepParam, steps.length) - 1;
     if (!realPhone && /^(mobile|desktop)$/.test(params.get("device"))) state.mode = params.get("device");
@@ -183,6 +199,15 @@
 
     var panel = el("aside", "panel");
     panel.setAttribute("aria-label", "Demo controls");
+    if (demo.backLink) {
+      var back = el("a", "panel-back", "← " + escapeHtml(demo.backLink.label));
+      back.href = demo.backLink.href;
+      // Carry the current toggles back (e.g. Show Care Keys).
+      back.addEventListener("click", function () {
+        back.href = demo.backLink.href + toggleQuery();
+      });
+      panel.appendChild(back);
+    }
     panel.appendChild(el("h1", "panel-title", escapeHtml(demo.title)));
     panel.appendChild(el("p", "panel-summary", escapeHtml(demo.summary)));
 
@@ -201,6 +226,32 @@
       deviceSwitch.appendChild(b);
     });
     panel.appendChild(deviceSwitch);
+
+    // Demo switcher: navigates between related demos, styled like the device
+    // switch and placed directly under it. Carries ?device= and the toggles
+    // (e.g. Show Care Keys) across the hop.
+    if (demo.demoSwitch && demo.demoSwitch.options) {
+      var ds = demo.demoSwitch;
+      var dsGroup = el("div", "device-switch demo-switcher");
+      dsGroup.setAttribute("role", "radiogroup");
+      dsGroup.setAttribute("aria-label", ds.label || "Demo");
+      dsGroup.style.gridTemplateColumns = "repeat(" + ds.options.length + ", 1fr)";
+      ds.options.forEach(function (o) {
+        var active = o.id === ds.current;
+        var b = el("button", null, escapeHtml(o.label));
+        b.type = "button";
+        b.setAttribute("role", "radio");
+        b.setAttribute("aria-checked", active ? "true" : "false");
+        if (!active && o.href) {
+          b.addEventListener("click", function () {
+            var sep = o.href.indexOf("?") === -1 ? "?" : "&";
+            location.href = o.href + sep + "device=" + state.mode + toggleQuery();
+          });
+        }
+        dsGroup.appendChild(b);
+      });
+      panel.appendChild(dsGroup);
+    }
 
     // Demo-defined segmented switches, styled like the device switch.
     var switchButtons = {};
@@ -865,6 +916,7 @@
         renderScreen(true);
       },
       next: next,
+      setSwitch: setSwitch,
     };
   }
 

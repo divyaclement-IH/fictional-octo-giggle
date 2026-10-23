@@ -26,6 +26,13 @@ Demos:
   - **P2 · Modals**: no Plan Key. A plan summary (no amounts) sits above the map on desktop (above the first provider on mobile); badges are buttons that explain themselves, with a text legend inside the plan summary.
   - **P3 · Deductible tracker**: like P2, plus deductible progress ($1,250 of $3,000, placeholder).
 
+- `demos/dot-chat/`: a Dot (AI assistant) conversation where a member asks to find
+  providers or facilities. Mobile follows the
+  [Dot Figma](https://www.figma.com/design/2UJLBp93sigLx4o9mXzzFD/Dot-onboarding-exploration?node-id=1118-28018);
+  web matches the same message style. Click chips to advance (Dot types, then replies); **Path**
+  (or **P**) picks providers or facilities. **See all** opens care search on the matching tab and
+  device, with a **Back to Dot** link.
+
 Plain HTML, CSS and JS with no build step. Serve the repo and open it:
 
 ```bash

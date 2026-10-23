@@ -1100,8 +1100,29 @@
   var V2 = { networkChip: true, networkFilter: false, planInfo: "summary-progress", explainBadges: true, summaryAboveMap: true };
   var V3 = { networkChip: true, networkFilter: false, planInfo: "summary", explainBadges: true, summaryAboveMap: true, legendInSummary: true };
 
+  // Opened from the Dot demo's "See all" button: offer a way back.
+  var fromParams = new URLSearchParams(location.search);
+  var backLink =
+    fromParams.get("from") === "dot"
+      ? {
+          label: "Back to Dot",
+          href:
+            "../dot-chat/?step=3&path=" + (fromParams.get("search") === "facilities" ? "facilities" : "providers") +
+            (fromParams.get("device") ? "&device=" + fromParams.get("device") : ""),
+        }
+      : null;
+
   app = DemoShell.mount({
+    backLink: backLink,
     title: "Care search results",
+    demoSwitch: {
+      label: "Demo",
+      current: "traditional",
+      options: [
+        { id: "traditional", label: "Traditional" },
+        { id: "dot", label: "Dot", href: "../dot-chat/" },
+      ],
+    },
     switches: [
       {
         key: "search",
