@@ -6,23 +6,23 @@
 
   var TOP_MATCHES = [
     {
-      name: "Dr. Alex Johnson, DDS",
+      name: "Dr. Alex Johnson, MD",
       photo: true,
       offerings: ["telehealth"],
       preferred: true,
-      specialties: "Dentistry · General Dentistry · Cosmetic Dentistry",
-      summary: "Committed to providing comprehensive dental care with an emphasis on patient comfort and aesthetic needs.",
-      clinic: "Bright Futures Center",
-      address: "321 Dental Blvd, Oakland, CA 94612",
+      specialties: "Family Medicine · Primary Care",
+      summary: "Committed to comprehensive primary care with an emphasis on preventive health and building long-term relationships with patients.",
+      clinic: "Bright Futures Primary Care",
+      address: "321 Main Blvd, Oakland, CA 94612",
       distance: "8 mi",
     },
     {
       name: "Dr. Jessica Yu, MD",
       preferred: true,
       careKey: true,
-      specialties: "Obstetrics & Gynecology · Obstetrics · Gynecology",
-      summary: "Has strong back and spine expertise, prioritizes safe and non-invasive care, and stays engaged in your long-term recovery, referring to trusted specialists.",
-      clinic: "Golden State Research Institute",
+      specialties: "Internal Medicine · Primary Care",
+      summary: "Focuses on preventive care and chronic-condition management, prioritizes clear follow-up, and stays engaged in your long-term health.",
+      clinic: "Golden State Primary Care",
       address: "123 State St, San Francisco, CA 95118",
       distance: "17 mi",
     },
@@ -30,8 +30,8 @@
       name: "Dr. Emily Tran, NP",
       preferred: true,
       offerings: ["lgbtq"],
-      specialties: "Nursing · Family Practice · Wellness",
-      summary: "Advocates for holistic health practices while providing compassionate care and education to families.",
+      specialties: "Primary Care · Preventive Care",
+      summary: "Advocates for holistic health practices while providing compassionate primary care and education to families.",
       clinic: "Healthy Living Clinic",
       address: "654 Care St, Fremont, CA 94536",
       distance: "15 mi",
@@ -43,18 +43,18 @@
       name: "Dr. Julianna Smith, MD",
       offerings: ["premium"],
       careKey: true,
-      specialties: "Obstetrics & Gynecology · Obstetrics · Gynecology",
-      summary: "Has strong back and spine expertise, prioritizes safe and non-invasive care, and stays engaged in your long-term recovery, referring to trusted specialists.",
-      clinic: "Golden State Research Institute",
+      specialties: "Family Medicine · Primary Care",
+      summary: "Provides whole-person primary care with a focus on prevention, chronic-condition management, and coordinating referrals when you need them.",
+      clinic: "Golden State Primary Care",
       address: "123 State St, San Francisco, CA 95118",
       distance: "17 mi",
     },
     {
       name: "Dr. Michael Lee, DO",
       offerings: ["telehealth", "lgbtq"],
-      specialties: "Pediatrics · Child Health",
-      summary: "Dedicated to holistic child development, emphasizes preventive care, and works closely with families to ensure optimal growth and health.",
-      clinic: "Sunrise Children's Clinic",
+      specialties: "Internal Medicine · Primary Care",
+      summary: "Emphasizes preventive care and works closely with patients to manage chronic conditions and support long-term health.",
+      clinic: "Sunrise Family Medicine",
       address: "456 Elm St, San Francisco, CA 95118",
       distance: "12 mi",
     },
@@ -62,9 +62,9 @@
       name: "Dr. Priya Patel, MD",
       photo: true,
       careKey: true,
-      specialties: "Cardiology · Heart Health",
-      summary: "Specializes in cardiovascular wellness, employs cutting-edge technology for accurate diagnoses, and is committed to patient education and lifestyle changes.",
-      clinic: "Heartbeat Medical Center",
+      specialties: "Primary Care · Preventive Care",
+      summary: "Focuses on preventive care and healthy lifestyle changes, employs clear patient education, and partners with you on long-term wellness.",
+      clinic: "Lakeside Primary Care",
       address: "789 Oak St, San Francisco, CA 95118",
       distance: "10 mi",
     },
@@ -105,6 +105,7 @@
   var app = null;
   var current = null; // { ctx, cfg } of the screen on show
   var showCareKeys = true; // "Show Care Keys" checkbox under Scenario
+  var copayOnly = false; // Plan B (copay only): no deductible, no Care Keys
 
   // ---------- Pieces ----------
 
@@ -198,7 +199,7 @@
       .join("");
   }
 
-  // "Dr. Alex Johnson, DDS" -> "AJ"
+  // "Dr. Alex Johnson, MD" -> "AJ"
   function initials(name) {
     return name
       .replace(/^Dr\.\s*/, "")
@@ -234,9 +235,12 @@
         '<span class="chip chip-neutral">Out-of-network rates apply</span>' +
         '<span class="chip chip-oon">Out-of-network</span>';
     } else {
+      // Copay-only plan drops the "after deductible" qualifier.
+      var afterDeductible = copayOnly ? "" : ' <span class="chip-regular">after deductible</span>';
+      var afterDeductiblePlain = copayOnly ? "" : " after deductible";
       chips = opts.top
-        ? '<span class="chip chip-copay"' + (first ? ' data-type="Caption · 12/16 Bold" data-color="surface/accentone/weak text/accentone/strong"' : "") + "><span>$30 copay <span class=\"chip-regular\">after deductible</span></span></span>"
-        : '<span class="chip chip-copay-high"><span><b>$300 copay</b> after deductible</span></span>';
+        ? '<span class="chip chip-copay"' + (first ? ' data-type="Caption · 12/16 Bold" data-color="surface/accentone/weak text/accentone/strong"' : "") + "><span>$10 copay" + afterDeductible + "</span></span>"
+        : '<span class="chip chip-copay-high"><span><b>$100 copay</b>' + afterDeductiblePlain + "</span></span>";
       if (opts.cfg.networkChip) {
         chips +=
           '<span class="chip chip-network"><img src="' + A + 'check-circle.svg" width="12" height="12" alt=""' +
@@ -301,9 +305,12 @@
       '<img class="dot-bl" src="' + A + 'logomark-dot-left.svg" width="4.48117" height="4.47185" alt="">' +
       '<img class="dot-br" src="' + A + 'logomark-dot-right.svg" width="4.47931" height="4.47185" alt="">' +
       "</span>" +
-      '<h3 class="plan-summary-title" id="plan-summary-title" data-type="Title 5 · 14/20 Bold">Included Health HSA Plan</h3>' +
+      '<h3 class="plan-summary-title" id="plan-summary-title" data-type="Title 5 · 14/20 Bold">' +
+      (copayOnly ? "Included Health Copay Plan" : "Included Health HSA Plan") + "</h3>" +
       (cfg.legendInSummary ? "" : detailsLink) + "</div>" +
-      (cfg.planInfo === "summary-progress"
+      (copayOnly
+        ? '<p class="plan-summary-note">The copays below are what you pay per visit.</p>'
+        : cfg.planInfo === "summary-progress"
         ? '<p class="plan-summary-amount" data-type="Body 1 · 16/24 Bold"><b>' + money(DEDUCTIBLE.met) + "</b> of " + money(DEDUCTIBLE.total) + " deductible met</p>" +
           '<div class="plan-progress" role="progressbar" aria-label="Deductible met" aria-valuemin="0" aria-valuemax="' + DEDUCTIBLE.total +
           '" aria-valuenow="' + DEDUCTIBLE.met + '" aria-valuetext="' + money(DEDUCTIBLE.met) + " of " + money(DEDUCTIBLE.total) + '">' +
@@ -382,8 +389,12 @@
       '<img class="bar" src="' + A + 'logomark-bar.svg" width="14.7808" height="4.47185" alt="">' +
       '<img class="dot-bl" src="' + A + 'logomark-dot-left.svg" width="4.48117" height="4.47185" alt="">' +
       '<img class="dot-br" src="' + A + 'logomark-dot-right.svg" width="4.47931" height="4.47185" alt="">' +
-      "</span>Included Health HSA Plan</p>" +
-      '<p class="info-card-body" data-type="Body 1 · 16/24 Medium">This is a high deductible health plan (HDHP). The copays shown only apply after you’ve met your deductible. </p>' +
+      "</span>" + (copayOnly ? "Included Health Copay Plan" : "Included Health HSA Plan") + "</p>" +
+      '<p class="info-card-body" data-type="Body 1 · 16/24 Medium">' +
+      (copayOnly
+        ? "This is a copay plan. The copays shown are what you pay per visit — there’s no deductible to meet first. "
+        : "This is a high deductible health plan (HDHP). The copays shown only apply after you’ve met your deductible. ") +
+      "</p>" +
       "</div>"
     );
   }
@@ -412,7 +423,11 @@
       '<div class="info-card plan-key" id="plan-card" data-space data-dim>' +
       '<div class="plan-key-group">' +
       '<h2 class="plan-key-title" data-type="Title 4 · 16/24 Bold">Plan Key</h2>' +
-      '<p class="info-card-body" data-type="Body 1 · 16/24 Medium">You’re on a plan with a deductible. The copays shown only apply after you’ve met your deductible. </p></div>' +
+      '<p class="info-card-body" data-type="Body 1 · 16/24 Medium">' +
+      (copayOnly
+        ? "You’re on a copay plan. The copays shown are what you pay per visit. "
+        : "You’re on a plan with a deductible. The copays shown only apply after you’ve met your deductible. ") +
+      "</p></div>" +
       '<div class="plan-key-group" id="preferred-card">' +
       '<p class="info-card-title plan-key-subtitle" data-type="Title 5 · 14/20 Bold"><img src="' + A + 'badge-preferred-star.svg" width="16" height="16" alt="" data-icon="Verification Badge">IH Preferred Providers</p>' +
       '<p class="info-card-body">These providers are recommended by Included Health because their patients have strong outcomes and their care usually costs you less. </p></div>' +
@@ -430,7 +445,10 @@
 
   function resultsPage(ctx, cfg) {
     closeLearnMore();
-    showCareKeys = ctx.toggles.careKeys !== false;
+    // Copay-only plan (Plan B): no deductible, no Care Keys. The deductible plan
+    // (Plan A) keeps the Care Keys toggle under Scenario.
+    copayOnly = ctx.switches.plan === "copay";
+    showCareKeys = !copayOnly && ctx.toggles.careKeys !== false;
     // A step can set the network filter when it's entered; refreshes keep the member's choice.
     var entering = !current || current.ctx.step !== ctx.step;
     if (entering && ctx.step.network === "reset") network.includeOON = false;
@@ -633,7 +651,7 @@
       intro: "Your deductible is what you pay for covered care each year before your plan starts sharing the cost.",
       points: [
         "Until you meet it, you pay the full negotiated price for most visits.",
-        "After you meet it, you pay only the copay shown on each provider, like $30 for preferred providers.",
+        "After you meet it, you pay only the copay shown on each provider, like $10 for preferred providers.",
         "Preventive care, like your annual checkup, is covered before you meet your deductible.",
       ],
     },
@@ -1054,7 +1072,7 @@
           ? "Scroll to Other in-network matches. Select View more to load more providers."
           : "Scroll to Other top matches. Select View more to load more providers.",
         notes: [
-          "These providers are in-network but not preferred, so copays are higher ($300 vs $30).",
+          "These providers are in-network but not preferred, so copays are higher ($100 vs $10).",
           "View more paginates the list instead of loading everything at once.",
         ],
         render: page,
@@ -1124,6 +1142,15 @@
       ],
     },
     switches: [
+      {
+        key: "plan",
+        label: "Plan",
+        shortcut: "l",
+        options: [
+          { id: "deductible", label: "Deductible + Care Keys" },
+          { id: "copay", label: "Copay only" },
+        ],
+      },
       {
         key: "search",
         label: "Search type",

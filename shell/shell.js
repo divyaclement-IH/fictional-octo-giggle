@@ -185,6 +185,17 @@
         })
         .join("");
     }
+    // "&key=id" for every switch (e.g. plan, path), so a linked demo opens with
+    // the same selections. Only non-default values are carried.
+    function switchQuery() {
+      return switches
+        .map(function (sw) {
+          return state.switches[sw.key] === sw.options[0].id
+            ? ""
+            : "&" + sw.key + "=" + state.switches[sw.key];
+        })
+        .join("");
+    }
     var stepParam = parseInt(params.get("step"), 10);
     if (stepParam >= 1) state.index = Math.min(stepParam, steps.length) - 1;
     if (!realPhone && /^(mobile|desktop)$/.test(params.get("device"))) state.mode = params.get("device");
@@ -202,9 +213,9 @@
     if (demo.backLink) {
       var back = el("a", "panel-back", "← " + escapeHtml(demo.backLink.label));
       back.href = demo.backLink.href;
-      // Carry the current toggles back (e.g. Show Care Keys).
+      // Carry the current toggles and switches back (e.g. Show Care Keys, plan).
       back.addEventListener("click", function () {
-        back.href = demo.backLink.href + toggleQuery();
+        back.href = demo.backLink.href + toggleQuery() + switchQuery();
       });
       panel.appendChild(back);
     }
@@ -245,7 +256,7 @@
         if (!active && o.href) {
           b.addEventListener("click", function () {
             var sep = o.href.indexOf("?") === -1 ? "?" : "&";
-            location.href = o.href + sep + "device=" + state.mode + toggleQuery();
+            location.href = o.href + sep + "device=" + state.mode + toggleQuery() + switchQuery();
           });
         }
         dsGroup.appendChild(b);
