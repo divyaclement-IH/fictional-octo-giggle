@@ -76,7 +76,7 @@
 
   // Recommended freestanding imaging center for the X-ray follow-up, with the
   // copay compared against a hospital-affiliated imaging center (placeholders).
-  var IMAGING_CENTER = { name: "Valley Diagnostic Imaging Center", type: "Freestanding imaging center", address: "7121 Stevens Dr. N", distance: "2.4 mi" };
+  var IMAGING_CENTER = { name: "Valley Diagnostic Imaging Center", type: "Diagnostic Imaging or Radiology Center", address: "7121 Stevens Dr. N", distance: "2.4 mi", cost: "lower" };
   var IMAGING_COPAY = { recommended: 25, hospital: 250 };
 
   // Steps where the member answers by typing in the chat instead of a quick
@@ -114,14 +114,6 @@
       ],
       cta: "Find an orthopedist",
       action: "ortho",
-    },
-    {
-      title: "Sports Medicine Doctor",
-      body: [
-        "See a sports medicine doctor for non-surgical care of injuries from running and other activity.",
-        "Can treat sprains and strains, guide your return to running, and refer you to an orthopedist if you need surgery.",
-      ],
-      cta: "Find a sports medicine doctor",
     },
   ];
 
@@ -184,57 +176,117 @@
   }
 
   // Reveal the newest Dot reply's text char-by-char, then show its chips/cards.
+  // A reply can be several Dot messages in a row (e.g. the matches, then an
+  // imaging recommendation): each one types in turn after the previous one's
+  // cards appear.
   function runReplyTypewriter(stepName) {
     if (typeTimer) {
       clearTimeout(typeTimer);
       typeTimer = null;
     }
     var screen = document.querySelector(".screen");
-    if (!screen) return;
-    var turns = screen.querySelectorAll(".dot-turn");
-    var turn = turns.length ? turns[turns.length - 1] : null;
-    if (!turn) return;
-    var msg = turn.querySelector(".dot-message");
-    // Elements to reveal only after the text finishes typing.
-    var deferred = [];
-    var chips = turn.querySelector(".chip-buttons");
-    if (chips) deferred.push(chips);
-    // Cards and quick prompts that follow the reply.
-    for (var sib = turn.nextElementSibling; sib; sib = sib.nextElementSibling) deferred.push(sib);
+    var col = screen && screen.querySelector(".chat-scroll .chat-column");
+    if (!col) return;
 
-    function reveal() {
-      deferred.forEach(function (el) { el.style.visibility = ""; });
+    // The reply is everything after the member's newest message, split into
+    // segments: a Dot message plus the cards/prompts that follow it.
+    var kids = Array.prototype.slice.call(col.children);
+    var start = 0;
+    kids.forEach(function (el, i) {
+      if (el.classList.contains("member-turn")) start = i + 1;
+    });
+    var segments = [];
+    kids.slice(start).forEach(function (el) {
+      if (el.classList.contains("dot-turn")) segments.push({ turn: el, after: [] });
+      else if (segments.length) segments[segments.length - 1].after.push(el);
+    });
+    if (!segments.length) return;
+
+    // Chips inside a message, then everything after it, wait for its text.
+    function deferredOf(seg) {
+      var chips = seg.turn.querySelector(".chip-buttons");
+      return (chips ? [chips] : []).concat(seg.after);
+    }
+    function showAll() {
+      segments.forEach(function (seg) {
+        seg.turn.style.display = "";
+        deferredOf(seg).forEach(function (el) { el.style.display = ""; });
+      });
       typedSteps[stepName] = true;
       scrollToLatest({ screen: screen });
     }
 
-    // A reply can hold its cards back for a moment after the text (data-hold, ms),
-    // e.g. "Give me a few seconds..." before the matches appear.
-    var hold = parseInt(turn.getAttribute("data-hold"), 10) || 0;
-    function finish() {
-      if (!hold) return reveal();
-      typeTimer = setTimeout(function () {
-        typeTimer = null;
-        reveal();
-      }, hold);
-    }
-
     // Already typed earlier: show everything now (no pause on a re-render).
-    if (!msg || typedSteps[stepName]) {
-      reveal();
+    if (typedSteps[stepName]) {
+      showAll();
       return;
     }
-    // Reduced motion: no typing, but still the pause.
-    if (prefersReducedMotion()) {
-      deferred.forEach(function (el) { el.style.visibility = "hidden"; });
-      finish();
-      return;
-    }
+    // Hidden pieces take no space, so the thread never scrolls into a blank gap.
+    segments.forEach(function (seg, i) {
+      if (i > 0) seg.turn.style.display = "none";
+      deferredOf(seg).forEach(function (el) { el.style.display = "none"; });
+    });
+    scrollToLatest({ screen: screen });
 
-    // Type into the reply's own markup, so paragraphs, lists and bold stay in
-    // place: every text node starts empty and fills in order, and each block
-    // (paragraph, list item) stays hidden until typing reaches it, so a new
-    // paragraph starts on its own line instead of running on from the last one.
+    var i = 0;
+    (function nextSegment() {
+      if (i >= segments.length) {
+        typedSteps[stepName] = true;
+        return;
+      }
+      var seg = segments[i];
+      i += 1;
+      seg.turn.style.display = "";
+      scrollToLatest({ screen: screen });
+      typeMessage(seg.turn.querySelector(".dot-message"), screen, function () {
+        // A message can hold its cards back for a moment after the text
+        // (data-hold, ms), e.g. "Give me a few seconds..." before the matches.
+        var hold = parseInt(seg.turn.getAttribute("data-hold"), 10) || 0;
+        typeTimer = setTimeout(function () {
+          typeTimer = null;
+          var shown = deferredOf(seg);
+          shown.forEach(function (el) {
+            el.style.display = "";
+            el.classList.remove("is-revealing");
+            void el.offsetWidth; // restart the animation
+            el.classList.add("is-revealing");
+          });
+          revealIntoView(shown, screen);
+          // Let the cards land before the next message starts typing.
+          typeTimer = setTimeout(nextSegment, i < segments.length ? 900 : 0);
+        }, hold);
+      });
+    })();
+  }
+
+  // Bring newly revealed cards into view: show them whole if they fit, else
+  // from their top, so nobody has to scroll back up to find them. Never
+  // scrolls up.
+  function revealIntoView(els, screen) {
+    // Reading positions forces layout, so the just-revealed cards measure true.
+    var scroller = screen.querySelector(".chat-scroll");
+    var visible = els.filter(function (el) { return el.offsetParent !== null; });
+    if (!scroller || !visible.length) return;
+    var box = scroller.getBoundingClientRect();
+    // The device frame can be scaled to fit the pane; positions come back in
+    // screen pixels, scrolling works in CSS pixels.
+    var scale = box.height / scroller.offsetHeight || 1;
+    var top = (visible[0].getBoundingClientRect().top - box.top) / scale + scroller.scrollTop;
+    var bottom = (visible[visible.length - 1].getBoundingClientRect().bottom - box.top) / scale + scroller.scrollTop;
+    var target = Math.min(bottom - scroller.clientHeight + 24, top - 24);
+    target = Math.min(target, scroller.scrollHeight - scroller.clientHeight);
+    if (target <= scroller.scrollTop) return;
+    if (prefersReducedMotion() || !scroller.scrollTo) scroller.scrollTop = target;
+    else scroller.scrollTo({ top: target, behavior: "smooth" });
+  }
+
+  // Type into a message's own markup, so paragraphs, lists and bold stay in
+  // place: every text node starts empty and fills in order, and each block
+  // (paragraph, list item) stays hidden until typing reaches it, so a new
+  // paragraph starts on its own line instead of running on from the last one.
+  // Reduced motion skips the typing.
+  function typeMessage(msg, screen, done) {
+    if (!msg || prefersReducedMotion()) return done();
     var walker = document.createTreeWalker(msg, NodeFilter.SHOW_TEXT);
     var nodes = [];
     for (var node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -251,7 +303,6 @@
         if (el.style && el.style.display === "none") el.style.display = "";
       }
     }
-    deferred.forEach(function (el) { el.style.visibility = "hidden"; });
     var n = 0;
     var c = 0;
     var lastHeight = 0;
@@ -274,7 +325,7 @@
       } else {
         hidden.forEach(function (el) { el.style.display = ""; });
         typeTimer = null;
-        finish();
+        done();
       }
     })();
   }
@@ -528,7 +579,6 @@
   var PROMPTS = {
     providers: [
       { id: "more", label: "Show me more providers" },
-      { id: "xray", label: "What if I need an X-ray?", advance: true },
       { id: "busy", label: "These providers don't have availability" },
     ],
     facilities: [
@@ -637,25 +687,9 @@
     );
   }
 
-  // Compact facility card for the imaging recommendation: name, address,
-  // distance, and a copay + network chip.
-  function clinicPreviewCard(f) {
-    var after = copayPlan ? "" : ' <span class="chip-regular">after deductible</span>';
-    return (
-      '<div class="dot-results clinic-preview">' +
-      '<article class="provider-card clinic-preview-card">' +
-      '<div class="provider-header">' +
-      '<img class="facility-avatar" src="' + PS + 'facility-avatar.svg" width="48" height="48" alt="">' +
-      '<div class="provider-title">' +
-      '<p class="provider-name">' + f.name + "</p>" +
-      '<p class="provider-specialties">' + f.type + "</p></div></div>" +
-      '<div class="chips">' +
-      '<span class="chip chip-copay"><span>$' + IMAGING_COPAY.recommended + " copay" + after + "</span></span>" +
-      '<span class="chip chip-network"><img src="' + PS + 'check-circle.svg" width="12" height="12" alt="">In-network</span></div>' +
-      '<div class="clinic"><p class="facility-address">' + f.address + "</p>" +
-      '<p class="clinic-distance facility-distance">' + f.distance + "</p></div>" +
-      "</article></div>"
-    );
+  // The recommended imaging center uses the same card as facility search.
+  function recommendedFacility(f, ctx) {
+    return '<div class="dot-results clinic-preview">' + facilityCard(f, ctx.toggles.costRange === true) + "</div>";
   }
 
   function conversation(ctx) {
@@ -724,7 +758,7 @@
     if (index === 4 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Thanks for sharing that. Here are a few kinds of care that can help with knee pain like yours. A primary care provider is a good place to start, or you can go straight to a specialist.</p>"
+        "<p>Thanks for sharing that. Here are two kinds of care that can help with knee pain like yours. A primary care provider is a good place to start, or you can go straight to an orthopedist.</p>"
       ) +
         carousel(
           CARE_OPTIONS.map(function (o) { return serviceCard(o, index === 4); }),
@@ -772,23 +806,21 @@
         " are <b>Preferred Providers</b>, which means they have the best patient outcomes and cost you less.</p></div>" +
         resultCards("providers", 0, ctx)
     );
-    if (followUpTurns(turns, "providers", ctx) || index < 8) return turns.join("");
-
-    // index 8 — member asks about an X-ray; Dot explains the savings and
-    // recommends the nearby lower-copay imaging center.
-    turns.push(memberTurn("What if I need an X-ray?", "turn-xray", stepStatus(8, index)));
-    if (!typingDone) return waiting(turns);
+    // Then, without waiting to be asked, Dot steers the member to a lower-cost
+    // imaging center in case the orthopedist orders an X-ray.
     var after = copayPlan ? "" : " after your deductible";
     turns.push(
       dotTurn(
-        "<p>If you need imaging after your orthopedist appointment, you can save hundreds out of pocket by using one of our recommended imaging centers instead of one that is affiliated with a hospital.</p>" +
-          "<p>" + IMAGING_CENTER.name + " is nearby, and I recommend it. Your copay there is <b>$" + IMAGING_COPAY.recommended + "</b>" + after +
+        "<p>If your provider orders X-rays or other imaging of your knee, I highly recommend one of our lower-cost imaging centers. " +
+          "You can save hundreds out of pocket compared with one that is affiliated with a hospital.</p>" +
+          "<p>" + IMAGING_CENTER.name + " is nearby. Your copay there is <b>$" + IMAGING_COPAY.recommended + "</b>" + after +
           ", compared with <b>$" + IMAGING_COPAY.hospital + "</b> at a hospital-affiliated imaging center." +
           " If your orthopedist orders an X-ray, ask them to send the order here.</p>",
         null,
-        { id: "turn-imaging-result" }
-      ) + clinicPreviewCard(IMAGING_CENTER)
+        { id: "turn-imaging" }
+      ) + recommendedFacility(IMAGING_CENTER, ctx)
     );
+    followUpTurns(turns, "providers", ctx);
     return turns.join("");
   }
 
@@ -903,14 +935,14 @@
   }
 
   // app.refresh() rebuilds the thread at the top; put it back, settle, then ease down.
-  function refresh() {
+  function refresh(noScroll) {
     var sc = scroller();
     if (sc) savedTop = sc.scrollTop;
     app.refresh();
     sc = scroller();
     if (sc) sc.scrollTop = savedTop;
     settle();
-    scrollToLatest();
+    if (!noScroll) scrollToLatest();
   }
 
   // Dot "types" dots for a moment, then the reply appears and types itself out.
@@ -940,7 +972,8 @@
       setTimeout(function () {
         if (lastStep !== step) return;
         typingDone = true;
-        refresh();
+        // Don't scroll yet: the typewriter hides the pending cards first, then scrolls.
+        refresh(isReply);
         // The reply is now in the DOM; type it out and hold its chips/cards.
         if (isReply) runReplyTypewriter(stepName);
       }, 700);
@@ -962,7 +995,7 @@
       setTimeout(function () {
         if (lastStep !== step) return;
         followPhase = "done";
-        refresh();
+        refresh(true);
         runReplyTypewriter(step.name + "#" + followUps.length);
       }, 700);
     }, SEND_MS);
@@ -1161,9 +1194,9 @@
       {
         name: "Kinds of care",
         address: ADDRESS,
-        instruction: "Dot suggests three kinds of care for the knee pain. Swipe through, then select Find an orthopedist.",
+        instruction: "Dot suggests two kinds of care for the knee pain. Select Find an orthopedist.",
         notes: [
-          "Service cards (Figma 2653:31518): a primary care provider is recommended, then an orthopedist and a sports medicine doctor.",
+          "Service cards (Figma 2653:31518): a primary care provider (recommended) and an orthopedist.",
           "Each card explains what that provider does for knee pain, with a button to find one.",
           "The member goes with the orthopedist, so the search continues from there.",
         ],
@@ -1198,35 +1231,21 @@
       {
         name: "Orthopedist results",
         address: ADDRESS,
-        instruction: "Dot pulls up orthopedists. Swipe through the cards, then select What if I need an X-ray?",
+        instruction: "Dot pulls up orthopedists, then recommends a lower-cost imaging center in case the knee needs an X-ray.",
         notes: function (ctx) {
           return [
             "Dot says it's pulling up matches, then pauses 2 seconds before the cards appear.",
             "With the cards, Dot explains the purple badge: Preferred Providers have the best patient outcomes and cost less.",
             "Three orthopedists who treat knee pain appear as cards in a swipeable row. Specialist copays: $40 Preferred, $300 Standard.",
-            "Up to three quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
+            "Without being asked, Dot then steers the member to low cost: if the provider orders X-rays or other imaging, use a recommended imaging center.",
+            "The recommended center ($25 copay, placeholder, vs $250 hospital-affiliated) uses the same card as facility search.",
+            "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
             "Show me more providers adds a second set of three full cards; the other prompts come back after it.",
-            "What if I need an X-ray? continues the story to imaging.",
             ctx.switches.plan === "copay"
               ? "Copay-only plan: copay chips drop \"after deductible\" and Care Key icons are hidden."
               : ctx.toggles.careKeys !== false
               ? "The Care Key icon by the name marks Care Key providers, matching care search."
               : null,
-          ].filter(Boolean);
-        },
-        render: page,
-        onShow: show,
-      },
-      {
-        name: "Imaging recommendation",
-        address: ADDRESS,
-        instruction: "Dot explains imaging savings and recommends a nearby freestanding imaging center for the X-ray.",
-        notes: function (ctx) {
-          return [
-            "Cost-savings education: freestanding imaging centers instead of hospital-affiliated ones. This is for a scan after the orthopedist visit, not urgent care.",
-            "In the same reply, Dot recommends the nearby lower-copay center ($25, placeholder) against a hospital-affiliated one ($250).",
-            "The clinic preview card shows the name, address, distance, and a copay + network chip.",
-            ctx.switches.plan === "copay" ? "Copay-only plan: no \"after deductible\" wording." : null,
           ].filter(Boolean);
         },
         render: page,

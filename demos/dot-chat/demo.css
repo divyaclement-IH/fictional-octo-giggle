@@ -789,13 +789,9 @@
   background: #f2f2f2;
 }
 
-/* Clinic preview card: one recommended imaging center under Dot's reply. */
+/* One recommended imaging center under Dot's reply (facility search card). */
 .clinic-preview {
   max-width: 360px;
-}
-
-.clinic-preview-card {
-  gap: 12px;
 }
 
 /* Service cards (Figma 2653:31518): kinds of care Dot suggests. */
@@ -918,4 +914,22 @@
 
 .chat-input.is-live:focus-within {
   box-shadow: 0 0 0 2px #0012e7;
+}
+
+/* Cards and prompts revealed after Dot's text: a very subtle fade and rise. */
+.chat-column > .is-revealing,
+.chip-buttons.is-revealing {
+  animation: reveal-in 0.45s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@keyframes reveal-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-column > .is-revealing,
+  .chip-buttons.is-revealing {
+    animation: none;
+  }
 }
