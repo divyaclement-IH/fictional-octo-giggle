@@ -529,15 +529,19 @@
 
   function costChip(cost, range) {
     var lower = cost === "lower";
+    // "Show deductible" checked: the Range tag ends with "after deductible", like
+    // provider copays. Level and Both don't.
+    var after = range && costTag !== "both" && !copayPlan ? '<span class="chip-regular"> after deductible</span>' : "";
+    var cls = "chip chip-cost is-" + cost + (after ? " has-after" : "");
     if (range) {
-      // "Label cost level" checked: "Lower cost facility: $10–$50 per visit", range in bold.
+      // "Both": "Lower cost facility: $10–$50 per visit", range in bold.
       return costTag === "both"
-        ? '<span class="chip chip-cost is-' + cost + ' is-range has-label">' + (lower ? "Lower" : "Higher") + " cost facility: <b>" + COPAY_RANGE[cost] + "</b></span>"
-        : '<span class="chip chip-cost is-' + cost + ' is-range">' + COPAY_RANGE[cost] + "</span>";
+        ? '<span class="' + cls + ' is-range has-label">' + (lower ? "Lower" : "Higher") + " cost facility: <b>" + COPAY_RANGE[cost] + "</b></span>"
+        : '<span class="' + cls + ' is-range">' + COPAY_RANGE[cost] + after + "</span>";
     }
     var label = lower ? "Lower cost facility" : "Higher cost facility";
     return (
-      '<span class="chip chip-cost is-' + cost + '">' +
+      '<span class="' + cls + '">' +
       '<img class="cost-arrow" src="' + PS + (lower ? "cost-lower-arrow.svg" : "cost-higher-arrow.svg") + '" width="12" height="12" alt="">' +
       label + "</span>"
     );

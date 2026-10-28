@@ -822,8 +822,12 @@
     // "Label cost level" checked: "Lower cost facility: $10–$50 per visit", range in bold.
     var labeled = range && costTag === "both";
     if (labeled) label = (lower ? "Lower" : "Higher") + " cost facility: <b>" + COPAY_RANGE[cost] + "</b>";
+    // "Show deductible" checked: the Range tag on cards ends with "after
+    // deductible", like provider copays. Level and Both don't.
+    var after = range && !labeled && !large && !copayOnly;
+    if (after) label += '<span class="chip-regular"> after deductible</span>';
     return (
-      '<span class="chip chip-cost is-' + cost + (large ? " is-large" : "") + (range ? " is-range" : "") + (labeled ? " has-label" : "") + '">' +
+      '<span class="chip chip-cost is-' + cost + (large ? " is-large" : "") + (range ? " is-range" : "") + (labeled ? " has-label" : "") + (after ? " has-after" : "") + '">' +
       // V2 range chips have no arrow, just the copay range.
       (range ? "" : '<img class="cost-arrow" src="' + A + (lower ? "cost-lower-arrow.svg" : "cost-higher-arrow.svg") + '" width="12" height="12" alt="">') +
       label + "</span>"

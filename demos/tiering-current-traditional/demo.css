@@ -1569,3 +1569,9 @@
 .chip-cost.is-range.has-label b {
   font-weight: 700;
 }
+
+/* Facility tags with "after deductible" can wrap on narrow cards. */
+.chip-cost.has-after {
+  white-space: normal;
+  text-align: left;
+}
