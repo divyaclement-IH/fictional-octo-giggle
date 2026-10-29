@@ -525,19 +525,20 @@
 
   // Two chip versions: the Lower/Higher cost facility chip (with arrow), or a
   // per-visit copay range, picked by the "Facility cost tag" switch (see rangeTags).
-  var COPAY_RANGE = { lower: "$10–$50 per visit", higher: "$100–$200 per visit" };
+  var COPAY_AMOUNT = { lower: "$10–$50", higher: "$100–$200" };
+  var COPAY_RANGE = { lower: COPAY_AMOUNT.lower + " per visit", higher: COPAY_AMOUNT.higher + " per visit" };
 
   function costChip(cost, range) {
     var lower = cost === "lower";
-    // "Show deductible" checked: the Range tag ends with "after deductible", like
-    // provider copays. Level and Both don't.
+    // Range tag: "$10–$50 after deductible" with a deductible, "$10–$50 per
+    // visit" without. Level and Both don't change.
     var after = range && costTag !== "both" && !copayPlan ? '<span class="chip-regular"> after deductible</span>' : "";
     var cls = "chip chip-cost is-" + cost + (after ? " has-after" : "");
     if (range) {
       // "Both": "Lower cost facility: $10–$50 per visit", range in bold.
       return costTag === "both"
         ? '<span class="' + cls + ' is-range has-label">' + (lower ? "Lower" : "Higher") + " cost facility: <b>" + COPAY_RANGE[cost] + "</b></span>"
-        : '<span class="' + cls + ' is-range">' + COPAY_RANGE[cost] + after + "</span>";
+        : '<span class="' + cls + ' is-range">' + (after ? COPAY_AMOUNT[cost] + after : COPAY_RANGE[cost]) + "</span>";
     }
     var label = lower ? "Lower cost facility" : "Higher cost facility";
     return (

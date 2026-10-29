@@ -814,7 +814,8 @@
   ];
 
   // range: facility V2 shows the copay range in the chip instead of "Lower/Higher cost facility".
-  var COPAY_RANGE = { lower: "$10–$50 per visit", higher: "$100–$200 per visit" };
+  var COPAY_AMOUNT = { lower: "$10–$50", higher: "$100–$200" };
+  var COPAY_RANGE = { lower: COPAY_AMOUNT.lower + " per visit", higher: COPAY_AMOUNT.higher + " per visit" };
 
   function costChip(cost, large, range) {
     var lower = cost === "lower";
@@ -822,10 +823,10 @@
     // "Label cost level" checked: "Lower cost facility: $10–$50 per visit", range in bold.
     var labeled = range && costTag === "both";
     if (labeled) label = (lower ? "Lower" : "Higher") + " cost facility: <b>" + COPAY_RANGE[cost] + "</b>";
-    // "Show deductible" checked: the Range tag on cards ends with "after
-    // deductible", like provider copays. Level and Both don't.
+    // Range tag on cards: "$10–$50 after deductible" with a deductible,
+    // "$10–$50 per visit" without. Level and Both don't change.
     var after = range && !labeled && !large && !copayOnly;
-    if (after) label += '<span class="chip-regular"> after deductible</span>';
+    if (after) label = COPAY_AMOUNT[cost] + '<span class="chip-regular"> after deductible</span>';
     return (
       '<span class="chip chip-cost is-' + cost + (large ? " is-large" : "") + (range ? " is-range" : "") + (labeled ? " has-label" : "") + (after ? " has-after" : "") + '">' +
       // V2 range chips have no arrow, just the copay range.
