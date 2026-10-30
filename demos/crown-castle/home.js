@@ -98,7 +98,7 @@
     return (
       '<div class="home-welcome">' +
       '<h1 data-type="Title 2 · 24/32 Bold">What’s on your mind, Riley?</h1>' +
-      '<p class="home-covered" data-type="Body 2 · 14/20 Medium">Covered by Google' +
+      '<p class="home-covered" data-type="Body 2 · 14/20 Medium">Covered by Crown Castle' +
       '<img src="' + H + 'check-badge.svg" width="16" height="16" alt="" data-icon="check-badge"></p></div>'
     );
   }
