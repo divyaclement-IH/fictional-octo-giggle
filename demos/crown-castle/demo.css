@@ -181,11 +181,11 @@
 
 /* New turns settle in instead of the thread repainting all at once. */
 .chat-column > .is-entering {
-  animation: turn-enter 0.32s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  animation: turn-enter 0.2s cubic-bezier(0.22, 0.8, 0.24, 1) both;
 }
 
 @keyframes turn-enter {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
 
@@ -308,7 +308,7 @@
 
 /* Send status under the member's newest message: Sending... then Sent. */
 .member-bubble.is-sending {
-  background: #f6fafe;
+  background: #f2f2f2;
   color: #3b3b3b;
 }
 
@@ -343,37 +343,70 @@
   }
 }
 
-.typing {
-  display: flex;
-  gap: 6px;
-  padding: 8px 0;
+/* Dot thinking: italic "Thinking..." under the header, while the logo's
+   dots move between a cluster of three and a four-dot diamond. */
+.thinking {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  font-style: italic;
+  color: #6d6d6d;
 }
 
-.typing span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #c6c6c6;
-  animation: dot-typing 1s infinite cubic-bezier(0.22, 0.8, 0.24, 1);
+.dot-thinking-logo {
+  flex: none;
+  margin-right: 4px;
+  overflow: visible;
 }
 
-.typing span:nth-child(2) {
-  animation-delay: 0.15s;
+.dot-thinking-logo circle {
+  fill: url(#dot-thinking-fill);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: 1.6s cubic-bezier(0.22, 0.8, 0.24, 1) var(--think-offset, 0s) infinite;
 }
 
-.typing span:nth-child(3) {
-  animation-delay: 0.3s;
-}
+.dot-thinking-logo circle:nth-child(2) { animation-name: dot-think-1; }
+.dot-thinking-logo circle:nth-child(3) { animation-name: dot-think-2; }
+.dot-thinking-logo circle:nth-child(4) { animation-name: dot-think-3; }
+.dot-thinking-logo circle:nth-child(5) { animation-name: dot-think-4; }
 
-@keyframes dot-typing {
-  0%, 60%, 100% { opacity: 0.4; transform: none; }
-  30% { opacity: 1; transform: translateY(-3px); }
+/* Cluster: the logo's top, right and left dots (the bottom one tucked away).
+   Diamond: four equal dots. */
+@keyframes dot-think-1 {
+  0%, 100% { transform: translate(-0.6px, -7.5px) scale(2.5); }
+  50% { transform: translate(0, -6.8px) scale(2.6); }
+}
+@keyframes dot-think-2 {
+  0%, 100% { transform: translate(5.7px, -1.25px) scale(3.75); }
+  50% { transform: translate(6.8px, 0) scale(2.6); }
+}
+@keyframes dot-think-3 {
+  0%, 100% { transform: translate(-4.4px, 1.7px) scale(5); }
+  50% { transform: translate(-6.8px, 0) scale(2.6); }
+}
+@keyframes dot-think-4 {
+  0%, 100% { transform: translate(3.2px, 7.5px) scale(0); }
+  50% { transform: translate(0, 6.8px) scale(2.6); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .typing span {
-    animation: none;
+  .dot-thinking-logo circle {
+    animation-duration: 0s;
+    animation-iteration-count: 1;
   }
+}
+
+/* Streamed paragraphs land whole, pale grey to full black, rising a touch. */
+.dot-message .is-streaming,
+.dot-message.is-streaming {
+  animation: stream-in 0.15s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@keyframes stream-in {
+  from { opacity: 0.25; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* ---------- Result cards in the chat ---------- */
@@ -792,7 +825,7 @@
   max-width: 360px;
 }
 
-/* Service cards (Figma 2653:31518): kinds of care Dot suggests. */
+/* Service cards (Figma IsbGOKYwvvVi214VFgPRdA 11845:24200): provider types Dot offers. */
 .dot-results.is-services .carousel-item {
   flex-basis: 300px;
 }
@@ -824,14 +857,9 @@
 }
 
 .service-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 9999px;
-  background: #e6effe;
+  width: 40px;
+  height: 40px;
 }
 
 .service-tag {
@@ -857,9 +885,7 @@
 }
 
 .service-body {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  margin: 0;
   color: #3b3b3b;
   font-size: 14px;
   line-height: 20px;
@@ -873,10 +899,10 @@
   width: 100%;
   min-height: 24px;
   padding: 12px 16px;
-  border: 1px solid #6a4cde;
+  border: 1px solid #c6c6c6;
   border-radius: 24px;
   background: #fff;
-  color: #002380;
+  color: #0012e7;
   font: inherit;
   font-size: 14px;
   line-height: 20px;
@@ -917,11 +943,11 @@
 /* Cards and prompts revealed after Dot's text: a very subtle fade and rise. */
 .chat-column > .is-revealing,
 .chip-buttons.is-revealing {
-  animation: reveal-in 0.45s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  animation: reveal-in 0.15s cubic-bezier(0.22, 0.8, 0.24, 1) both;
 }
 
 @keyframes reveal-in {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(3px); }
   to { opacity: 1; transform: none; }
 }
 

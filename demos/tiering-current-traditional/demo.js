@@ -108,7 +108,7 @@
   var app = null;
   var current = null; // { ctx, cfg } of the screen on show
   var showCareKeys = true; // "Show Care Keys" checkbox under Scenario
-  // Scenario checkboxes, each on its own: Show deductible, Show Care Keys, Show copays.
+  // Checkboxes (in the Versions section), each on its own: Show deductible, Show Care Keys, Show copays.
   var copayOnly = false; // "Show deductible" unchecked: a copay plan with no deductible
   var showCopays = true; // "Show copays" unchecked: no dollar amounts on cards or plan cards
   var costTag = "range"; // "Facility cost tag" switch: range | level | both

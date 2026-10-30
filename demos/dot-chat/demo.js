@@ -143,10 +143,11 @@
 
   var app = null;
   var lastStep = null;
-  var typingDone = false; // Dot "types" each time a step with a new reply is entered
-  // The member's newest message shows "Sending..." for a moment, then "Sent";
-  // Dot's typing dots only start once it's sent.
-  var SEND_MS = 450;
+  var typingDone = false; // Dot "thinks" each time a step with a new reply is entered
+  // The member's newest message shows "Sending..." for a moment, then "Sent".
+  // Dot's "Thinking..." turn comes in with the message and lasts THINK_MS in all.
+  var SEND_MS = 400;
+  var THINK_MS = 1600;
   var sendDone = false;
 
   // Scenario checkboxes: Show deductible, Show Care Keys, Show copays.
@@ -160,13 +161,15 @@
   var followPhase = "done";
   var lastPath = null;
 
-  // --- Reply typewriter: after the typing dots, Dot's latest reply reveals one
-  //     character at a time (20 ms/char), and any chips/cards below it stay
-  //     hidden until the text finishes. Mirrors the m4 Dot chat send/sent
-  //     interaction. Each step's reply types once; re-renders (device/path
-  //     switches) don't re-animate a finished one. Honors reduced motion. ---
-  var TYPE_SPEED_MS = 20;
-  var typedSteps = {}; // step name -> true once its reply has finished typing
+  // --- Reply streaming: after "Thinking...", Dot's header sits alone for a
+  //     moment, then the reply arrives a paragraph at a time, each fading from
+  //     pale grey to full black. Chips and cards below it stay hidden until
+  //     the text is done. Each step's reply streams once; re-renders
+  //     (device/path switches) don't re-animate a finished one. Honors
+  //     reduced motion. ---
+  var HEADER_MS = 300; // header alone before the first paragraph
+  var PARAGRAPH_MS = 350; // between paragraphs
+  var typedSteps = {}; // step name -> true once its reply has finished streaming
   var typeTimer = null;
 
   function prefersReducedMotion() {
@@ -182,11 +185,11 @@
     return prefersReducedMotion() ? 0 : ms;
   }
 
-  // Reveal the newest Dot reply's text char-by-char, then show its chips/cards.
+  // Stream the newest Dot reply a paragraph at a time, then show its chips/cards.
   // A reply can be several Dot messages in a row (e.g. the matches, then an
-  // imaging recommendation): each one types in turn after the previous one's
+  // imaging recommendation): each one streams in turn after the previous one's
   // cards appear.
-  function runReplyTypewriter(stepName) {
+  function runReplyStream(stepName) {
     if (typeTimer) {
       clearTimeout(typeTimer);
       typeTimer = null;
@@ -228,6 +231,9 @@
       showAll();
       return;
     }
+    // The first message takes over from "Thinking...": its header is already
+    // on screen, so it stays put instead of fading in again.
+    segments[0].turn.classList.remove("is-entering");
     // Hidden pieces take no space, so the thread never scrolls into a blank gap.
     segments.forEach(function (seg, i) {
       if (i > 0) seg.turn.style.display = "none";
@@ -245,7 +251,7 @@
       i += 1;
       seg.turn.style.display = "";
       scrollToLatest({ screen: screen });
-      typeMessage(seg.turn.querySelector(".dot-message"), screen, function () {
+      streamMessage(seg.turn.querySelector(".dot-message"), screen, function () {
         // A message can hold its cards back for a moment after the text
         // (data-hold, ms), e.g. "Give me a few seconds..." before the matches.
         var hold = pause(parseInt(seg.turn.getAttribute("data-hold"), 10) || 0);
@@ -260,7 +266,7 @@
           });
           revealIntoView(shown, screen);
           // Let the cards land before the next message starts typing.
-          typeTimer = setTimeout(nextSegment, i < segments.length ? pause(900) : 0);
+          typeTimer = setTimeout(nextSegment, i < segments.length ? pause(PARAGRAPH_MS) : 0);
         }, hold);
       });
     })();
@@ -287,54 +293,48 @@
     else scroller.scrollTo({ top: target, behavior: "smooth" });
   }
 
-  // Type into a message's own markup, so paragraphs, lists and bold stay in
-  // place: every text node starts empty and fills in order, and each block
-  // (paragraph, list item) stays hidden until typing reaches it, so a new
-  // paragraph starts on its own line instead of running on from the last one.
-  // Reduced motion skips the typing.
-  function typeMessage(msg, screen, done) {
+  // Stream a message a paragraph at a time: each paragraph or list item lands
+  // whole, fading from pale grey to full black, and the chat scrolls to fit
+  // it. A message with no paragraphs is one piece. Reduced motion shows it all.
+  function streamMessage(msg, screen, done) {
     if (!msg || prefersReducedMotion()) return done();
-    var walker = document.createTreeWalker(msg, NodeFilter.SHOW_TEXT);
-    var nodes = [];
-    for (var node = walker.nextNode(); node; node = walker.nextNode()) {
-      nodes.push({ node: node, chars: Array.from(node.nodeValue) }); // Array.from keeps emoji whole
-      node.nodeValue = "";
-    }
-    var hidden = [];
-    msg.querySelectorAll("p, li, ul, ol").forEach(function (el) {
-      el.style.display = "none";
-      hidden.push(el);
+    var pieces = [];
+    var lists = [];
+    Array.prototype.forEach.call(msg.children, function (el) {
+      if (el.tagName === "UL" || el.tagName === "OL") {
+        lists.push(el);
+        Array.prototype.forEach.call(el.children, function (li) {
+          pieces.push(li);
+        });
+      } else if (/^(P|DIV|H\d)$/.test(el.tagName)) {
+        pieces.push(el);
+      }
     });
-    function showBlocks(textNode) {
-      for (var el = textNode.parentNode; el && el !== msg; el = el.parentNode) {
-        if (el.style && el.style.display === "none") el.style.display = "";
-      }
+    // Plain text, or text with inline tags only: the whole message is one piece.
+    var whole = !pieces.length;
+    if (whole) pieces = [msg];
+    pieces.forEach(function (el) {
+      el.style.display = "none";
+    });
+    lists.forEach(function (el) {
+      el.style.display = "none";
+    });
+    var i = 0;
+    typeTimer = setTimeout(function next() {
+      var el = pieces[i];
+      if (el.parentNode && el.parentNode.style.display === "none") el.parentNode.style.display = "";
+      el.style.display = "";
+      el.classList.remove("is-streaming");
+      void el.offsetWidth; // restart the fade
+      el.classList.add("is-streaming");
+      scrollToLatest({ screen: screen });
+      i += 1;
+      typeTimer = setTimeout(i < pieces.length ? next : finish, i < pieces.length ? PARAGRAPH_MS : 150);
+    }, HEADER_MS);
+    function finish() {
+      typeTimer = null;
+      done();
     }
-    var n = 0;
-    var c = 0;
-    var lastHeight = 0;
-    (function step() {
-      while (n < nodes.length && c >= nodes[n].chars.length) {
-        n += 1;
-        c = 0;
-      }
-      if (n < nodes.length) {
-        var t = nodes[n];
-        if (c === 0) showBlocks(t.node);
-        c += 1;
-        t.node.nodeValue = t.chars.slice(0, c).join("");
-        // Ease down a line at a time as the reply wraps, instead of jumping at the end.
-        if (msg.offsetHeight !== lastHeight) {
-          lastHeight = msg.offsetHeight;
-          scrollToLatest({ screen: screen });
-        }
-        typeTimer = setTimeout(step, TYPE_SPEED_MS);
-      } else {
-        hidden.forEach(function (el) { el.style.display = ""; });
-        typeTimer = null;
-        done();
-      }
-    })();
   }
 
   // ---------- Pieces ----------
@@ -358,10 +358,20 @@
     );
   }
 
-  function typingTurn() {
+  // Dot's logo dots move between a cluster of three and a four-dot diamond.
+  var THINKING_LOGO =
+    '<svg class="dot-thinking-logo" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" data-icon="Dot">' +
+    '<defs><linearGradient id="dot-thinking-fill" x1="0" y1="1" x2="1" y2="0">' +
+    '<stop stop-color="#0012E7"/><stop offset="1" stop-color="#6A4CDE"/></linearGradient></defs>' +
+    '<circle cx="10" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="10" cy="10" r="1"/>' +
+    "</svg>";
+
+  function thinkingTurn() {
     return (
-      '<section class="turn dot-turn" aria-label="Dot is typing">' + dotHeader() +
-      '<div class="typing" aria-hidden="true"><span></span><span></span><span></span></div></section>'
+      '<section class="turn dot-turn" aria-label="Dot is thinking">' +
+      // Keyed to the clock, so a re-render (e.g. at "Sent") doesn't restart the morph.
+      dotHeader().replace(/<img [^>]*>/, THINKING_LOGO.replace("<svg ", '<svg style="--think-offset:-' + Math.round(performance.now() % 1600) + 'ms" ')) +
+      '<p class="thinking" data-type="Caption · 12/16 Medium">Thinking…</p></section>'
     );
   }
 
@@ -387,9 +397,9 @@
     return sendDone ? "sent" : "sending";
   }
 
-  // While the member's message is still sending, Dot hasn't started typing.
+  // Dot's "Thinking..." comes in together with the member's message.
   function waiting(turns) {
-    return (sendDone ? turns.concat(typingTurn()) : turns).join("");
+    return turns.concat(thinkingTurn()).join("");
   }
 
   // active: the chip answers the current question; answered chips stay but go inert.
@@ -647,7 +657,7 @@
       var pending = newest && followPhase !== "done";
       turns.push(memberTurn(f.label, null, newest ? (followPhase === "sending" ? "sending" : "sent") : null));
       if (pending) {
-        if (followPhase === "typing") turns.push(typingTurn());
+        turns.push(thinkingTurn());
         return true;
       }
       turns.push(followUpReply(kind, f.id, ctx));
@@ -935,7 +945,7 @@
     for (var i = 0; i < col.children.length; i++) {
       var kid = col.children[i];
       var transient =
-        kid.getAttribute("aria-label") === "Dot is typing" ? "typing" : kid.classList.contains("chip-buttons-after") ? "prompts" : null;
+        kid.getAttribute("aria-label") === "Dot is thinking" ? "typing" : kid.classList.contains("chip-buttons-after") ? "prompts" : null;
       if (transient) {
         now[transient] = true;
         if (!settled[transient]) kid.classList.add("is-entering");
@@ -972,7 +982,7 @@
     if (typingDone) {
       // Re-entered an already-answered step (e.g. device/path switch): reveal
       // immediately without re-animating.
-      if (isReply) runReplyTypewriter(stepName);
+      if (isReply) runReplyStream(stepName);
       for (var i = 0; i < followUps.length; i++) typedSteps[stepName + "#" + (i + 1)] = true;
       return;
     }
@@ -988,8 +998,8 @@
         // Don't scroll yet: the typewriter hides the pending cards first, then scrolls.
         refresh(isReply);
         // The reply is now in the DOM; type it out and hold its chips/cards.
-        if (isReply) runReplyTypewriter(stepName);
-      }, pause(700));
+        if (isReply) runReplyStream(stepName);
+      }, pause(THINK_MS - SEND_MS));
     }, pause(SEND_MS));
   }
 
@@ -1009,8 +1019,8 @@
         if (lastStep !== step) return;
         followPhase = "done";
         refresh(true);
-        runReplyTypewriter(step.name + "#" + followUps.length);
-      }, pause(700));
+        runReplyStream(step.name + "#" + followUps.length);
+      }, pause(THINK_MS - SEND_MS));
     }, pause(SEND_MS));
   }
 

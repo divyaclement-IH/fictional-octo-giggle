@@ -108,7 +108,7 @@
   var app = null;
   var current = null; // { ctx, cfg } of the screen on show
   var showCareKeys = true; // "Show Care Keys" checkbox under Scenario
-  // Scenario checkboxes, each on its own: Show deductible, Show Care Keys, Show copays.
+  // Checkboxes (in the Versions section), each on its own: Show deductible, Show Care Keys, Show copays.
   var copayOnly = false; // "Show deductible" unchecked: a copay plan with no deductible
   var showCopays = true; // "Show copays" unchecked: no dollar amounts on cards or plan cards
   var costTag = "range"; // "Facility cost tag" switch: range | level | both
@@ -255,7 +255,7 @@
       // Older card design: the chip names the tier, then the copay in bold.
       // Without copays it just names the tier; without a deductible it drops "after deductible".
       var amount = (opts.top ? "$10" : "$100") + " copay" + (copayOnly ? "" : " after deductible");
-      var label = opts.top ? "Preferred provider" : "Standard Provider";
+      var label = opts.top ? "Preferred" : "Standard";
       chips =
         '<span class="chip chip-tier is-' + (opts.top ? "preferred" : "standard") + '"' +
         (first ? ' data-type="Caption · 12/16 Medium"' : "") + "><span>" +
@@ -451,10 +451,10 @@
       "</p>" +
       '<p class="tier-key-plan" data-type="Body 1 · 16/24 Medium">Both tiers shown below are in-network.</p>' +
       '<div class="tier-key-rows" id="preferred-card">' +
-      '<div class="tier-key-row"><span class="tier-key-tag is-preferred">Preferred provider</span>' +
+      '<div class="tier-key-row"><span class="tier-key-tag is-preferred">Preferred</span>' +
       '<img src="../crown-castle/assets/badge-preferred-key-16.svg" width="16" height="16" alt="" data-icon="Verification Badge">' +
       "<span>Highest quality standards, lower copay</span></div>" +
-      '<div class="tier-key-row is-standard"><span class="tier-key-tag is-standard">Standard provider</span>' +
+      '<div class="tier-key-row is-standard"><span class="tier-key-tag is-standard">Standard</span>' +
       "<span>Covered, usually a higher copay</span></div>" +
       "</div></div>"
     );
@@ -1166,7 +1166,7 @@
       ? {
           label: "Back to Dot",
           href:
-            "../crown-castle/?step=4&path=" + (fromParams.get("search") === "facilities" ? "facilities" : "providers") +
+            "../crown-castle/?step=2&path=" + (fromParams.get("search") === "facilities" ? "facilities" : "providers") +
             (fromParams.get("device") ? "&device=" + fromParams.get("device") : ""),
         }
       : null;
@@ -1174,6 +1174,9 @@
   app = DemoShell.mount({
     backLink: backLink,
     title: "Crown Castle Demo",
+    home: CrownHome.home("traditional", function () {
+      return app;
+    }),
     feedback: true,
     demoSwitch: {
       label: "Demo",
@@ -1224,8 +1227,8 @@
       },
     ],
     toggles: [
-      { key: "deductible", label: "Show deductible", checked: true },
-      { key: "careKeys", label: "Show Care Keys", checked: true },
+      { key: "deductible", label: "Show deductible", checked: false },
+      { key: "careKeys", label: "Show Care Keys", checked: false },
       { key: "copays", label: "Show copays", checked: true },
     ],
     summary: "A member compares primary care providers, or lab and imaging facilities, and what each visit will cost.",

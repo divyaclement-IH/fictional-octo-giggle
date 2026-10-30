@@ -28,7 +28,8 @@
  * holds the chosen id (steps stay the same).
  *
  * Optional demo.toggles: [{ key, label, checked }] adds checkboxes under
- * Scenario; ctx.toggles holds their state. A step's instruction and notes
+ * Scenario (or at the end of the Versions section, when there is one);
+ * ctx.toggles holds their state. A step's instruction and notes
  * can be functions of ctx, so the panel text can follow the toggles.
  *
  * Every panel starts with an "← All demos" link to the demo list (index.html).
@@ -43,6 +44,11 @@
  * demo.versionsLabel) sit in an open "Versions" section above Scenario, each
  * under its own label, instead of at the top of the panel.
  *
+ * Optional demo.home: { label, address, render(ctx), instruction, notes } is a
+ * screen outside the steps (e.g. the app's home page). A button labelled
+ * home.label (e.g. "Start demo") at the top of Scenario opens it; any step,
+ * Next or Restart leaves it. The URL keeps ?home=1 while it's open.
+ *
  * Optional demo.feedback: true adds a Feedback section: a note box and a Copy
  * for Slack button that copies the note, where the reviewer is (demo side,
  * version, switches, step, device) and a link that reopens this exact screen.
@@ -53,7 +59,7 @@
  * the active page; clicking another option navigates to its href, carrying the
  * current ?device= and toggle states so the layout mode and options are preserved.
  *
- * mount() returns { refresh, next, setSwitch } so a screen can re-render after its own
+ * mount() returns { refresh, next, goTo, setSwitch } so a screen can re-render after its own
  * state changes. The URL keeps ?version=&step=&device= so a reload or a
  * shared link opens in the same place.
  *
@@ -169,6 +175,7 @@
       if (v.id && v.id === params.get("version")) state.version = i;
     });
     var steps = versions[state.version].steps;
+    state.home = !!demo.home && params.get("home") === "1";
     var switches = demo.switches || [];
     state.switches = {};
     switches.forEach(function (sw) {
@@ -448,6 +455,15 @@
 
     // Scenario
     var scenario = section("scenario", "Scenario");
+    if (demo.home) {
+      var homeBtn = el("button", "btn btn-primary btn-home", escapeHtml(demo.home.label || "Start demo"));
+      homeBtn.type = "button";
+      homeBtn.addEventListener("click", function () {
+        state.home = true;
+        render();
+      });
+      scenario.body.appendChild(homeBtn);
+    }
     var stepList = el("ol", "steps");
     var stepButtons = [];
     function renderSteps() {
@@ -523,7 +539,12 @@
         label.appendChild(document.createTextNode(t.label));
         toggleList.appendChild(label);
       });
-      scenario.body.appendChild(toggleList);
+      if (versionsSection) {
+        toggleList.classList.add("versions-toggles");
+        versionsSection.body.appendChild(toggleList);
+      } else {
+        scenario.body.appendChild(toggleList);
+      }
     }
 
     // Feedback (demo.feedback: true): a note plus where the reviewer is,
@@ -607,7 +628,7 @@
           }
         });
       });
-      parts.push("Step " + (state.index + 1) + ": " + steps[state.index].name);
+      parts.push(state.home ? "Home" : "Step " + (state.index + 1) + ": " + steps[state.index].name);
       parts.push(state.mode === "mobile" ? "Mobile" : "Desktop");
       return parts.join(" · ");
     }
@@ -685,23 +706,35 @@
 
     // ---------- Rendering ----------
 
+    // demo.home as a step-like object, so the panel and screen can treat it alike.
+    function homeStep() {
+      return {
+        name: "Home",
+        address: demo.home.address,
+        instruction: demo.home.instruction,
+        notes: demo.home.notes,
+        render: demo.home.render,
+      };
+    }
+
     function resolve(value, step) {
       return typeof value === "function" ? value(context(step)) : value;
     }
 
     function renderPanel() {
-      var step = steps[state.index];
+      // On the home screen, the panel describes home instead of a step.
+      var step = state.home ? homeStep() : steps[state.index];
       var instruction = resolve(step.instruction, step);
-      var notes = resolve(step.notes, step);
+      var notes = resolve(step.notes, step) || [];
       stepButtons.forEach(function (b, i) {
-        b.classList.toggle("is-done", i < state.index);
-        if (i === state.index) b.setAttribute("aria-current", "step");
+        b.classList.toggle("is-done", !state.home && i < state.index);
+        if (!state.home && i === state.index) b.setAttribute("aria-current", "step");
         else b.removeAttribute("aria-current");
       });
       nextText.textContent = instruction;
       if (feedbackContext) feedbackContext.textContent = contextLine();
-      backBtn.disabled = state.index === 0;
-      nextBtn.disabled = state.index === steps.length - 1;
+      backBtn.disabled = state.home || state.index === 0;
+      nextBtn.disabled = !state.home && state.index === steps.length - 1;
 
       annotations.badge.textContent = notes.length;
       annotations.badge.setAttribute("aria-label", notes.length + (notes.length === 1 ? " note" : " notes"));
@@ -764,6 +797,8 @@
       var query = new URLSearchParams(location.search);
       if (versions[state.version].id) query.set("version", versions[state.version].id);
       query.set("step", String(state.index + 1));
+      if (state.home) query.set("home", "1");
+      else query.delete("home");
       if (!realPhone) query.set("device", state.mode);
       switches.forEach(function (sw) {
         if (state.switches[sw.key] === sw.options[0].id) query.delete(sw.key);
@@ -795,7 +830,7 @@
     }
 
     function renderScreen(keepScroll) {
-      var step = steps[state.index];
+      var step = state.home ? homeStep() : steps[state.index];
       var scrollTop = frameContent.scrollTop;
       screen.className = "screen mode-" + state.mode;
       screen.innerHTML = step.render(context(step));
@@ -823,13 +858,15 @@
 
     function goTo(i) {
       i = Math.max(0, Math.min(steps.length - 1, i));
-      if (i === state.index) return;
+      if (i === state.index && !state.home) return;
+      state.home = false;
       state.index = i;
       render();
     }
 
+    // From the home screen, Next starts the steps.
     function next() {
-      goTo(state.index + 1);
+      goTo(state.home ? 0 : state.index + 1);
     }
 
     function back() {
@@ -838,7 +875,7 @@
 
     function restart() {
       if (demo.onRestart) demo.onRestart();
-      if (state.index === 0) renderScreen();
+      if (state.index === 0 && !state.home) renderScreen();
       goTo(0);
     }
 
@@ -1115,6 +1152,7 @@
         renderScreen(true);
       },
       next: next,
+      goTo: goTo,
       setSwitch: setSwitch,
     };
   }

@@ -737,3 +737,16 @@ body.is-real-phone {
 .panel [hidden] {
   display: none;
 }
+
+/* "Start demo": opens demo.home, above the steps */
+.btn-home {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Scenario checkboxes moved into the Versions section, under its menus */
+.scenario-toggles.versions-toggles {
+  margin-top: 24px;
+  padding-top: 0;
+  border-top: 0;
+}
