@@ -1,4 +1,4 @@
-/* Provider/facility tiering - current: a copy of the Dot find-care demo (demos/dot-chat).
+/* Tiered Providers & Facilities (1/1/27): a copy of the Dot find-care demo (demos/dot-chat).
    Dot conversation: a member asks Dot to find providers or facilities.
    Mobile follows Figma 2UJLBp93sigLx4o9mXzzFD node 1118:28018; web follows
    the "Navigate your care" web screenshot. Both share one message style. */
@@ -183,6 +183,12 @@
     );
   }
 
+  // A pause in the reply sequence (sending, typing dots, holding cards).
+  // Reduced motion skips them, so the reply shows right away.
+  function pause(ms) {
+    return prefersReducedMotion() ? 0 : ms;
+  }
+
   // Reveal the newest Dot reply's text char-by-char, then show its chips/cards.
   // A reply can be several Dot messages in a row (e.g. the matches, then an
   // imaging recommendation): each one types in turn after the previous one's
@@ -249,7 +255,7 @@
       typeMessage(seg.turn.querySelector(".dot-message"), screen, function () {
         // A message can hold its cards back for a moment after the text
         // (data-hold, ms), e.g. "Give me a few seconds..." before the matches.
-        var hold = parseInt(seg.turn.getAttribute("data-hold"), 10) || 0;
+        var hold = pause(parseInt(seg.turn.getAttribute("data-hold"), 10) || 0);
         typeTimer = setTimeout(function () {
           typeTimer = null;
           var shown = deferredOf(seg);
@@ -261,7 +267,7 @@
           });
           revealIntoView(shown, screen);
           // Let the cards land before the next message starts typing.
-          typeTimer = setTimeout(nextSegment, i < segments.length ? 900 : 0);
+          typeTimer = setTimeout(nextSegment, i < segments.length ? pause(900) : 0);
         }, hold);
       });
     })();
@@ -372,7 +378,7 @@
     status = !status
       ? ""
       : sending
-      ? '<p class="send-status is-sending" data-type="Caption · 12/16 Medium" role="status">Sending...</p>'
+      ? '<p class="send-status is-sending" data-type="Caption · 12/16 Medium" role="status">Sending…</p>'
       : '<p class="send-status is-sent" data-type="Caption · 12/16 Medium" role="status">' +
         '<img src="' + A + 'sent-check.svg" width="12" height="12" alt="" data-icon="check-circle">Sent</p>';
     return (
@@ -1021,8 +1027,8 @@
         refresh(isReply);
         // The reply is now in the DOM; type it out and hold its chips/cards.
         if (isReply) runReplyTypewriter(stepName);
-      }, 700);
-    }, SEND_MS);
+      }, pause(700));
+    }, pause(SEND_MS));
   }
 
   // A quick prompt after the results: send it as the member's message (the
@@ -1042,8 +1048,8 @@
         followPhase = "done";
         refresh(true);
         runReplyTypewriter(step.name + "#" + followUps.length);
-      }, 700);
-    }, SEND_MS);
+      }, pause(700));
+    }, pause(SEND_MS));
   }
 
   function currentIndex() {
@@ -1122,7 +1128,7 @@
   var ADDRESS = "member.includedhealth.com/dot";
 
   app = DemoShell.mount({
-    title: "Provider/facility tiering - current",
+    title: "Tiered Providers & Facilities (1/1/27)",
     feedback: true,
     summary: "A member with knee pain asks Dot, the AI assistant, to find an orthopedist, then learns how to save on an X-ray at a freestanding imaging center.",
     demoSwitch: {
@@ -1134,6 +1140,18 @@
       ],
     },
     switches: [
+      {
+        // Milestones: whole-experience versions. P0 is everything shown today;
+        // P1 is the same flow for now, to change once its design is ready.
+        key: "milestone",
+        label: "Milestones",
+        section: "versions",
+        menu: true,
+        options: [
+          { id: "p0", label: "P0", description: "The current experience." },
+          { id: "p1", label: "P1", description: "A copy of P0 for now." },
+        ],
+      },
       {
         key: "path",
         label: "Path",
@@ -1148,6 +1166,8 @@
         // cost facility), or both ("Lower cost facility: $10–$50 per visit").
         key: "costTag",
         label: "Facility cost tag",
+        section: "versions",
+        showIf: { key: "path", id: "facilities" },
         options: [
           { id: "range", label: "Range" },
           { id: "level", label: "Level" },

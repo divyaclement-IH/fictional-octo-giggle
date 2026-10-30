@@ -1,4 +1,4 @@
-/* Provider/facility tiering - current (Traditional): a copy of care search
+/* Tiered Providers & Facilities (1/1/27) (Traditional): a copy of care search
    (demos/provider-search) paired with the tiering Dot demo (demos/tiering-current),
    so the Traditional / Dot switch stays inside this demo.
    Provider search results: a member reviews matched primary care providers. */
@@ -1034,7 +1034,7 @@
               ]
             : inNetworkList
             ? [
-                "Changed from P1: no In-network chip on each card. The header and description say the whole list is in-network.",
+                "Changed from Plain text: no In-network chip on each card. The header and description say the whole list is in-network.",
                 "A new Network filter lets members include out-of-network providers.",
                 BADGE_NOTE,
               ]
@@ -1060,8 +1060,8 @@
         notes: cfg.planInfo
           ? [
               cfg.summaryAboveMap
-                ? "Changed from P1: the deductible note moves from the Plan Key to a plan summary above the map on desktop (above the first provider on mobile)."
-                : "Changed from P1: the deductible note moves from the Plan Key to a plan summary right above the first provider, so it's read before any copay.",
+                ? "Changed from Plain text: the deductible note moves from the Plan Key to a plan summary above the map on desktop (above the first provider on mobile)."
+                : "Changed from Plain text: the deductible note moves from the Plan Key to a plan summary right above the first provider, so it's read before any copay.",
               cfg.planInfo === "summary-progress"
                 ? "Deductible progress ($1,250 of $3,000, placeholder) shows how close copays are to applying."
                 : "No amounts: it just says the plan has a deductible and copays apply after it's met.",
@@ -1083,7 +1083,7 @@
               "Tap a badge on a card, or in the legend, to see what IH Preferred means."
             ),
             notes: careKeyNotes([
-              "Changed from P1: no Plan Key. Each badge is a button that opens its explainer right where it appears.",
+              "Changed from Plain text: no Plan Key. Each badge is a button that opens its explainer right where it appears.",
               cfg.legendInSummary
                 ? "A legend inside the plan summary names each badge in text, so meaning never depends on the icon alone."
                 : "A legend under the description names each badge in text, so meaning never depends on the icon alone.",
@@ -1173,7 +1173,7 @@
 
   app = DemoShell.mount({
     backLink: backLink,
-    title: "Provider/facility tiering - current",
+    title: "Tiered Providers & Facilities (1/1/27)",
     feedback: true,
     demoSwitch: {
       label: "Demo",
@@ -1184,6 +1184,18 @@
       ],
     },
     switches: [
+      {
+        // Milestones: whole-experience versions. P0 is everything shown today;
+        // P1 is the same flow for now, to change once its design is ready.
+        key: "milestone",
+        label: "Milestones",
+        section: "versions",
+        menu: true,
+        options: [
+          { id: "p0", label: "P0", description: "The current experience." },
+          { id: "p1", label: "P1", description: "A copy of P0 for now." },
+        ],
+      },
       {
         key: "search",
         label: "Search type",
@@ -1202,6 +1214,8 @@
         // cost facility), or both ("Lower cost facility: $10–$50 per visit").
         key: "costTag",
         label: "Facility cost tag",
+        section: "versions",
+        showIf: { key: "search", id: "facilities" },
         options: [
           { id: "range", label: "Range" },
           { id: "level", label: "Level" },
@@ -1219,10 +1233,11 @@
       network.includeOON = false;
       closeMenu();
     },
+    versionsLabel: "Plan info",
     versions: [
-      { id: "p1", label: "P1 · Plain text", description: "The Figma design, with an In-network chip on every card and the Plan Key below the map.", steps: baseSteps(V1) },
-      { id: "p2", label: "P2 · Modals", description: "No Plan Key: a plan summary above the map, and badges that explain themselves.", steps: baseSteps(V3) },
-      { id: "p3", label: "P3 · Deductible tracker", description: "Like P2, plus deductible progress.", steps: baseSteps(V2) },
+      { id: "plain", label: "Plain text", description: "The Figma design, with an In-network chip on every card and the Plan Key below the map.", steps: baseSteps(V1) },
+      { id: "modals", label: "Modals", description: "No Plan Key: a plan summary above the map, and badges that explain themselves.", steps: baseSteps(V3) },
+      { id: "tracker", label: "Deductible tracker", description: "Like Modals, plus deductible progress.", steps: baseSteps(V2) },
     ],
   });
 })();

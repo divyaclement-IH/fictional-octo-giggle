@@ -639,9 +639,16 @@ body.is-real-phone {
 }
 
 /* Optional link back to the demo you came from */
+/* "← All demos" and the optional back link, in one row above the title */
+.panel-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-bottom: 16px;
+}
+
 .panel-back {
   display: inline-block;
-  margin-bottom: 16px;
   font-size: 14px;
   line-height: 20px;
   font-weight: 700;
@@ -703,4 +710,30 @@ body.is-real-phone {
 
 .feedback-help {
   margin-top: 12px;
+}
+
+/* Versions */
+
+.versions-item + .versions-item {
+  margin-top: 16px;
+}
+
+.versions-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.versions-item .device-switch,
+.versions-item.version-picker {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Panel pieces hidden by state (showIf, version picker) stay hidden even
+   when their class sets a display, like the grid on .device-switch. */
+.panel [hidden] {
+  display: none;
 }

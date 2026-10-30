@@ -33,11 +33,15 @@ Demos:
   (or **P**) picks providers or facilities. **See all** opens care search on the matching tab and
   device, with a **Back to Dot** link.
 
-- `demos/tiering-current/`: "Provider/facility tiering - current", a copy of
+- `demos/tiering-current/`: "Tiered Providers & Facilities (1/1/27)", a copy of
   `demos/dot-chat/` to iterate on separately, with the older provider cards and Plan Key.
   Its **Traditional** side is `demos/tiering-current-traditional/`, a copy of care search,
   so the Traditional / Dot switch stays inside this demo. Both use the care search assets in
   `demos/provider-search/assets/`.
+
+- `demos/crown-castle/`: "Crown Castle Demo", a copy of the tiering demo above to iterate on
+  separately. Its **Traditional** side is `demos/crown-castle-traditional/`; like the original,
+  the bare link opens on Traditional.
 
 Plain HTML, CSS and JS with no build step. Serve the repo and open it:
 

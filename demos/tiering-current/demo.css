@@ -329,7 +329,7 @@
 
 .send-status.is-sent {
   color: #002380;
-  animation: send-status-in 0.2s ease;
+  animation: send-status-in 0.2s cubic-bezier(0.22, 0.8, 0.24, 1);
 }
 
 @keyframes send-status-in {
@@ -354,7 +354,7 @@
   height: 8px;
   border-radius: 50%;
   background: #c6c6c6;
-  animation: dot-typing 1s infinite ease-in-out;
+  animation: dot-typing 1s infinite cubic-bezier(0.22, 0.8, 0.24, 1);
 }
 
 .typing span:nth-child(2) {

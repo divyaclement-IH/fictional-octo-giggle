@@ -31,7 +31,17 @@
  * Scenario; ctx.toggles holds their state. A step's instruction and notes
  * can be functions of ctx, so the panel text can follow the toggles.
  *
- * Optional demo.backLink: { label, href } shows a link above the panel title.
+ * Every panel starts with an "← All demos" link to the demo list (index.html).
+ * Optional demo.backLink: { label, href } shows a link beside it.
+ *
+ * A switch with menu: true shows as a dropdown instead of buttons; an
+ * option's description shows under it. showIf: { key, id } shows a switch
+ * only while another switch is on that option.
+ *
+ * Optional Versions section: switches with section: "versions" (e.g. a
+ * Milestones menu with P0, P1...) and the version picker (labelled
+ * demo.versionsLabel) sit in an open "Versions" section above Scenario, each
+ * under its own label, instead of at the top of the panel.
  *
  * Optional demo.feedback: true adds a Feedback section: a note box and a Copy
  * for Slack button that copies the note, where the reviewer is (demo side,
@@ -53,6 +63,10 @@
  */
 (function () {
   "use strict";
+
+  // The demo list is the repo root's index.html, one folder up from shell/.
+  var SHELL_SRC = document.currentScript && document.currentScript.src;
+  var DEMO_LIST = SHELL_SRC ? new URL("../", SHELL_SRC).href : "../../";
 
   var TOKENS = {
     "text/primary": "#000000",
@@ -214,6 +228,12 @@
 
     var panel = el("aside", "panel");
     panel.setAttribute("aria-label", "Demo controls");
+    // Every demo links back to the demo list; demo.backLink sits beside it.
+    var panelLinks = el("div", "panel-links");
+    var home = el("a", "panel-back panel-home", "← All demos");
+    home.href = DEMO_LIST;
+    panelLinks.appendChild(home);
+    panel.appendChild(panelLinks);
     if (demo.backLink) {
       var back = el("a", "panel-back", "← " + escapeHtml(demo.backLink.label));
       back.href = demo.backLink.href;
@@ -221,7 +241,7 @@
       back.addEventListener("click", function () {
         back.href = demo.backLink.href + toggleQuery() + switchQuery();
       });
-      panel.appendChild(back);
+      panelLinks.appendChild(back);
     }
     panel.appendChild(el("h1", "panel-title", escapeHtml(demo.title)));
     panel.appendChild(el("p", "panel-summary", escapeHtml(demo.summary)));
@@ -268,9 +288,43 @@
       panel.appendChild(dsGroup);
     }
 
-    // Demo-defined segmented switches, styled like the device switch.
+    // Demo-defined segmented switches, styled like the device switch. Ones with
+    // section: "versions" go in the Versions section, under their label.
+    // menu: true shows a dropdown (like the version picker) instead.
     var switchButtons = {};
+    var switchMenus = {};
+    var switchWraps = {}; // switch key -> its element, for showIf
+    var versionItems = [];
     switches.forEach(function (sw) {
+      if (sw.menu) {
+        var menu = el("div", "version-picker");
+        var menuWrap = el("div", "version-select");
+        var menuSelect = el("select");
+        menuSelect.setAttribute("aria-label", sw.label);
+        sw.options.forEach(function (o) {
+          var option = el("option", null, escapeHtml(o.label));
+          option.value = o.id;
+          menuSelect.appendChild(option);
+        });
+        menuSelect.addEventListener("change", function () {
+          setSwitch(sw.key, menuSelect.value);
+        });
+        menuWrap.appendChild(menuSelect);
+        menuWrap.insertAdjacentHTML("beforeend", CHEVRON.replace("section-chevron", "version-chevron"));
+        menu.appendChild(menuWrap);
+        var menuNote = el("p", "version-note");
+        menu.appendChild(menuNote);
+        switchMenus[sw.key] = { sw: sw, select: menuSelect, note: menuNote };
+        switchWraps[sw.key] = menu;
+        if (sw.section === "versions") {
+          menu.classList.add("versions-item");
+          menu.insertBefore(el("p", "versions-label", escapeHtml(sw.label)), menuWrap);
+          versionItems.push(menu);
+        } else {
+          panel.appendChild(menu);
+        }
+        return;
+      }
       var group = el("div", "device-switch demo-switch");
       group.setAttribute("role", "radiogroup");
       group.setAttribute("aria-label", sw.label);
@@ -286,18 +340,28 @@
         switchButtons[sw.key][o.id] = b;
         group.appendChild(b);
       });
-      panel.appendChild(group);
+      if (sw.section === "versions") {
+        var item = el("div", "versions-item");
+        item.appendChild(el("p", "versions-label", escapeHtml(sw.label)));
+        item.appendChild(group);
+        versionItems.push(item);
+        switchWraps[sw.key] = item;
+      } else {
+        panel.appendChild(group);
+        switchWraps[sw.key] = group;
+      }
     });
 
     var versionSelect = null;
     var versionNote = null;
     var versionPicker = null;
     if (demo.versions && demo.versions.length > 1) {
-      var picker = el("div", "version-picker");
+      var picker = el("div", "version-picker versions-item");
       versionPicker = picker;
+      if (demo.versionsLabel) picker.appendChild(el("p", "versions-label", escapeHtml(demo.versionsLabel)));
       var selectWrap = el("div", "version-select");
       versionSelect = el("select");
-      versionSelect.setAttribute("aria-label", "Version");
+      versionSelect.setAttribute("aria-label", demo.versionsLabel || "Version");
       versions.forEach(function (v, i) {
         var option = el("option", null, escapeHtml(v.label));
         option.value = String(i);
@@ -311,7 +375,7 @@
       picker.appendChild(selectWrap);
       versionNote = el("p", "version-note");
       picker.appendChild(versionNote);
-      panel.appendChild(picker);
+      versionItems.push(picker);
     }
 
     // Variant menus for switch options (e.g. facility versions), same look as the version picker.
@@ -343,12 +407,12 @@
       });
     });
 
-    function section(key, label, withBadge) {
+    function section(key, label, withBadge, open) {
       var wrap = el("section", "section");
       var header = el("button", "section-header");
       header.type = "button";
       header.id = "section-" + key + "-header";
-      header.setAttribute("aria-expanded", "false");
+      header.setAttribute("aria-expanded", open ? "true" : "false");
       header.setAttribute("aria-controls", "section-" + key);
       header.innerHTML = "<span>" + label + "</span>";
       var badge = null;
@@ -361,7 +425,7 @@
       body.id = "section-" + key;
       body.setAttribute("role", "region");
       body.setAttribute("aria-labelledby", header.id);
-      body.hidden = true;
+      body.hidden = !open;
       header.addEventListener("click", function () {
         var open = header.getAttribute("aria-expanded") !== "true";
         header.setAttribute("aria-expanded", String(open));
@@ -372,6 +436,14 @@
       wrap.appendChild(body);
       panel.appendChild(wrap);
       return { header: header, body: body, badge: badge };
+    }
+
+    // Versions
+    if (versionItems.length) {
+      var versionsSection = section("versions", "Versions", false, true);
+      versionItems.forEach(function (item) {
+        versionsSection.body.appendChild(item);
+      });
     }
 
     // Scenario
@@ -513,8 +585,18 @@
           return o.hideVersions && o.id === state.switches[sw.key];
         });
       });
+      // Milestone menus (P0, P1...) lead, then the version, then the other switches.
+      var ordered = switches.filter(function (sw) {
+        return sw.menu;
+      });
+      ordered.forEach(function (sw) {
+        sw.options.forEach(function (o) {
+          if (o.id === state.switches[sw.key]) add(o.label);
+        });
+      });
       if (versions.length > 1 && !hideVersions) add(versions[state.version].label);
       switches.forEach(function (sw) {
+        if (sw.menu) return;
         sw.options.forEach(function (o) {
           if (o.id !== state.switches[sw.key]) return;
           add(o.label);
@@ -641,6 +723,19 @@
         for (var id in switchButtons[key]) {
           switchButtons[key][id].setAttribute("aria-checked", String(id === state.switches[key]));
         }
+      }
+      // showIf: { key, id } shows a switch only while another switch is on that option.
+      switches.forEach(function (sw) {
+        if (sw.showIf) switchWraps[sw.key].hidden = state.switches[sw.showIf.key] !== sw.showIf.id;
+      });
+      for (var menuKey in switchMenus) {
+        var m = switchMenus[menuKey];
+        m.select.value = state.switches[menuKey];
+        var picked = m.sw.options.filter(function (o) {
+          return o.id === state.switches[menuKey];
+        })[0];
+        m.note.textContent = (picked && picked.description) || "";
+        m.note.hidden = !m.note.textContent;
       }
 
       if (versionSelect) {

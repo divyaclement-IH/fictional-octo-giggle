@@ -176,6 +176,12 @@
     );
   }
 
+  // A pause in the reply sequence (sending, typing dots, holding cards).
+  // Reduced motion skips them, so the reply shows right away.
+  function pause(ms) {
+    return prefersReducedMotion() ? 0 : ms;
+  }
+
   // Reveal the newest Dot reply's text char-by-char, then show its chips/cards.
   // A reply can be several Dot messages in a row (e.g. the matches, then an
   // imaging recommendation): each one types in turn after the previous one's
@@ -242,7 +248,7 @@
       typeMessage(seg.turn.querySelector(".dot-message"), screen, function () {
         // A message can hold its cards back for a moment after the text
         // (data-hold, ms), e.g. "Give me a few seconds..." before the matches.
-        var hold = parseInt(seg.turn.getAttribute("data-hold"), 10) || 0;
+        var hold = pause(parseInt(seg.turn.getAttribute("data-hold"), 10) || 0);
         typeTimer = setTimeout(function () {
           typeTimer = null;
           var shown = deferredOf(seg);
@@ -254,7 +260,7 @@
           });
           revealIntoView(shown, screen);
           // Let the cards land before the next message starts typing.
-          typeTimer = setTimeout(nextSegment, i < segments.length ? 900 : 0);
+          typeTimer = setTimeout(nextSegment, i < segments.length ? pause(900) : 0);
         }, hold);
       });
     })();
@@ -365,7 +371,7 @@
     status = !status
       ? ""
       : sending
-      ? '<p class="send-status is-sending" data-type="Caption · 12/16 Medium" role="status">Sending...</p>'
+      ? '<p class="send-status is-sending" data-type="Caption · 12/16 Medium" role="status">Sending…</p>'
       : '<p class="send-status is-sent" data-type="Caption · 12/16 Medium" role="status">' +
         '<img src="' + A + 'sent-check.svg" width="12" height="12" alt="" data-icon="check-circle">Sent</p>';
     return (
@@ -983,8 +989,8 @@
         refresh(isReply);
         // The reply is now in the DOM; type it out and hold its chips/cards.
         if (isReply) runReplyTypewriter(stepName);
-      }, 700);
-    }, SEND_MS);
+      }, pause(700));
+    }, pause(SEND_MS));
   }
 
   // A quick prompt after the results: send it as the member's message (the
@@ -1004,8 +1010,8 @@
         followPhase = "done";
         refresh(true);
         runReplyTypewriter(step.name + "#" + followUps.length);
-      }, 700);
-    }, SEND_MS);
+      }, pause(700));
+    }, pause(SEND_MS));
   }
 
   function currentIndex() {
