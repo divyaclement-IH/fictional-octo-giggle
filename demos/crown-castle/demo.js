@@ -82,7 +82,7 @@
   // story forward; Next without typing uses the fallback.
   var TYPED = {
     1: "I'd like to see an orthopedist",
-    2: "My shoulder has been hurting pretty bad since I played tennis last week. I’ve dislocated this shoulder before",
+    2: "My shoulder has been hurting pretty bad since I played tennis last week.",
     3: "It feels stable but it really hurts and I'm nervous about moving it too much",
     5: "Yes",
     7: "Someone close by. No other preferences",
@@ -475,7 +475,7 @@
     var preferred = list.some(function (p) { return p.preferred; });
     var standard = list.some(function (p) { return !p.preferred; });
     var parts = [];
-    if (preferred) parts.push("<b>Preferred providers</b> (those with the purple badge) meet our highest quality standards and usually have a lower copay than <b>Standard providers</b>.");
+    if (preferred) parts.push("<b>Preferred providers</b> (those with the purple badge) meet our highest quality standards and have a lower copay than <b>Standard providers</b>.");
     if (standard) parts.push("<b>Standard providers</b> are covered too, usually with a higher copay.");
     if (parts.length < 2) return "<p>" + lead + " " + parts.join("") + "</p>";
     return "<p>" + lead + "</p><ul>" + parts.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
@@ -588,16 +588,16 @@
   // Figma IsbGOKYwvvVi214VFgPRdA 11845:24200). Riley goes with the orthopedist.
   var PROVIDER_TYPES = [
     {
-      title: "Orthopedist",
+      title: "Primary care doctor",
       recommended: true,
+      body: "A good starting point for an initial evaluation and help coordinating next steps.",
+      cta: "Find a primary care doctor",
+    },
+    {
+      title: "Orthopedist",
       body: "Focuses on bones and joints, including the shoulder.",
       cta: "Find an orthopedist",
       action: "ortho",
-    },
-    {
-      title: "Primary care doctor",
-      body: "A good starting point for an initial evaluation and help coordinating next steps.",
-      cta: "Find a primary care doctor",
     },
     {
       title: "Sports medicine doctor",
@@ -689,9 +689,12 @@
   // Prompts disappear once one is sent; after "Show me more" the unused ones
   // return, but only while the walkthrough is still on the results step.
   // Returns true when the newest one is still sending or Dot is still typing.
-  function followUpTurns(turns, kind, ctx) {
+  // later: an optional Dot message that sits right after the results' quick
+  // prompts (and stays put above any follow-up exchanges once one is sent).
+  function followUpTurns(turns, kind, ctx, later) {
     // Facilities results are its last step, so every later step is still "on results".
     var onResults = kind === "facilities" || ctx.index === RESULTS[kind];
+    if (later && followUps.length) turns.push(later);
     for (var i = 0; i < followUps.length; i++) {
       var f = followUps[i];
       var newest = onResults && i === followUps.length - 1;
@@ -726,6 +729,7 @@
         );
       }
     }
+    if (later && !followUps.length) turns.push(later);
     return false;
   }
 
@@ -765,7 +769,7 @@
     if (index === 3 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Ouch — sorry to hear that. Knowing it’s the same shoulder you’ve dislocated before is helpful. " +
+        "<p>Ouch — sorry to hear that. " +
           "Are you able to move the shoulder normally right now, or does it feel unstable/like it might slip out?</p>"
       )
     );
@@ -814,8 +818,8 @@
     if (index === 7 && !typingDone) return waiting(turns);
     turns.push(
       dotTurn(
-        "<p>Before I pull your matches, do you have any specific preferences?</p>" +
-          '<p class="select-help">💡 Tip: You can mention gender, languages spoken or expertise.</p>'
+        "<p>Happy to help find an orthopedist. Do you have any specific preferences?</p>" +
+          '<p class="select-help">💡 Tip: you can mention things like gender, languages spoken, or expertise</p>'
       )
     );
     if (index < 8) return turns.join("");
@@ -834,7 +838,19 @@
         tierMessage("Here are your top matches.", providerSet(0)) + "</div>" +
         resultCards("providers", 0, ctx)
     );
-    followUpTurns(turns, "providers", ctx);
+    // Below the cards come the quick prompts, then two things for later as
+    // a separate Dot message.
+    var later =
+      dotTurn(
+        "<p>Two things to keep in mind for later:</p>" +
+          "<ul><li><b>Imaging or labs:</b> If you need either, just ask. I can help you find in-network options that could lower your " +
+          "out-of-pocket costs, so you’re not paying more than you need to.</li>" +
+          "<li><b>Surgery:</b> If your doctor ever recommends it, your plan includes access to Carrum, a network of top-rated surgeons " +
+          "and surgical centers. A care team coordinates everything from evaluation to recovery. No need to think about it now. It’s there if you need it.</li></ul>",
+        null,
+        { id: "turn-later" }
+      );
+    followUpTurns(turns, "providers", ctx, later);
     return turns.join("");
   }
 
@@ -1185,7 +1201,7 @@
             "A new Dot chat starts with the Find a doctor quick prompt from Home as the member's message.",
             "Dot greets Riley and asks what they're hoping to be seen for, so it can point them to the right kind of doctor.",
             ctx.switches.path === "providers"
-              ? "No quick replies: Riley answers in their own words. Next without typing sends: My shoulder has been hurting pretty bad since I played tennis last week. I’ve dislocated this shoulder before"
+              ? "No quick replies: Riley answers in their own words. Next without typing sends: My shoulder has been hurting pretty bad since I played tennis last week."
               : "Facilities path: the member answers Lab or imaging.",
             "Checkboxes in Versions: Show deductible, Show Care Keys and Show copays each turn their mentions on or off.",
           ];
@@ -1204,7 +1220,7 @@
         notes: function (ctx) {
           return ctx.switches.path === "providers"
             ? [
-                "Dot acknowledges the pain and notes it's the shoulder Riley dislocated before.",
+                "Dot acknowledges the pain.",
                 "It asks whether Riley can move the shoulder normally or whether it feels unstable, like it might slip out.",
                 "No quick replies: Riley types that it feels stable but hurts, and they're nervous about moving it.",
               ]
@@ -1250,7 +1266,7 @@
         address: ADDRESS,
         instruction: "Dot offers three provider types that could help. Select Find an orthopedist.",
         notes: [
-          "Service cards in a swipeable row (Figma 11845:24200): orthopedist (Recommended), primary care doctor and sports medicine doctor.",
+          "Service cards in a swipeable row (Figma 11845:24200): primary care doctor (Recommended), orthopedist and sports medicine doctor.",
           "Each card says what that provider type focuses on, with a button to find one.",
           "Riley goes with the orthopedist, so the search continues from there.",
         ],
@@ -1262,7 +1278,7 @@
         address: ADDRESS,
         instruction: "Dot asks about preferences. Type Someone close by. No other preferences in the chat (or select Next), then send.",
         notes: [
-          "Dot offers a tip: the member can mention gender, languages, or expertise.",
+          "Dot confirms the orthopedist search and asks about specific preferences, with a tip: Riley can mention gender, languages spoken, or expertise.",
           "No quick reply: Riley types their preferences (Someone close by. No other preferences) to have Dot pull up the matches.",
         ],
         render: page,
@@ -1276,6 +1292,7 @@
           return [
             "Dot says it's pulling up matches, then pauses 3.5 seconds before the cards appear.",
             "With the cards, Dot explains in plain text only the tiers shown: Preferred for the first set, both once a Standard provider appears. The Plan Key box is only in Traditional.",
+            "Quick prompts sit right below the cards; then, as a separate message, Dot adds two things to keep in mind for later: in-network imaging or labs that lower costs, and Carrum if surgery ever comes up.",
             "Cards use the older design: the copay chip names the tier (Preferred / Standard), with View full profile and Schedule appointment.",
             "Three orthopedists who treat shoulder pain appear as cards in a swipeable row. Specialist copays: $40 Preferred, $300 Standard.",
             "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
