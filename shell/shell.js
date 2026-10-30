@@ -48,6 +48,9 @@
  * screen outside the steps (e.g. the app's home page). A button labelled
  * home.label (e.g. "Start demo") at the top of Scenario opens it; any step,
  * Next or Restart leaves it. The URL keeps ?home=1 while it's open.
+ * home.buttons: [{ id, label }] shows one button per story instead (e.g.
+ * Ortho Demo, Pediatrician Demo): each opens home, and the picked id stays
+ * in ctx.story (and ?story=) after leaving it.
  *
  * Optional demo.feedback: true adds a Feedback section: a note box and a Copy
  * for Slack button that copies the note, where the reviewer is (demo side,
@@ -175,7 +178,18 @@
       if (v.id && v.id === params.get("version")) state.version = i;
     });
     var steps = versions[state.version].steps;
-    state.home = !!demo.home && params.get("home") === "1";
+    // Home buttons: one per story. state.home is the open button's id (or false).
+    var homeButtons = !demo.home
+      ? []
+      : demo.home.buttons || [{ id: "1", label: demo.home.label || "Start demo" }];
+    function homeButton(id) {
+      return homeButtons.filter(function (b) {
+        return b.id === id;
+      })[0];
+    }
+    var homeParam = params.get("home");
+    state.home = !demo.home || !homeParam ? false : homeButton(homeParam) ? homeParam : homeButtons[0].id;
+    state.story = demo.home && demo.home.buttons ? (homeButton(params.get("story")) || homeButton(state.home) || homeButtons[0]).id : null;
     var switches = demo.switches || [];
     state.switches = {};
     switches.forEach(function (sw) {
@@ -455,14 +469,19 @@
 
     // Scenario
     var scenario = section("scenario", "Scenario");
-    if (demo.home) {
-      var homeBtn = el("button", "btn btn-primary btn-home", escapeHtml(demo.home.label || "Start demo"));
-      homeBtn.type = "button";
-      homeBtn.addEventListener("click", function () {
-        state.home = true;
-        render();
+    if (homeButtons.length) {
+      var homeRow = el("div", "home-buttons");
+      homeButtons.forEach(function (hb) {
+        var homeBtn = el("button", "btn btn-primary btn-home", escapeHtml(hb.label));
+        homeBtn.type = "button";
+        homeBtn.addEventListener("click", function () {
+          state.home = hb.id;
+          if (state.story) state.story = hb.id;
+          render();
+        });
+        homeRow.appendChild(homeBtn);
       });
-      scenario.body.appendChild(homeBtn);
+      scenario.body.appendChild(homeRow);
     }
     var stepList = el("ol", "steps");
     var stepButtons = [];
@@ -618,6 +637,7 @@
       if (versions.length > 1 && !hideVersions) add(versions[state.version].label);
       switches.forEach(function (sw) {
         if (sw.menu) return;
+        if (sw.showIf && state.switches[sw.showIf.key] !== sw.showIf.id) return; // hidden right now
         sw.options.forEach(function (o) {
           if (o.id !== state.switches[sw.key]) return;
           add(o.label);
@@ -628,6 +648,7 @@
           }
         });
       });
+      if (state.story && homeButtons.length > 1) add(homeButton(state.story).label);
       parts.push(state.home ? "Home" : "Step " + (state.index + 1) + ": " + steps[state.index].name);
       parts.push(state.mode === "mobile" ? "Mobile" : "Desktop");
       return parts.join(" · ");
@@ -797,8 +818,9 @@
       var query = new URLSearchParams(location.search);
       if (versions[state.version].id) query.set("version", versions[state.version].id);
       query.set("step", String(state.index + 1));
-      if (state.home) query.set("home", "1");
+      if (state.home) query.set("home", state.home);
       else query.delete("home");
+      if (state.story) query.set("story", state.story);
       if (!realPhone) query.set("device", state.mode);
       switches.forEach(function (sw) {
         if (state.switches[sw.key] === sw.options[0].id) query.delete(sw.key);
@@ -826,6 +848,7 @@
         toggles: Object.assign({}, state.toggles),
         switches: Object.assign({}, state.switches),
         variants: Object.assign({}, state.variants),
+        story: state.story,
       };
     }
 

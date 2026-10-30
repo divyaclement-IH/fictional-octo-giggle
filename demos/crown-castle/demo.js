@@ -475,7 +475,7 @@
     var preferred = list.some(function (p) { return p.preferred; });
     var standard = list.some(function (p) { return !p.preferred; });
     var parts = [];
-    if (preferred) parts.push("<b>Preferred providers</b> meet our highest quality standards and usually have a lower copay.");
+    if (preferred) parts.push("<b>Preferred providers</b> (those with the purple badge) meet our highest quality standards and usually have a lower copay than <b>Standard providers</b>.");
     if (standard) parts.push("<b>Standard providers</b> are covered too, usually with a higher copay.");
     if (parts.length < 2) return "<p>" + lead + " " + parts.join("") + "</p>";
     return "<p>" + lead + "</p><ul>" + parts.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
@@ -491,7 +491,7 @@
       '<span class="chip chip-network"><img src="' + PS + 'check-circle.svg" width="12" height="12" alt="">In-network</span>';
     return (
       '<article class="provider-card">' +
-      '<div class="provider-content">' +
+      '<div class="provider-content"><div class="card-top">' +
       '<div class="provider-header">' +
       avatar(p) +
       '<div class="provider-title">' +
@@ -504,12 +504,13 @@
       // Dot view: cap at 2 chips (copay + network); offerings are omitted here.
       '<div class="chips">' + chips + "</div>" +
       '<p class="provider-summary">' + p.summary + "</p>" +
+      '</div><div class="card-bottom">' +
       '<img class="divider" src="' + PS + 'divider.svg" width="520" height="1" alt="">' +
       '<div class="clinic"><div class="clinic-address">' +
       '<p class="clinic-name">' + p.clinic + "</p>" +
       '<p class="clinic-street">' + p.address + "</p></div>" +
       '<p class="clinic-distance">' + p.distance + "</p></div>" +
-      "</div>" +
+      "</div></div>" +
       '<div class="button-stack">' +
       '<button class="btn-outline" type="button">View full profile</button>' +
       '<button class="btn-solid" type="button">Schedule appointment</button>' +
@@ -545,7 +546,7 @@
   function facilityCard(f, range) {
     return (
       '<article class="provider-card facility-card">' +
-      '<div class="provider-content">' +
+      '<div class="provider-content"><div class="card-top">' +
       '<div class="provider-header">' +
       '<img class="facility-avatar" src="' + PS + 'facility-avatar.svg" width="48" height="48" alt="">' +
       '<div class="provider-title">' +
@@ -555,10 +556,11 @@
       '<img src="' + PS + 'bookmark.svg" width="24" height="24" alt=""></button></div>' +
       '<div class="chips facility-chips">' + costChip(f.cost, range) +
       '<span class="chip chip-network"><img src="' + PS + 'check-circle.svg" width="12" height="12" alt="">In-network</span></div>' +
+      '</div><div class="card-bottom">' +
       '<img class="divider" src="' + PS + 'divider.svg" width="520" height="1" alt="">' +
       '<div class="clinic"><p class="facility-address">' + f.address + "</p>" +
       '<p class="clinic-distance facility-distance">' + f.distance + "</p></div>" +
-      "</div>" +
+      "</div></div>" +
       '<div class="button-stack">' +
       '<button class="btn-outline" type="button">View</button>' +
       '<button class="btn-solid" type="button">Schedule</button>' +
@@ -825,7 +827,7 @@
       dotTurn(
         "<p>Give me a few seconds to pull up your matches.</p>",
         null,
-        { id: "turn-results", holdMs: 2000 }
+        { id: "turn-results", holdMs: 3500 }
       ) +
         // The tier explainer appears with the cards, after the pause.
         '<div class="dot-message results-note" data-type="Body 1 · 16/24 Medium">' +
@@ -1272,7 +1274,7 @@
         instruction: "Dot pulls up orthopedists near Riley. Swipe through the cards, or send a quick prompt.",
         notes: function (ctx) {
           return [
-            "Dot says it's pulling up matches, then pauses 2 seconds before the cards appear.",
+            "Dot says it's pulling up matches, then pauses 3.5 seconds before the cards appear.",
             "With the cards, Dot explains in plain text only the tiers shown: Preferred for the first set, both once a Standard provider appears. The Plan Key box is only in Traditional.",
             "Cards use the older design: the copay chip names the tier (Preferred / Standard), with View full profile and Schedule appointment.",
             "Three orthopedists who treat shoulder pain appear as cards in a swipeable row. Specialist copays: $40 Preferred, $300 Standard.",

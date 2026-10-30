@@ -685,6 +685,8 @@
 .button-stack {
   display: flex;
   gap: 8px;
+  /* Cards in a row share the tallest card's height; keep the buttons at the bottom. */
+  margin-top: auto;
 }
 
 .btn-outline,
@@ -1023,4 +1025,58 @@
 .chip-cost.has-after {
   white-space: normal;
   text-align: left;
+}
+
+/* Cards in a carousel row share three rows (top, divider + address, buttons),
+   so dividers and buttons line up across cards of different heights. */
+.dot-results:not(.is-services) .carousel-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 360px;
+  grid-template-rows: auto auto auto;
+  row-gap: 0;
+}
+
+.mode-mobile .dot-results:not(.is-services) .carousel-track {
+  grid-auto-columns: calc(100% - 40px);
+}
+
+.dot-results:not(.is-services) .carousel-item {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+}
+
+/* The card's padding moves onto its three parts, so the shared rows don't
+   count it twice. */
+.dot-results:not(.is-services) .carousel-item > .provider-card {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  gap: 0;
+  padding: 0;
+}
+
+.dot-results:not(.is-services) .card-top {
+  padding: 16px 16px 0;
+}
+
+.dot-results:not(.is-services) .carousel-item > .provider-card > .provider-content {
+  display: contents;
+}
+
+.card-top,
+.card-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dot-results:not(.is-services) .card-bottom {
+  padding: 12px 16px 0;
+}
+
+.dot-results:not(.is-services) .carousel-item > .provider-card > .button-stack {
+  margin-top: 0;
+  padding: 16px;
 }

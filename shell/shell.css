@@ -738,10 +738,16 @@ body.is-real-phone {
   display: none;
 }
 
-/* "Start demo": opens demo.home, above the steps */
+/* "Start demo" (one per story): opens demo.home, above the steps */
+.home-buttons {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
 .btn-home {
   width: 100%;
-  margin-bottom: 16px;
+  padding: 0 12px;
 }
 
 /* Scenario checkboxes moved into the Versions section, under its menus */

@@ -3,7 +3,8 @@
    (demos/crown-castle-traditional).
    Mobile follows the Anatomy Home (Figma VT79VSlhYlpl0g2JS9vLKt, node 50837:50112);
    desktop follows the web home screenshots.
-   CrownHome.home(side) returns the shell's demo.home (opened by Start demo).
+   CrownHome.home(side) returns the shell's demo.home (opened by the Ortho Demo
+   or Pediatrician Demo button in Scenario).
    The Dot entry points (Ask Dot box, Find a doctor, Navigate your healthcare
    with Dot, Find care with chat assistant) start the Dot side; Search for
    local care starts the Traditional side. side is the page Home opened on. */
@@ -190,7 +191,12 @@
         else openSide(to, pages[to]);
       });
       return {
-        label: "Start demo",
+        // Two stories start from Home; ctx.story says which one was picked.
+        // The Pediatrician Demo follows the same flow until its script is in.
+        buttons: [
+          { id: "ortho", label: "Ortho Demo" },
+          { id: "peds", label: "Pediatrician Demo" },
+        ],
         address: "member.includedhealth.com/home",
         instruction: function (ctx) {
           return ctx.mode === "mobile"
@@ -203,7 +209,8 @@
               ? "Mobile follows the Anatomy Home design (Figma 50837:50112), plus a Search for local care tile in the empty grid slot so Traditional has a way in."
               : "Desktop follows the web home: welcome, Ask Dot box with prompts, next steps, Get care, recommendations and Care Team.",
             "The Dot entry points start the Dot conversation; Search for local care starts care search (Traditional).",
-            "Start demo in Scenario brings you back here from any step.",
+            "Ortho Demo or Pediatrician Demo in Scenario brings you back here from any step.",
+            ctx.story === "peds" ? "Pediatrician Demo: uses the Ortho flow for now, until its own script is added." : null,
             ctx.mode === "desktop" ? "The Recommended for you photo is a placeholder." : null,
           ].filter(Boolean);
         },
