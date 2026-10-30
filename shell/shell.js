@@ -33,6 +33,10 @@
  *
  * Optional demo.backLink: { label, href } shows a link above the panel title.
  *
+ * Optional demo.feedback: true adds a Feedback section: a note box and a Copy
+ * for Slack button that copies the note, where the reviewer is (demo side,
+ * version, switches, step, device) and a link that reopens this exact screen.
+ *
  * Optional demo.demoSwitch: { label, current, options: [{ id, label, href }] }
  * adds a segmented control right under Mobile/Desktop that navigates between
  * related demos (e.g. Traditional | Dot). The option whose id === current is
@@ -450,6 +454,94 @@
       scenario.body.appendChild(toggleList);
     }
 
+    // Feedback (demo.feedback: true): a note plus where the reviewer is,
+    // copied for Slack with a link that reopens this exact screen.
+    var feedbackContext = null;
+    if (demo.feedback) {
+      var feedback = section("feedback", "Feedback");
+      var noteLabel = el("label", "feedback-label", "Your note");
+      noteLabel.htmlFor = "feedback-note";
+      var note = el("textarea", "feedback-note");
+      note.id = "feedback-note";
+      note.rows = 4;
+      note.placeholder = "What’s working, what should change?";
+      feedbackContext = el("p", "feedback-context");
+      var copyBtn = el("button", "btn btn-primary feedback-copy", "Copy for Slack");
+      copyBtn.type = "button";
+      var copyTimer = null;
+      copyBtn.addEventListener("click", function () {
+        var text =
+          "*" + demo.title + "* feedback\n" +
+          (note.value.trim() ? note.value.trim().split("\n").map(function (l) { return "> " + l; }).join("\n") + "\n" : "") +
+          contextLine() + "\n" + location.href;
+        copyText(text).then(function () {
+          copyBtn.textContent = "Copied";
+          clearTimeout(copyTimer);
+          copyTimer = setTimeout(function () {
+            copyBtn.textContent = "Copy for Slack";
+          }, 2000);
+        });
+      });
+      feedback.body.appendChild(noteLabel);
+      feedback.body.appendChild(note);
+      feedback.body.appendChild(feedbackContext);
+      feedback.body.appendChild(copyBtn);
+      feedback.body.appendChild(
+        el(
+          "p",
+          "feedback-help",
+          "Copies your note with the path, step, view and a link that opens this exact screen. No account needed to open the link."
+        )
+      );
+    }
+
+    // "Traditional · P1: Plain text · Providers · Step 3: Results · Desktop": the
+    // demo side, the version shown, switch choices, then the step and device.
+    function contextLine() {
+      var parts = [];
+      // Labels like "P1 · Plain text" read "P1: Plain text" so the dots only separate parts.
+      function add(label) {
+        if (label) parts.push(String(label).replace(/ · /g, ": "));
+      }
+      if (demo.demoSwitch) {
+        demo.demoSwitch.options.forEach(function (o) {
+          if (o.id === demo.demoSwitch.current) add(o.label);
+        });
+      }
+      var hideVersions = switches.some(function (sw) {
+        return sw.options.some(function (o) {
+          return o.hideVersions && o.id === state.switches[sw.key];
+        });
+      });
+      if (versions.length > 1 && !hideVersions) add(versions[state.version].label);
+      switches.forEach(function (sw) {
+        sw.options.forEach(function (o) {
+          if (o.id !== state.switches[sw.key]) return;
+          add(o.label);
+          if (o.variants) {
+            o.variants.items.forEach(function (v) {
+              if (v.id === state.variants[o.id]) add(v.label);
+            });
+          }
+        });
+      });
+      parts.push("Step " + (state.index + 1) + ": " + steps[state.index].name);
+      parts.push(state.mode === "mobile" ? "Mobile" : "Desktop");
+      return parts.join(" · ");
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+      var area = el("textarea");
+      area.value = text;
+      area.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+      return Promise.resolve();
+    }
+
     // Specs
     var specs = section("specs", "Specs");
     var specList = el("fieldset", "spec-options");
@@ -525,6 +617,7 @@
         else b.removeAttribute("aria-current");
       });
       nextText.textContent = instruction;
+      if (feedbackContext) feedbackContext.textContent = contextLine();
       backBtn.disabled = state.index === 0;
       nextBtn.disabled = state.index === steps.length - 1;
 

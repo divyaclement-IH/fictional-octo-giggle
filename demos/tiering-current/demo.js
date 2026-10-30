@@ -1123,6 +1123,7 @@
 
   app = DemoShell.mount({
     title: "Provider/facility tiering - current",
+    feedback: true,
     summary: "A member with knee pain asks Dot, the AI assistant, to find an orthopedist, then learns how to save on an X-ray at a freestanding imaging center.",
     demoSwitch: {
       label: "Demo",

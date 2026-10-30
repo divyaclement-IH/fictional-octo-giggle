@@ -1174,6 +1174,7 @@
   app = DemoShell.mount({
     backLink: backLink,
     title: "Provider/facility tiering - current",
+    feedback: true,
     demoSwitch: {
       label: "Demo",
       current: "traditional",
