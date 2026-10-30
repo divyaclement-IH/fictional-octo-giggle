@@ -9,8 +9,65 @@
  *       notes: [],     // annotation bullets
  *       address,       // desktop address pill
  *       render(ctx),   // returns the screen's HTML; ctx = { mode, step, index }
+ *       onShow(ctx),   // optional, runs after render; ctx adds { screen, content }
  *     }],
  *   }
+ *
+ * Instead of steps, a demo can pass versions: [{ id, label, description,
+ * steps }] to show iterations of a page. A picker in the panel switches
+ * between them in place, and the render/onShow ctx gains { version }.
+ * Optional demo.onRestart() runs when the walkthrough restarts.
+ *
+ * Optional demo.switches: [{ key, label, shortcut, options: [{ id, label }] }]
+ * adds a segmented control under Mobile/Desktop (e.g. Providers | Facilities);
+ * ctx.switches holds the selected option ids, and the shortcut key cycles it.
+ * An option with hideVersions: true hides the version picker while selected.
+ * An option can also bring its own render-only variants:
+ *   variants: { param, items: [{ id, label, description }] }
+ * shown as a version menu while that option is selected; ctx.variants[optionId]
+ * holds the chosen id (steps stay the same).
+ *
+ * Optional demo.toggles: [{ key, label, checked }] adds checkboxes under
+ * Scenario (or at the end of the Versions section, when there is one);
+ * ctx.toggles holds their state. A step's instruction and notes
+ * can be functions of ctx, so the panel text can follow the toggles.
+ *
+ * Every panel starts with an "← All demos" link to the demo list (index.html).
+ * Optional demo.backLink: { label, href } shows a link beside it.
+ *
+ * A switch with menu: true shows as a dropdown instead of buttons; an
+ * option's description shows under it. showIf: { key, id } shows a switch
+ * only while another switch is on that option.
+ *
+ * Optional Versions section: switches with section: "versions" (e.g. a
+ * Milestones menu with P0, P1...) and the version picker (labelled
+ * demo.versionsLabel) sit in an open "Versions" section above Scenario, each
+ * under its own label, instead of at the top of the panel.
+ *
+ * Optional demo.home: { label, address, render(ctx), instruction, notes } is a
+ * screen outside the steps (e.g. the app's home page). A button labelled
+ * home.label (e.g. "Start demo") at the top of Scenario opens it; any step,
+ * Next or Restart leaves it. The URL keeps ?home=1 while it's open.
+ * home.buttons: [{ id, label, steps, switches }] shows one button per story
+ * instead (e.g. Ortho Demo, Facility Demo): each opens home, and the picked
+ * id stays in ctx.story (and ?story=) after leaving it. A story with its own
+ * steps (a list, or a function(versionSteps) returning one) swaps the
+ * Scenario step list (the version picker then hides);
+ * switches presets them (e.g. { path: "facilities" }) when it's picked.
+ *
+ * Optional demo.feedback: true adds a Feedback section: a note box and a Copy
+ * for Slack button that copies the note, where the reviewer is (demo side,
+ * version, switches, step, device) and a link that reopens this exact screen.
+ *
+ * Optional demo.demoSwitch: { label, current, options: [{ id, label, href }] }
+ * adds a segmented control right under Mobile/Desktop that navigates between
+ * related demos (e.g. Traditional | Dot). The option whose id === current is
+ * the active page; clicking another option navigates to its href, carrying the
+ * current ?device= and toggle states so the layout mode and options are preserved.
+ *
+ * mount() returns { refresh, next, goTo, setSwitch } so a screen can re-render after its own
+ * state changes. The URL keeps ?version=&step=&device= so a reload or a
+ * shared link opens in the same place.
  *
  * Inside a screen, elements with data-action="next" | "back" | "restart"
  * drive the walkthrough. Spec overlay hooks: data-type, data-space,
@@ -18,6 +75,10 @@
  */
 (function () {
   "use strict";
+
+  // The demo list is the repo root's index.html, one folder up from shell/.
+  var SHELL_SRC = document.currentScript && document.currentScript.src;
+  var DEMO_LIST = SHELL_SRC ? new URL("../", SHELL_SRC).href : "../../";
 
   var TOKENS = {
     "text/primary": "#000000",
@@ -34,6 +95,11 @@
     "surface/brand/weak": "#E6EFFE",
     "surface/brand": "#0012E7",
     "surface/success/weak": "#E6F4EC",
+    "text/neutral/strong": "#3B3B3B",
+    "text/success/strongest": "#002C00",
+    "text/accentone/strong": "#3C1B8F",
+    "surface/accentone/weak": "#F1F0FF",
+    "surface/brand/strongest": "#001048",
   };
 
   var SPEC_OPTIONS = [
@@ -63,7 +129,7 @@
   var FRAME_SIZE = {
     // Outer footprint including the phone bezel (10px + 1px ring per side).
     mobile: { width: 375 + 22, height: 812 + 22 },
-    desktop: { width: 1280 + 2, height: 800 + 2 },
+    desktop: { width: 1280 + 2, height: 880 + 2 },
   };
   var FRAME_CLEARANCE = 32;
 
@@ -101,12 +167,102 @@
     var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     var realPhone = window.matchMedia("(pointer: coarse) and (max-width: 767px)").matches;
 
+    var versions = demo.versions || [{ id: null, steps: demo.steps }];
+    var params = new URLSearchParams(location.search);
+
     var state = {
+      version: 0,
       index: 0,
-      mode: "mobile",
+      mode: realPhone ? "mobile" : "desktop", // real phones always get the phone layout
       specs: {},
       switching: 0,
     };
+    versions.forEach(function (v, i) {
+      if (v.id && v.id === params.get("version")) state.version = i;
+    });
+    var steps = versions[state.version].steps;
+    // Home buttons: one per story. state.home is the open button's id (or false).
+    var homeButtons = !demo.home
+      ? []
+      : demo.home.buttons || [{ id: "1", label: demo.home.label || "Start demo" }];
+    function homeButton(id) {
+      return homeButtons.filter(function (b) {
+        return b.id === id;
+      })[0];
+    }
+    var homeParam = params.get("home");
+    state.home = !demo.home || !homeParam ? false : homeButton(homeParam) ? homeParam : homeButtons[0].id;
+    state.story = demo.home && demo.home.buttons ? (homeButton(params.get("story")) || homeButton(state.home) || homeButtons[0]).id : null;
+    // A story can bring its own steps (a list, or a function of the
+    // version's steps); otherwise the version's steps apply. Cached so each
+    // step keeps its identity across renders.
+    var storyStepCache = {};
+    function storySteps() {
+      var b = state.story ? homeButton(state.story) : null;
+      if (!b || !b.steps) return null;
+      if (typeof b.steps !== "function") return b.steps;
+      var key = b.id + "|" + state.version;
+      if (!storyStepCache[key]) storyStepCache[key] = b.steps(versions[state.version].steps);
+      return storyStepCache[key];
+    }
+    function activeSteps() {
+      return storySteps() || versions[state.version].steps;
+    }
+    steps = activeSteps();
+    var switches = demo.switches || [];
+    state.switches = {};
+    switches.forEach(function (sw) {
+      var fromUrl = params.get(sw.key);
+      var valid = sw.options.some(function (o) {
+        return o.id === fromUrl;
+      });
+      state.switches[sw.key] = valid ? fromUrl : sw.options[0].id;
+    });
+    // The story's presets apply wherever the URL doesn't say otherwise (e.g.
+    // arriving from the other side of a demo).
+    var storyPresets = (state.story && homeButton(state.story).switches) || {};
+    for (var presetKey in storyPresets) {
+      if (!params.get(presetKey) && presetKey in state.switches) state.switches[presetKey] = storyPresets[presetKey];
+    }
+    state.variants = {};
+    switches.forEach(function (sw) {
+      sw.options.forEach(function (o) {
+        if (!o.variants) return;
+        var fromUrl = params.get(o.variants.param);
+        var found = o.variants.items.some(function (v) {
+          return v.id === fromUrl;
+        });
+        state.variants[o.id] = found ? fromUrl : o.variants.items[0].id;
+      });
+    });
+    var toggles = demo.toggles || [];
+    state.toggles = {};
+    toggles.forEach(function (t) {
+      var fromUrl = params.get(t.key);
+      state.toggles[t.key] = fromUrl === "0" ? false : fromUrl === "1" ? true : t.checked !== false;
+    });
+    // "&key=1|0" for every toggle, so a linked demo opens with the same options.
+    function toggleQuery() {
+      return toggles
+        .map(function (t) {
+          return "&" + t.key + "=" + (state.toggles[t.key] ? "1" : "0");
+        })
+        .join("");
+    }
+    // "&key=id" for every switch (e.g. plan, path), so a linked demo opens with
+    // the same selections. Only non-default values are carried.
+    function switchQuery() {
+      return switches
+        .map(function (sw) {
+          return state.switches[sw.key] === sw.options[0].id
+            ? ""
+            : "&" + sw.key + "=" + state.switches[sw.key];
+        })
+        .join("");
+    }
+    var stepParam = parseInt(params.get("step"), 10);
+    if (stepParam >= 1) state.index = Math.min(stepParam, steps.length) - 1;
+    if (!realPhone && /^(mobile|desktop)$/.test(params.get("device"))) state.mode = params.get("device");
     SPEC_OPTIONS.forEach(function (o) {
       state.specs[o.key] = o.checked;
     });
@@ -118,6 +274,21 @@
 
     var panel = el("aside", "panel");
     panel.setAttribute("aria-label", "Demo controls");
+    // Every demo links back to the demo list; demo.backLink sits beside it.
+    var panelLinks = el("div", "panel-links");
+    var home = el("a", "panel-back panel-home", "← All demos");
+    home.href = DEMO_LIST;
+    panelLinks.appendChild(home);
+    panel.appendChild(panelLinks);
+    if (demo.backLink) {
+      var back = el("a", "panel-back", "← " + escapeHtml(demo.backLink.label));
+      back.href = demo.backLink.href;
+      // Carry the current toggles and switches back (e.g. Show Care Keys, plan).
+      back.addEventListener("click", function () {
+        back.href = demo.backLink.href + toggleQuery() + switchQuery();
+      });
+      panelLinks.appendChild(back);
+    }
     panel.appendChild(el("h1", "panel-title", escapeHtml(demo.title)));
     panel.appendChild(el("p", "panel-summary", escapeHtml(demo.summary)));
 
@@ -137,12 +308,157 @@
     });
     panel.appendChild(deviceSwitch);
 
-    function section(key, label, withBadge) {
+    // Demo switcher: navigates between related demos, styled like the device
+    // switch and placed directly under it. Carries ?device= and the toggles
+    // (e.g. Show Care Keys) across the hop.
+    if (demo.demoSwitch && demo.demoSwitch.options) {
+      var ds = demo.demoSwitch;
+      var dsGroup = el("div", "device-switch demo-switcher");
+      dsGroup.setAttribute("role", "radiogroup");
+      dsGroup.setAttribute("aria-label", ds.label || "Demo");
+      dsGroup.style.gridTemplateColumns = "repeat(" + ds.options.length + ", 1fr)";
+      ds.options.forEach(function (o) {
+        var active = o.id === ds.current;
+        var b = el("button", null, escapeHtml(o.label));
+        b.type = "button";
+        b.setAttribute("role", "radio");
+        b.setAttribute("aria-checked", active ? "true" : "false");
+        if (!active && o.href) {
+          b.addEventListener("click", function () {
+            var sep = o.href.indexOf("?") === -1 ? "?" : "&";
+            location.href = o.href + sep + "device=" + state.mode + toggleQuery() + switchQuery();
+          });
+        }
+        dsGroup.appendChild(b);
+      });
+      panel.appendChild(dsGroup);
+    }
+
+    // Demo-defined segmented switches, styled like the device switch. Ones with
+    // section: "versions" go in the Versions section, under their label.
+    // menu: true shows a dropdown (like the version picker) instead.
+    var switchButtons = {};
+    var switchMenus = {};
+    var switchWraps = {}; // switch key -> its element, for showIf
+    var versionItems = [];
+    switches.forEach(function (sw) {
+      if (sw.menu) {
+        var menu = el("div", "version-picker");
+        var menuWrap = el("div", "version-select");
+        var menuSelect = el("select");
+        menuSelect.setAttribute("aria-label", sw.label);
+        sw.options.forEach(function (o) {
+          var option = el("option", null, escapeHtml(o.label));
+          option.value = o.id;
+          menuSelect.appendChild(option);
+        });
+        menuSelect.addEventListener("change", function () {
+          setSwitch(sw.key, menuSelect.value);
+        });
+        menuWrap.appendChild(menuSelect);
+        menuWrap.insertAdjacentHTML("beforeend", CHEVRON.replace("section-chevron", "version-chevron"));
+        menu.appendChild(menuWrap);
+        var menuNote = el("p", "version-note");
+        menu.appendChild(menuNote);
+        switchMenus[sw.key] = { sw: sw, select: menuSelect, note: menuNote };
+        switchWraps[sw.key] = menu;
+        if (sw.section === "versions") {
+          menu.classList.add("versions-item");
+          menu.insertBefore(el("p", "versions-label", escapeHtml(sw.label)), menuWrap);
+          versionItems.push(menu);
+        } else {
+          panel.appendChild(menu);
+        }
+        return;
+      }
+      var group = el("div", "device-switch demo-switch");
+      group.setAttribute("role", "radiogroup");
+      group.setAttribute("aria-label", sw.label);
+      group.style.gridTemplateColumns = "repeat(" + sw.options.length + ", 1fr)";
+      switchButtons[sw.key] = {};
+      sw.options.forEach(function (o) {
+        var b = el("button", null, escapeHtml(o.label));
+        b.type = "button";
+        b.setAttribute("role", "radio");
+        b.addEventListener("click", function () {
+          setSwitch(sw.key, o.id);
+        });
+        switchButtons[sw.key][o.id] = b;
+        group.appendChild(b);
+      });
+      if (sw.section === "versions") {
+        var item = el("div", "versions-item");
+        item.appendChild(el("p", "versions-label", escapeHtml(sw.label)));
+        item.appendChild(group);
+        versionItems.push(item);
+        switchWraps[sw.key] = item;
+      } else {
+        panel.appendChild(group);
+        switchWraps[sw.key] = group;
+      }
+    });
+
+    var versionSelect = null;
+    var versionNote = null;
+    var versionPicker = null;
+    if (demo.versions && demo.versions.length > 1) {
+      var picker = el("div", "version-picker versions-item");
+      versionPicker = picker;
+      if (demo.versionsLabel) picker.appendChild(el("p", "versions-label", escapeHtml(demo.versionsLabel)));
+      var selectWrap = el("div", "version-select");
+      versionSelect = el("select");
+      versionSelect.setAttribute("aria-label", demo.versionsLabel || "Version");
+      versions.forEach(function (v, i) {
+        var option = el("option", null, escapeHtml(v.label));
+        option.value = String(i);
+        versionSelect.appendChild(option);
+      });
+      versionSelect.addEventListener("change", function () {
+        switchVersion(parseInt(versionSelect.value, 10));
+      });
+      selectWrap.appendChild(versionSelect);
+      selectWrap.insertAdjacentHTML("beforeend", CHEVRON.replace("section-chevron", "version-chevron"));
+      picker.appendChild(selectWrap);
+      versionNote = el("p", "version-note");
+      picker.appendChild(versionNote);
+      versionItems.push(picker);
+    }
+
+    // Variant menus for switch options (e.g. facility versions), same look as the version picker.
+    var variantPickers = [];
+    switches.forEach(function (sw) {
+      sw.options.forEach(function (o) {
+        if (!o.variants) return;
+        var wrap = el("div", "version-picker");
+        var selectWrap = el("div", "version-select");
+        var select = el("select");
+        select.setAttribute("aria-label", o.label + " version");
+        o.variants.items.forEach(function (v) {
+          var option = el("option", null, escapeHtml(v.label));
+          option.value = v.id;
+          select.appendChild(option);
+        });
+        select.addEventListener("change", function () {
+          state.variants[o.id] = select.value;
+          renderPanel();
+          renderScreen();
+        });
+        selectWrap.appendChild(select);
+        selectWrap.insertAdjacentHTML("beforeend", CHEVRON.replace("section-chevron", "version-chevron"));
+        wrap.appendChild(selectWrap);
+        var note = el("p", "version-note");
+        wrap.appendChild(note);
+        panel.appendChild(wrap);
+        variantPickers.push({ sw: sw, option: o, wrap: wrap, select: select, note: note });
+      });
+    });
+
+    function section(key, label, withBadge, open) {
       var wrap = el("section", "section");
       var header = el("button", "section-header");
       header.type = "button";
       header.id = "section-" + key + "-header";
-      header.setAttribute("aria-expanded", "false");
+      header.setAttribute("aria-expanded", open ? "true" : "false");
       header.setAttribute("aria-controls", "section-" + key);
       header.innerHTML = "<span>" + label + "</span>";
       var badge = null;
@@ -155,7 +471,7 @@
       body.id = "section-" + key;
       body.setAttribute("role", "region");
       body.setAttribute("aria-labelledby", header.id);
-      body.hidden = true;
+      body.hidden = !open;
       header.addEventListener("click", function () {
         var open = header.getAttribute("aria-expanded") !== "true";
         header.setAttribute("aria-expanded", String(open));
@@ -168,22 +484,56 @@
       return { header: header, body: body, badge: badge };
     }
 
+    // Versions
+    if (versionItems.length) {
+      var versionsSection = section("versions", "Versions", false, true);
+      versionItems.forEach(function (item) {
+        versionsSection.body.appendChild(item);
+      });
+    }
+
     // Scenario
     var scenario = section("scenario", "Scenario");
-    var stepList = el("ol", "steps");
-    var stepButtons = demo.steps.map(function (step, i) {
-      var li = el("li");
-      var b = el("button", "step");
-      b.type = "button";
-      b.innerHTML =
-        '<span class="step-number">' + (i + 1) + "</span><span>" + escapeHtml(step.name) + "</span>";
-      b.addEventListener("click", function () {
-        goTo(i);
+    if (homeButtons.length) {
+      var homeRow = el("div", "home-buttons");
+      homeButtons.forEach(function (hb) {
+        var homeBtn = el("button", "btn btn-primary btn-home", escapeHtml(hb.label));
+        homeBtn.type = "button";
+        homeBtn.addEventListener("click", function () {
+          state.home = hb.id;
+          if (state.story) {
+            // Switch to this story: its steps (or the default ones) and presets.
+            state.story = hb.id;
+            steps = activeSteps();
+            state.index = 0;
+            for (var key in hb.switches || {}) state.switches[key] = hb.switches[key];
+            renderSteps();
+          }
+          render();
+        });
+        homeRow.appendChild(homeBtn);
       });
-      li.appendChild(b);
-      stepList.appendChild(li);
-      return b;
-    });
+      scenario.body.appendChild(homeRow);
+    }
+    var stepList = el("ol", "steps");
+    var stepButtons = [];
+    function renderSteps() {
+      stepList.innerHTML = "";
+      stepButtons = steps.map(function (step, i) {
+        var li = el("li");
+        var b = el("button", "step");
+        b.type = "button";
+        b.innerHTML =
+          '<span class="step-number">' + (i + 1) + "</span><span>" + escapeHtml(step.name) + "</span>";
+        b.addEventListener("click", function () {
+          goTo(i);
+        });
+        li.appendChild(b);
+        stepList.appendChild(li);
+        return b;
+      });
+    }
+    renderSteps();
     scenario.body.appendChild(stepList);
 
     var nextCard = el("div", "next-card");
@@ -208,8 +558,145 @@
     scenario.body.appendChild(restartBtn);
 
     scenario.body.appendChild(
-      el("p", "keys-line", "Keys: → next · ← back · R restart · M switch device")
+      el(
+        "p",
+        "keys-line",
+        "Keys: → next · ← back · R restart · M switch device" +
+          switches
+            .filter(function (sw) {
+              return sw.shortcut;
+            })
+            .map(function (sw) {
+              return " · " + sw.shortcut.toUpperCase() + " " + sw.label.toLowerCase();
+            })
+            .join("")
+      )
     );
+
+    if (toggles.length) {
+      var toggleList = el("fieldset", "spec-options scenario-toggles");
+      toggleList.setAttribute("aria-label", "Scenario options");
+      toggles.forEach(function (t) {
+        var label = el("label", "spec-option");
+        var input = el("input");
+        input.type = "checkbox";
+        input.checked = state.toggles[t.key];
+        input.addEventListener("change", function () {
+          state.toggles[t.key] = input.checked;
+          renderPanel();
+          renderScreen(true);
+        });
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(t.label));
+        toggleList.appendChild(label);
+      });
+      if (versionsSection) {
+        toggleList.classList.add("versions-toggles");
+        versionsSection.body.appendChild(toggleList);
+      } else {
+        scenario.body.appendChild(toggleList);
+      }
+    }
+
+    // Feedback (demo.feedback: true): a note plus where the reviewer is,
+    // copied for Slack with a link that reopens this exact screen.
+    var feedbackContext = null;
+    if (demo.feedback) {
+      var feedback = section("feedback", "Feedback");
+      var noteLabel = el("label", "feedback-label", "Your note");
+      noteLabel.htmlFor = "feedback-note";
+      var note = el("textarea", "feedback-note");
+      note.id = "feedback-note";
+      note.rows = 4;
+      note.placeholder = "What’s working, what should change?";
+      feedbackContext = el("p", "feedback-context");
+      var copyBtn = el("button", "btn btn-primary feedback-copy", "Copy for Slack");
+      copyBtn.type = "button";
+      var copyTimer = null;
+      copyBtn.addEventListener("click", function () {
+        var text =
+          "*" + demo.title + "* feedback\n" +
+          (note.value.trim() ? note.value.trim().split("\n").map(function (l) { return "> " + l; }).join("\n") + "\n" : "") +
+          contextLine() + "\n" + location.href;
+        copyText(text).then(function () {
+          copyBtn.textContent = "Copied";
+          clearTimeout(copyTimer);
+          copyTimer = setTimeout(function () {
+            copyBtn.textContent = "Copy for Slack";
+          }, 2000);
+        });
+      });
+      feedback.body.appendChild(noteLabel);
+      feedback.body.appendChild(note);
+      feedback.body.appendChild(feedbackContext);
+      feedback.body.appendChild(copyBtn);
+      feedback.body.appendChild(
+        el(
+          "p",
+          "feedback-help",
+          "Copies your note with the path, step, view and a link that opens this exact screen. No account needed to open the link."
+        )
+      );
+    }
+
+    // "Traditional · P1: Plain text · Providers · Step 3: Results · Desktop": the
+    // demo side, the version shown, switch choices, then the step and device.
+    function contextLine() {
+      var parts = [];
+      // Labels like "P1 · Plain text" read "P1: Plain text" so the dots only separate parts.
+      function add(label) {
+        if (label) parts.push(String(label).replace(/ · /g, ": "));
+      }
+      if (demo.demoSwitch) {
+        demo.demoSwitch.options.forEach(function (o) {
+          if (o.id === demo.demoSwitch.current) add(o.label);
+        });
+      }
+      var hideVersions = switches.some(function (sw) {
+        return sw.options.some(function (o) {
+          return o.hideVersions && o.id === state.switches[sw.key];
+        });
+      });
+      // Milestone menus (P0, P1...) lead, then the version, then the other switches.
+      var ordered = switches.filter(function (sw) {
+        return sw.menu;
+      });
+      ordered.forEach(function (sw) {
+        sw.options.forEach(function (o) {
+          if (o.id === state.switches[sw.key]) add(o.label);
+        });
+      });
+      if (versions.length > 1 && !hideVersions && !storySteps()) add(versions[state.version].label);
+      switches.forEach(function (sw) {
+        if (sw.menu) return;
+        if (sw.showIf && state.switches[sw.showIf.key] !== sw.showIf.id) return; // hidden right now
+        sw.options.forEach(function (o) {
+          if (o.id !== state.switches[sw.key]) return;
+          add(o.label);
+          if (o.variants) {
+            o.variants.items.forEach(function (v) {
+              if (v.id === state.variants[o.id]) add(v.label);
+            });
+          }
+        });
+      });
+      if (state.story && homeButtons.length > 1) add(homeButton(state.story).label);
+      parts.push(state.home ? "Home" : "Step " + (state.index + 1) + ": " + steps[state.index].name);
+      parts.push(state.mode === "mobile" ? "Mobile" : "Desktop");
+      return parts.join(" · ");
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+      var area = el("textarea");
+      area.value = text;
+      area.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+      return Promise.resolve();
+    }
 
     // Specs
     var specs = section("specs", "Specs");
@@ -236,7 +723,7 @@
     // ---------- Stage and frame ----------
 
     var stage = el("main", "stage");
-    var frame = el("div", "frame is-mobile");
+    var frame = el("div", "frame");
     frame.innerHTML =
       '<div class="frame-inner">' +
       '<div class="window-bar"><div class="window-dots"><span></span><span></span><span></span></div>' +
@@ -272,27 +759,43 @@
 
     // ---------- Rendering ----------
 
+    // demo.home as a step-like object, so the panel and screen can treat it alike.
+    function homeStep() {
+      return {
+        name: "Home",
+        address: demo.home.address,
+        instruction: demo.home.instruction,
+        notes: demo.home.notes,
+        render: demo.home.render,
+      };
+    }
+
+    function resolve(value, step) {
+      return typeof value === "function" ? value(context(step)) : value;
+    }
+
     function renderPanel() {
-      var step = demo.steps[state.index];
+      // On the home screen, the panel describes home instead of a step.
+      var step = state.home ? homeStep() : steps[state.index];
+      var instruction = resolve(step.instruction, step);
+      var notes = resolve(step.notes, step) || [];
       stepButtons.forEach(function (b, i) {
-        b.classList.toggle("is-done", i < state.index);
-        if (i === state.index) b.setAttribute("aria-current", "step");
+        b.classList.toggle("is-done", !state.home && i < state.index);
+        if (!state.home && i === state.index) b.setAttribute("aria-current", "step");
         else b.removeAttribute("aria-current");
       });
-      nextText.textContent = step.instruction;
-      backBtn.disabled = state.index === 0;
-      nextBtn.disabled = state.index === demo.steps.length - 1;
+      nextText.textContent = instruction;
+      if (feedbackContext) feedbackContext.textContent = contextLine();
+      backBtn.disabled = state.home || state.index === 0;
+      nextBtn.disabled = !state.home && state.index === steps.length - 1;
 
-      annotations.badge.textContent = step.notes.length;
-      annotations.badge.setAttribute(
-        "aria-label",
-        step.notes.length + (step.notes.length === 1 ? " note" : " notes")
-      );
+      annotations.badge.textContent = notes.length;
+      annotations.badge.setAttribute("aria-label", notes.length + (notes.length === 1 ? " note" : " notes"));
       annotations.body.innerHTML =
         '<p class="annotation-name">' +
         escapeHtml(step.name) +
         '</p><ul class="annotation-notes">' +
-        step.notes
+        notes
           .map(function (n) {
             return "<li>" + escapeHtml(n) + "</li>";
           })
@@ -302,14 +805,102 @@
       for (var mode in modeButtons) {
         modeButtons[mode].setAttribute("aria-checked", String(mode === state.mode));
       }
+      for (var key in switchButtons) {
+        for (var id in switchButtons[key]) {
+          switchButtons[key][id].setAttribute("aria-checked", String(id === state.switches[key]));
+        }
+      }
+      // showIf: { key, id } shows a switch only while another switch is on that option.
+      switches.forEach(function (sw) {
+        if (sw.showIf) switchWraps[sw.key].hidden = state.switches[sw.showIf.key] !== sw.showIf.id;
+      });
+      for (var menuKey in switchMenus) {
+        var m = switchMenus[menuKey];
+        m.select.value = state.switches[menuKey];
+        var picked = m.sw.options.filter(function (o) {
+          return o.id === state.switches[menuKey];
+        })[0];
+        m.note.textContent = (picked && picked.description) || "";
+        m.note.hidden = !m.note.textContent;
+      }
+
+      if (versionSelect) {
+        versionPicker.hidden = !!storySteps() || switches.some(function (sw) {
+          return sw.options.some(function (o) {
+            return o.hideVersions && o.id === state.switches[sw.key];
+          });
+        });
+        versionSelect.value = String(state.version);
+        versionNote.textContent = versions[state.version].description || "";
+        versionNote.hidden = !versions[state.version].description;
+      }
+      variantPickers.forEach(function (vp) {
+        vp.wrap.hidden = state.switches[vp.sw.key] !== vp.option.id;
+        vp.select.value = state.variants[vp.option.id];
+        var item = vp.option.variants.items.filter(function (v) {
+          return v.id === state.variants[vp.option.id];
+        })[0];
+        vp.note.textContent = (item && item.description) || "";
+        vp.note.hidden = !vp.note.textContent;
+      });
+      syncUrl();
     }
 
-    function renderScreen() {
-      var step = demo.steps[state.index];
+    function syncUrl() {
+      var query = new URLSearchParams(location.search);
+      if (versions[state.version].id) query.set("version", versions[state.version].id);
+      query.set("step", String(state.index + 1));
+      if (state.home) query.set("home", state.home);
+      else query.delete("home");
+      if (state.story) query.set("story", state.story);
+      if (!realPhone) query.set("device", state.mode);
+      switches.forEach(function (sw) {
+        if (state.switches[sw.key] === sw.options[0].id) query.delete(sw.key);
+        else query.set(sw.key, state.switches[sw.key]);
+        sw.options.forEach(function (o) {
+          if (!o.variants) return;
+          var p = o.variants.param;
+          if (state.switches[sw.key] !== o.id || state.variants[o.id] === o.variants.items[0].id) query.delete(p);
+          else query.set(p, state.variants[o.id]);
+        });
+      });
+      toggles.forEach(function (t) {
+        if (state.toggles[t.key] === (t.checked !== false)) query.delete(t.key);
+        else query.set(t.key, state.toggles[t.key] ? "1" : "0");
+      });
+      history.replaceState(null, "", location.pathname + "?" + query.toString() + location.hash);
+    }
+
+    function context(step) {
+      return {
+        mode: state.mode,
+        step: step,
+        index: state.index,
+        version: versions[state.version].id,
+        toggles: Object.assign({}, state.toggles),
+        switches: Object.assign({}, state.switches),
+        variants: Object.assign({}, state.variants),
+        story: state.story,
+      };
+    }
+
+    function renderScreen(keepScroll) {
+      var step = state.home ? homeStep() : steps[state.index];
+      var scrollTop = frameContent.scrollTop;
       screen.className = "screen mode-" + state.mode;
-      screen.innerHTML = step.render({ mode: state.mode, step: step, index: state.index });
-      addressPill.textContent = step.address || "";
-      frameContent.scrollTop = 0;
+      screen.innerHTML = step.render(context(step));
+      addressPill.textContent = resolve(step.address, step) || "";
+      if (keepScroll) {
+        frameContent.scrollTop = scrollTop;
+      } else {
+        frameContent.scrollTop = 0;
+        if (step.onShow) {
+          var ctx = context(step);
+          ctx.screen = screen;
+          ctx.content = frameContent;
+          step.onShow(ctx);
+        }
+      }
       drawOverlay();
     }
 
@@ -321,14 +912,16 @@
     // ---------- Walkthrough ----------
 
     function goTo(i) {
-      i = Math.max(0, Math.min(demo.steps.length - 1, i));
-      if (i === state.index) return;
+      i = Math.max(0, Math.min(steps.length - 1, i));
+      if (i === state.index && !state.home) return;
+      state.home = false;
       state.index = i;
       render();
     }
 
+    // From the home screen, Next starts the steps.
     function next() {
-      goTo(state.index + 1);
+      goTo(state.home ? 0 : state.index + 1);
     }
 
     function back() {
@@ -336,7 +929,30 @@
     }
 
     function restart() {
+      if (demo.onRestart) demo.onRestart();
+      if (state.index === 0 && !state.home) renderScreen();
       goTo(0);
+    }
+
+    function setSwitch(key, id) {
+      if (state.switches[key] === id) return;
+      state.switches[key] = id;
+      renderPanel();
+      renderScreen();
+    }
+
+    // Keep the same step (by name) when it exists in the new version.
+    function switchVersion(v) {
+      if (v === state.version) return;
+      var name = steps[state.index].name;
+      state.version = v;
+      steps = activeSteps();
+      var match = steps.findIndex(function (s) {
+        return s.name === name;
+      });
+      state.index = match >= 0 ? match : Math.min(state.index, steps.length - 1);
+      renderSteps();
+      render();
     }
 
     // ---------- Device switch ----------
@@ -561,6 +1177,18 @@
       else if (key === "ArrowLeft") back();
       else if (key === "r") restart();
       else if (key === "m") switchMode(state.mode === "mobile" ? "desktop" : "mobile");
+      else if (
+        switches.some(function (sw) {
+          if (sw.shortcut !== key) return false;
+          var ids = sw.options.map(function (o) {
+            return o.id;
+          });
+          setSwitch(sw.key, ids[(ids.indexOf(state.switches[sw.key]) + 1) % ids.length]);
+          return true;
+        })
+      ) {
+        // handled by a demo switch shortcut
+      }
       else return;
       e.preventDefault();
     });
@@ -573,6 +1201,15 @@
     applyMode();
     render();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawOverlay);
+
+    return {
+      refresh: function () {
+        renderScreen(true);
+      },
+      next: next,
+      goTo: goTo,
+      setSwitch: setSwitch,
+    };
   }
 
   window.DemoShell = { mount: mount, tokens: TOKENS };
