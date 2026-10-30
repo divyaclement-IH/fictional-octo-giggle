@@ -96,11 +96,11 @@
   // Lower-cost facilities first, matching the care-search facility results.
   var FACILITIES = [
     { name: "North Hills Advanced Imaging Center", type: "Diagnostic Imaging or Radiology Center", address: "4800 McKnight Rd, Pittsburgh, PA 15237", distance: "8 mi", cost: "lower" },
-    { name: "Quest Diagnostics", type: "Laboratory", address: "1001 Liberty Ave, Pittsburgh, PA 15222", distance: "0.5 mi", cost: "lower" },
-    { name: "Oakland Hospital Lab Services", type: "Laboratory", address: "200 Lothrop St, Pittsburgh, PA 15213", distance: "3 mi", cost: "higher" },
-    { name: "Three Rivers Imaging Consultants", type: "Diagnostic Imaging or Radiology Center", address: "2000 Smallman St, Pittsburgh, PA 15222", distance: "1.2 mi", cost: "lower" },
-    { name: "South Hills Health Lab", type: "Laboratory", address: "1500 Washington Rd, Pittsburgh, PA 15228", distance: "6 mi", cost: "lower" },
-    { name: "Monroeville Radiology Center", type: "Diagnostic Imaging or Radiology Center", address: "4000 William Penn Hwy, Monroeville, PA 15146", distance: "13 mi", cost: "higher" },
+    { name: "Downtown Diagnostic Imaging", type: "Diagnostic Imaging", address: "1001 Liberty Ave, Pittsburgh, PA 15222", distance: "0.5 mi", cost: "lower" },
+    { name: "Oakland Imaging Center", type: "Diagnostic Imaging", address: "200 Lothrop St, Pittsburgh, PA 15213", distance: "3 mi", cost: "higher" },
+    { name: "Three Rivers Imaging Consultants", type: "Diagnostic Imaging", address: "2000 Smallman St, Pittsburgh, PA 15222", distance: "1.2 mi", cost: "lower" },
+    { name: "South Hills Imaging Center", type: "Diagnostic Imaging", address: "1500 Washington Rd, Pittsburgh, PA 15228", distance: "6 mi", cost: "lower" },
+    { name: "Monroeville Radiology Center", type: "Diagnostic Imaging", address: "4000 William Penn Hwy, Monroeville, PA 15146", distance: "13 mi", cost: "higher" },
   ];
 
   // Results come in sets: the first set, then "Show me more" adds the next one.
@@ -667,7 +667,7 @@
         dotTurn(
           providers
             ? tierMessage("Here are three more in-network orthopedists near you who treat shoulder pain.", providerSet(1))
-            : "<p>Here are three more labs and imaging centers near you.</p>"
+            : "<p>Here are three more imaging centers near you.</p>"
         ) + resultCards(kind, 1, ctx)
       );
     }
@@ -737,6 +737,23 @@
     var index = ctx.index;
     var path = ctx.switches.path;
     var turns = [];
+
+    // Facility Demo: Riley's question from Home's Ask Dot box opens the chat,
+    // and Dot replies with imaging centers (placeholder until its script).
+    if (ctx.story === "facility") {
+      var asked = new URLSearchParams(location.search).get("ask") || CrownHome.DEFAULT_ASK;
+      turns.push(memberTurn(escapeText(asked), "turn-ask", stepStatus(2, index)));
+      if (index === 2 && !typingDone) return waiting(turns);
+      turns.push(
+        dotTurn(
+          "<p>Here are in-network imaging centers near you, with lower cost options first.</p>",
+          null,
+          { id: "turn-results" }
+        ) + resultCards("facilities", 0, ctx)
+      );
+      followUpTurns(turns, "facilities", ctx);
+      return turns.join("");
+    }
 
     // index 2 (the first step) — from Home, the member sends the Find a
     // doctor quick prompt and Dot asks what they'd like to be seen for.
@@ -1122,9 +1139,33 @@
 
   app = DemoShell.mount({
     title: "Crown Castle Demo",
-    home: CrownHome.home("dot", function () {
-      return app;
-    }),
+    home: CrownHome.home(
+      "dot",
+      function () {
+        return app;
+      },
+      {
+        // Ortho: the shoulder conversation (all the steps below).
+        ortho: { switches: { path: "providers" } },
+        // Facility: Riley's MRI question from Home, then imaging centers.
+        facility: {
+          switches: { path: "facilities" },
+          steps: function (base) {
+            return [
+              Object.assign({}, base[0], {
+                name: "Where to get an MRI",
+                instruction: "Riley's question from Home opens the chat. Dot replies with in-network imaging centers nearby. Swipe through the cards.",
+                notes: [
+                  "Riley typed their question into Home's Ask Dot box; it's their first message here (Sending…, then Sent).",
+                  "Dot's reply is a placeholder until the Facility Demo script is in: in-network imaging centers near Riley, lower cost first.",
+                  "Facility chips show the per-visit copay range; without copays they show Lower or Higher cost.",
+                ],
+              }),
+            ];
+          },
+        },
+      }
+    ),
     feedback: true,
     summary: "A member with shoulder pain asks Dot, the AI assistant, to find an orthopedist.",
     demoSwitch: {

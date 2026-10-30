@@ -48,9 +48,12 @@
  * screen outside the steps (e.g. the app's home page). A button labelled
  * home.label (e.g. "Start demo") at the top of Scenario opens it; any step,
  * Next or Restart leaves it. The URL keeps ?home=1 while it's open.
- * home.buttons: [{ id, label }] shows one button per story instead (e.g.
- * Ortho Demo, Pediatrician Demo): each opens home, and the picked id stays
- * in ctx.story (and ?story=) after leaving it.
+ * home.buttons: [{ id, label, steps, switches }] shows one button per story
+ * instead (e.g. Ortho Demo, Facility Demo): each opens home, and the picked
+ * id stays in ctx.story (and ?story=) after leaving it. A story with its own
+ * steps (a list, or a function(versionSteps) returning one) swaps the
+ * Scenario step list (the version picker then hides);
+ * switches presets them (e.g. { path: "facilities" }) when it's picked.
  *
  * Optional demo.feedback: true adds a Feedback section: a note box and a Copy
  * for Slack button that copies the note, where the reviewer is (demo side,
@@ -190,6 +193,22 @@
     var homeParam = params.get("home");
     state.home = !demo.home || !homeParam ? false : homeButton(homeParam) ? homeParam : homeButtons[0].id;
     state.story = demo.home && demo.home.buttons ? (homeButton(params.get("story")) || homeButton(state.home) || homeButtons[0]).id : null;
+    // A story can bring its own steps (a list, or a function of the
+    // version's steps); otherwise the version's steps apply. Cached so each
+    // step keeps its identity across renders.
+    var storyStepCache = {};
+    function storySteps() {
+      var b = state.story ? homeButton(state.story) : null;
+      if (!b || !b.steps) return null;
+      if (typeof b.steps !== "function") return b.steps;
+      var key = b.id + "|" + state.version;
+      if (!storyStepCache[key]) storyStepCache[key] = b.steps(versions[state.version].steps);
+      return storyStepCache[key];
+    }
+    function activeSteps() {
+      return storySteps() || versions[state.version].steps;
+    }
+    steps = activeSteps();
     var switches = demo.switches || [];
     state.switches = {};
     switches.forEach(function (sw) {
@@ -199,6 +218,12 @@
       });
       state.switches[sw.key] = valid ? fromUrl : sw.options[0].id;
     });
+    // The story's presets apply wherever the URL doesn't say otherwise (e.g.
+    // arriving from the other side of a demo).
+    var storyPresets = (state.story && homeButton(state.story).switches) || {};
+    for (var presetKey in storyPresets) {
+      if (!params.get(presetKey) && presetKey in state.switches) state.switches[presetKey] = storyPresets[presetKey];
+    }
     state.variants = {};
     switches.forEach(function (sw) {
       sw.options.forEach(function (o) {
@@ -476,7 +501,14 @@
         homeBtn.type = "button";
         homeBtn.addEventListener("click", function () {
           state.home = hb.id;
-          if (state.story) state.story = hb.id;
+          if (state.story) {
+            // Switch to this story: its steps (or the default ones) and presets.
+            state.story = hb.id;
+            steps = activeSteps();
+            state.index = 0;
+            for (var key in hb.switches || {}) state.switches[key] = hb.switches[key];
+            renderSteps();
+          }
           render();
         });
         homeRow.appendChild(homeBtn);
@@ -634,7 +666,7 @@
           if (o.id === state.switches[sw.key]) add(o.label);
         });
       });
-      if (versions.length > 1 && !hideVersions) add(versions[state.version].label);
+      if (versions.length > 1 && !hideVersions && !storySteps()) add(versions[state.version].label);
       switches.forEach(function (sw) {
         if (sw.menu) return;
         if (sw.showIf && state.switches[sw.showIf.key] !== sw.showIf.id) return; // hidden right now
@@ -793,7 +825,7 @@
       }
 
       if (versionSelect) {
-        versionPicker.hidden = switches.some(function (sw) {
+        versionPicker.hidden = !!storySteps() || switches.some(function (sw) {
           return sw.options.some(function (o) {
             return o.hideVersions && o.id === state.switches[sw.key];
           });
@@ -914,7 +946,7 @@
       if (v === state.version) return;
       var name = steps[state.index].name;
       state.version = v;
-      steps = versions[v].steps;
+      steps = activeSteps();
       var match = steps.findIndex(function (s) {
         return s.name === name;
       });

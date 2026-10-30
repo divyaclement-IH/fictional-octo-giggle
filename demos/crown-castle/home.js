@@ -4,7 +4,7 @@
    Mobile follows the Anatomy Home (Figma VT79VSlhYlpl0g2JS9vLKt, node 50837:50112);
    desktop follows the web home screenshots.
    CrownHome.home(side) returns the shell's demo.home (opened by the Ortho Demo
-   or Pediatrician Demo button in Scenario).
+   or Facility Demo button in Scenario).
    The Dot entry points (Ask Dot box, Find a doctor, Navigate your healthcare
    with Dot, Find care with chat assistant) start the Dot side; Search for
    local care starts the Traditional side. side is the page Home opened on. */
@@ -55,7 +55,24 @@
   };
 
   // The Ask Dot box: Dot, the placeholder, For: (person) and a disabled send.
-  function askDot(who) {
+  // What Riley types into the Ask Dot box in the Facility Demo (Next sends it too).
+  var DEFAULT_ASK = "My doctor ordered an MRI. Where should I go?";
+
+  // The Ask Dot box. live: a real text box Riley types into and sends (Facility
+  // Demo); otherwise the whole box is a button into the Dot chat.
+  function askDot(who, live) {
+    if (live) {
+      return (
+        '<div class="home-ask is-live" data-space data-dim>' +
+        '<span class="home-ask-row"><img src="' + H + 'dot.svg" width="24" height="24" alt="" data-icon="Dot">' +
+        '<input class="home-ask-input" type="text" aria-label="Ask Dot" placeholder="Ask me about care, benefits, costs..." data-type="Body 2 · 14/20 Medium"></span>' +
+        '<span class="home-ask-actions"><span class="home-for" data-type="Body 2 · 14/20 Medium">For: <b>' + who + "</b>" +
+        '<img src="' + H + 'arrow-down.svg" width="12" height="12" alt="" data-icon="arrow-down"></span>' +
+        '<button class="home-send-button" type="button" data-home-ask aria-label="Send">' +
+        '<img class="home-send" src="' + CC + 'send.svg" width="48" height="48" alt="" data-icon="Chat Input - Send button"></button></span>' +
+        "</div>"
+      );
+    }
     return (
       '<button type="button" class="home-ask is-next"' + go("dot") + " data-space data-dim>" +
       '<span class="home-ask-row"><img src="' + H + 'dot.svg" width="24" height="24" alt="" data-icon="Dot">' +
@@ -95,7 +112,7 @@
 
   // Figma's seven tiles, plus Search for local care in the grid's empty slot
   // so the Traditional side has a way in.
-  function mobile() {
+  function mobile(live) {
     var tiles = [T.urgent, T.therapy, T.chat, T.primary, T.bills, T.opinion, T.more, T.local];
     return (
       '<div class="home is-mobile-home">' +
@@ -103,7 +120,7 @@
       '<div class="home-m-nav"><img src="' + H + 'logo.svg" width="24.4616" height="26" alt="Included Health"></div>' +
       welcome() +
       '<div class="home-m-body">' +
-      '<div class="home-ask-group">' + askDot("Riley") + prompts() + "</div>" +
+      '<div class="home-ask-group">' + askDot("Riley", live) + prompts() + "</div>" +
       '<section class="home-get-care"><h2 data-type="Title 3 · 20/32 Bold">Get care</h2>' +
       '<div class="home-tiles">' + tiles.map(tile).join("") + "</div></section>" +
       "</div>" +
@@ -123,7 +140,7 @@
     return '<span class="home-glyph home-chevron ' + (cls || "") + '" style="--glyph:url(' + H + 'icon-arrow-right.svg)" data-icon="arrow-right"></span>';
   }
 
-  function desktop() {
+  function desktop(live) {
     var tiles = [T.urgent, T.therapy, T.primary, T.local, T.cancer, T.meds,
       { label: "Get a second opinion or advice", img: "care-second-opinion.svg", icon: "xray-hand" }, T.bills, T.more];
     return (
@@ -131,7 +148,7 @@
       '<nav class="home-web-nav"><img src="' + H + 'logo.svg" width="24.4616" height="26" alt="Included Health">' +
       '<div class="home-web-links"><a class="is-active" href="#">Home</a><a href="#"><span class="home-unread" aria-hidden="true"></span>Messages</a>' +
       '<a href="#">Activity</a><a href="#">Me</a></div></nav>' +
-      '<div class="home-hero"><div class="home-col">' + welcome() + askDot("You") +
+      '<div class="home-hero"><div class="home-col">' + welcome() + askDot("You", live) +
       prompts() + "</div></div>" +
       '<div class="home-col">' +
       '<section class="home-section"><div class="home-section-head"><h2 data-type="Title 2 · 24/32 Bold">Your next steps</h2>' +
@@ -168,19 +185,23 @@
 
   // Open the other side's first step, carrying the device and options (but
   // not this side's own step, version or path).
-  function openSide(to, page) {
+  function openSide(to, page, extra) {
     var q = new URLSearchParams(location.search);
-    ["step", "home", "version", "path", "search", "from"].forEach(function (k) {
+    ["step", "home", "version", "path", "search", "from", "ask"].forEach(function (k) {
       q.delete(k);
     });
     q.set("step", "1");
+    for (var k in extra || {}) q.set(k, extra[k]);
     location.href = page + "?" + q.toString();
   }
 
   window.CrownHome = {
+    DEFAULT_ASK: DEFAULT_ASK,
     // side: "dot" | "traditional", the page Home is opened on. getApp returns
-    // the shell's app once mounted.
-    home: function (side, getApp) {
+    // the shell's app once mounted. stories: per-story { steps, switches }
+    // for this side (see the shell's home.buttons).
+    home: function (side, getApp, stories) {
+      stories = stories || {};
       var pages = { dot: "../crown-castle/", traditional: "../crown-castle-traditional/" };
       document.addEventListener("click", function (e) {
         var b = e.target.closest && e.target.closest("[data-home-go]");
@@ -190,15 +211,46 @@
         if (to === side) getApp().goTo(0);
         else openSide(to, pages[to]);
       });
+      // Facility Demo: what Riley types in the Ask Dot box starts the Dot chat
+      // (kept in ?ask= so the Dot side shows it as their first message).
+      function sendAsk() {
+        var box = document.querySelector(".screen .home-ask-input");
+        if (!box) return;
+        var text = box.value.trim();
+        if (!text) {
+          box.focus();
+          return;
+        }
+        if (side === "dot") {
+          var q = new URLSearchParams(location.search);
+          q.set("ask", text);
+          history.replaceState(null, "", location.pathname + "?" + q.toString() + location.hash);
+          getApp().goTo(0);
+        } else {
+          openSide("dot", pages.dot, { ask: text });
+        }
+      }
+      document.addEventListener("click", function (e) {
+        if (e.target.closest && e.target.closest("[data-home-ask]")) sendAsk();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && e.target.classList && e.target.classList.contains("home-ask-input")) {
+          e.preventDefault();
+          sendAsk();
+        }
+      });
       return {
-        // Two stories start from Home; ctx.story says which one was picked.
-        // The Pediatrician Demo follows the same flow until its script is in.
+        // Two stories start from Home; ctx.story says which one was picked,
+        // and each can list its own steps in Scenario.
         buttons: [
-          { id: "ortho", label: "Ortho Demo" },
-          { id: "peds", label: "Pediatrician Demo" },
+          Object.assign({ id: "ortho", label: "Ortho Demo" }, stories.ortho),
+          Object.assign({ id: "facility", label: "Facility Demo" }, stories.facility),
         ],
         address: "member.includedhealth.com/home",
         instruction: function (ctx) {
+          if (ctx.story === "facility") {
+            return "Riley opens the app on Home. Type " + DEFAULT_ASK + " in the Ask Dot box, then send (or select Next).";
+          }
           return ctx.mode === "mobile"
             ? "Riley opens the app on Home. Select the Ask Dot box or Find care with chat assistant for Dot, or Search for local care for Traditional."
             : "Riley opens the app on Home. Select the Ask Dot box, Find a doctor or Navigate your healthcare with Dot for Dot, or Search for local care for Traditional.";
@@ -209,15 +261,18 @@
               ? "Mobile follows the Anatomy Home design (Figma 50837:50112), plus a Search for local care tile in the empty grid slot so Traditional has a way in."
               : "Desktop follows the web home: welcome, Ask Dot box with prompts, next steps, Get care, recommendations and Care Team.",
             "The Dot entry points start the Dot conversation; Search for local care starts care search (Traditional).",
-            "Ortho Demo or Pediatrician Demo in Scenario brings you back here from any step.",
-            ctx.story === "peds" ? "Pediatrician Demo: uses the Ortho flow for now, until its own script is added." : null,
+            "Ortho Demo or Facility Demo in Scenario brings you back here from any step.",
+            ctx.story === "facility"
+              ? "Facility Demo: Riley types their question into the Ask Dot box, and it becomes their first message in a new Dot chat. Next without typing sends: " + DEFAULT_ASK
+              : null,
             ctx.mode === "desktop" ? "The Recommended for you photo is a placeholder." : null,
           ].filter(Boolean);
         },
         // The Dot side's screen is a fixed-height chat layout, so Home
         // scrolls itself there; on Traditional the frame scrolls.
         render: function (ctx) {
-          var html = ctx.mode === "desktop" ? desktop() : mobile();
+          var live = ctx.story === "facility";
+          var html = ctx.mode === "desktop" ? desktop(live) : mobile(live);
           return side === "dot" ? html.replace('<div class="home ', '<div class="home home-own-scroll ') : html;
         },
       };

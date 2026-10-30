@@ -287,8 +287,8 @@
       '<p class="clinic-distance"' + (first ? ' data-color="text/success/strongest"' : "") + ">" + p.distance + "</p></div>" +
       "</div>" +
       '<div class="button-stack"' + (first ? " data-space" : "") + ">" +
-      '<button class="btn-outline" type="button"' + (first ? " data-dim" : "") + ">View full profile</button>" +
-      '<button class="btn-solid" type="button"' + (first ? ' data-dim data-color="surface/brand/strongest"' : "") + ">Schedule appointment</button>" +
+      '<button class="btn-outline" type="button"' + (first ? " data-dim" : "") + ">View profile</button>" +
+      '<button class="btn-solid" type="button"' + (first ? ' data-dim data-color="surface/brand/strongest"' : "") + ">Schedule</button>" +
       "</div></article>"
     );
   }
@@ -853,7 +853,7 @@
       '<p class="clinic-distance facility-distance">' + f.distance + "</p></div>" +
       "</div>" +
       '<div class="button-stack">' +
-      '<button class="btn-outline" type="button">View</button>' +
+      '<button class="btn-outline" type="button">View profile</button>' +
       '<button class="btn-solid" type="button">Schedule</button>' +
       "</div></article>"
     );
@@ -1174,9 +1174,16 @@
   app = DemoShell.mount({
     backLink: backLink,
     title: "Crown Castle Demo",
-    home: CrownHome.home("traditional", function () {
-      return app;
-    }),
+    home: CrownHome.home(
+      "traditional",
+      function () {
+        return app;
+      },
+      {
+        ortho: { switches: { search: "providers" } },
+        facility: { switches: { search: "facilities" } },
+      }
+    ),
     feedback: true,
     demoSwitch: {
       label: "Demo",

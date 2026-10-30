@@ -740,3 +740,37 @@
 .home-contact-fine a {
   color: #002380;
 }
+
+/* Facility Demo: the Ask Dot box is a real text box Riley types into. */
+.home-ask.is-live:focus-within {
+  outline: 2px solid #0012e7;
+  outline-offset: 0;
+}
+
+.home-ask-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #000;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  outline: none;
+}
+
+.home-ask-input::placeholder {
+  color: #6d6d6d;
+}
+
+.is-desktop-home .home-ask-input {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.home-send-button {
+  display: flex;
+  border-radius: 50%;
+}
