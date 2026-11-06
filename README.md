@@ -45,6 +45,9 @@ Demos:
 
 - `demos/quality-badging/`: "Provider Quality Badging", a copy of the tiering demo to try
   versions of the provider card. Its **Traditional** side is `demos/quality-badging-traditional/`.
+  A bare link opens on: gradient style, "Highest Quality Provider", top right corner on web and
+  above the photo on mobile, save icon next to the name on both, and deductible, Care Keys,
+  copays and tier chips all off.
   The side panel calls its Versions section **Configure** here, and Milestones **Presets**, with no
   descriptions under the dropdowns.
   The **Provider card** menu in Configure (`&card=v2`) picks the card:
@@ -65,13 +68,12 @@ Demos:
   **Save icon (mobile)** (`&saveMobile=header`) does the same on mobile: **Top right corner**
   (pinned to the card's corner at 20px), **Top right, by the name** (20px), or **Next to name** (16px).
   Card buttons read **View profile** and **Schedule**.
-  Quality is three menus, off by default, shown as styled text rather than a chip:
+  Quality is three menus, shown as styled text rather than a chip:
   **Quality style** (`&quality=q1`: gradient with a star, gold with a medal, or green with a shield),
   **Quality copy** (`&qualityCopy=c2`: "Top 10% of Orthopedists" (Primary Care Providers on
   Traditional), "Top provider", or "Highest Quality Provider"), and
-  **Quality placement (web)** (`&qualityPlace=under-name`), which picks where it sits on web: the
-  default (top right corner, wherever the save icon is), above the photo, top right corner, under
-  the name, next to the name, in the chip row, or under the address. **Quality placement (mobile)**
+  **Quality placement (web)** (`&qualityPlace=under-name`), which picks where it sits on web: top
+  right corner (the default, wherever the save icon is), above the photo, under the name, next to the name, in the chip row, or under the address. **Quality placement (mobile)**
   (`&qualityPlaceMobile=top-right`) picks the same spots on mobile (default: above the photo); its
   top right corner is a row of its own, beside the save icon when that's at the top right.
   Each tag ends in a small info icon in its own color; it opens a popup (modal on desktop, sheet on

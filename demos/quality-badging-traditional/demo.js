@@ -117,8 +117,7 @@
 
   // A Preferred provider's quality as styled text, not a chip. Three menus:
   // Quality style (icon and color), Quality copy (the words) and Quality
-  // placement (the spot; "default" is the top right corner, wherever the save
-  // icon is).
+  // placement (the spot, per device).
   // Styles: q1 blue-to-purple gradient with a star, q2 gold with a medal,
   // q3 green with a shield.
   var qualityVersion = "off"; // "Quality style" menu: off | q1 | q2 | q3
@@ -127,14 +126,14 @@
   function qualityCopyText() {
     return { c1: "Top 10% of " + QUALITY_GROUP, c2: "Top provider", c3: "Highest Quality Provider" }[qualityCopy];
   }
-  var qualityPlace = "default"; // "Quality placement (web)" menu (see qualitySpot)
+  var qualityPlace = "top-right"; // "Quality placement (web)" menu (see qualitySpot)
   var qualityPlaceMobile = "above-avatar"; // "Quality placement (mobile)" menu
 
   // Where the tag goes, per device: above-avatar | top-right | under-name |
   // name-line | chips | below-address.
   function qualitySpot() {
     if (deviceMode === "mobile") return qualityPlaceMobile;
-    return qualityPlace === "default" ? "top-right" : qualityPlace;
+    return qualityPlace;
   }
   var QUALITY_GROUP = "Primary Care Providers";
   var qualityGradientId = 0;
@@ -332,11 +331,11 @@
     cardVersion = ctx.switches.card || "v1";
     pageVersion = ctx.switches.page || "v1";
     deviceMode = ctx.mode;
-    saveSpot = ctx.switches.save || "top";
-    saveMobile = ctx.switches.saveMobile || "corner";
-    qualityVersion = ctx.switches.quality || "off";
-    qualityCopy = ctx.switches.qualityCopy || "c1";
-    qualityPlace = ctx.switches.qualityPlace || "default";
+    saveSpot = ctx.switches.save || "name";
+    saveMobile = ctx.switches.saveMobile || "name";
+    qualityVersion = ctx.switches.quality || "q1";
+    qualityCopy = ctx.switches.qualityCopy || "c3";
+    qualityPlace = ctx.switches.qualityPlace || "top-right";
     qualityPlaceMobile = ctx.switches.qualityPlaceMobile || "above-avatar";
   }
 
@@ -1465,8 +1464,8 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
-          { id: "off", label: "Off", description: "No quality text." },
           { id: "q1", label: "Gradient with a star", description: "Blue-to-purple gradient text and star." },
+          { id: "off", label: "Off", description: "No quality text." },
           { id: "q2", label: "Gold with a medal", description: "Gold text and medal." },
           { id: "q3", label: "Green with a shield", description: "Green text and shield." },
         ],
@@ -1479,9 +1478,9 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
+          { id: "c3", label: "Highest Quality Provider" },
           { id: "c1", label: "Top 10% of Primary Care Providers" },
           { id: "c2", label: "Top provider" },
-          { id: "c3", label: "Highest Quality Provider" },
         ],
       },
       {
@@ -1492,9 +1491,8 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
-          { id: "default", label: "Version default", description: "Top right corner, wherever the save icon is." },
+          { id: "top-right", label: "Top right corner", description: "Above the save icon, wherever that is." },
           { id: "above-avatar", label: "Above the photo", description: "Left-aligned at the top of the card." },
-          { id: "top-right", label: "Top right corner", description: "Above the save icon." },
           { id: "under-name", label: "Under the name", description: "Between the name and the specialty." },
           { id: "name-line", label: "Next to the name", description: "On the name line, right after the name." },
           { id: "chips", label: "In the chip row", description: "First in the row with the copay and network chips, still as text." },
@@ -1526,8 +1524,8 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
-          { id: "top", label: "Top right", description: "Right-aligned at the top of the card, below the quality tag or chip if there is one." },
           { id: "name", label: "Next to name", description: "Right after the provider's name, at 16px." },
+          { id: "top", label: "Top right", description: "Right-aligned at the top of the card, below the quality tag or chip if there is one." },
         ],
       },
       {
@@ -1538,9 +1536,9 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
+          { id: "name", label: "Next to name", description: "Right after the provider's name, at 16px." },
           { id: "corner", label: "Top right corner", description: "Pinned to the card's corner at 20px, level with a quality tag above the photo." },
           { id: "header", label: "Top right, by the name", description: "At the header's right, centered on the name, at 20px." },
-          { id: "name", label: "Next to name", description: "Right after the provider's name, at 16px." },
         ],
       },
       {
@@ -1589,8 +1587,8 @@
     toggles: [
       { key: "deductible", label: "Show deductible", checked: false },
       { key: "careKeys", label: "Show Care Keys", checked: false },
-      { key: "copays", label: "Show copays", checked: true },
-      { key: "tierChips", label: "Show tier chips", checked: true },
+      { key: "copays", label: "Show copays", checked: false },
+      { key: "tierChips", label: "Show tier chips", checked: false },
     ],
     summary: "A member compares primary care providers, or lab and imaging facilities, and what each visit will cost.",
     onRestart: function () {
