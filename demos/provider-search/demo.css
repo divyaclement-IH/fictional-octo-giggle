@@ -1,0 +1,1457 @@
+/* Provider search results, built from Figma "APD 2026 / V5 Web - Pagination"
+   (node 2634:11825). Desktop follows the 1440 frame's 1120px container;
+   mobile is adapted from it. */
+
+.screen {
+  --fg-primary: #1a1a23;
+  --text-strongest: #000;
+  --text-strong: #3b3b3b;
+  --text-brand: #0012e7;
+  --text-success-strong: #004f00;
+  --text-success-strongest: #002c00;
+  --text-accentone-strong: #3c1b8f;
+  --text-warning-strong: #662600;
+  --border-weakest: #e1e1e1;
+  --border-brand-strong: #002380;
+  --surface-brand-strongest: #001048;
+  --surface-accentone-weak: #f1f0ff;
+  --surface-warning-weak: #fcf4e6;
+  --surface-success-weak: #edf9ed;
+
+  min-height: 100%;
+  padding-bottom: 49px;
+  background: #fff;
+  color: var(--text-strongest);
+}
+
+.screen p,
+.screen h1,
+.screen h2 {
+  margin: 0;
+}
+
+.screen button {
+  font-family: inherit;
+}
+
+.screen img {
+  display: block;
+}
+
+.container {
+  position: relative;
+  width: 1120px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---------- Primary navigation ---------- */
+
+.primary-nav {
+  height: 64px;
+  border-bottom: 1px solid var(--border-weakest);
+}
+
+.primary-nav .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  position: relative;
+  flex: none;
+  width: 88.817px;
+  height: 26px;
+  overflow: hidden;
+}
+
+.logo-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.logo-wordmark {
+  position: absolute;
+  top: 0.32px;
+  left: 31.46px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  height: 100%;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  color: var(--fg-primary);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* ---------- Secondary navigation ---------- */
+
+.title-bar {
+  position: relative;
+  height: 64px;
+  border-bottom: 1px solid var(--border-weakest);
+}
+
+.title-bar .container {
+  display: flex;
+  align-items: center;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  min-width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.title-bar h1 {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 403px;
+  transform: translateX(-50%);
+  font-size: 20px;
+  line-height: 32px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------- Filters ---------- */
+
+.filters {
+  height: 64px;
+  border-bottom: 1px solid var(--border-weakest);
+}
+
+.filters .container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.filter {
+  display: flex;
+  flex: 1 0 0;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-label {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.filter-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--text-strongest);
+  white-space: nowrap;
+}
+
+.filter-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  transform: rotate(-90deg);
+}
+
+/* ---------- Layout ---------- */
+
+.results-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 60px;
+  width: 1120px;
+  margin: 24px auto 0;
+}
+
+.results {
+  width: 600px;
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 458px;
+  margin-top: 15px;
+}
+
+.results-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 24px;
+  scroll-margin-top: 16px;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title-row h2 {
+  flex: 1 0 0;
+  font-size: 20px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.text-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-brand);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.text-link.is-underlined {
+  text-decoration: underline;
+  text-underline-position: from-font;
+}
+
+.section-description {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 0 24px;
+}
+
+.cards + .results-header {
+  margin-top: 40px;
+}
+
+.results-header + .cards.is-continued {
+  margin-top: 12px;
+}
+
+.view-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 335px;
+  min-height: 48px;
+  margin: 36px auto 0;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--surface-brand-strongest);
+  color: #fff;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* ---------- Provider card ---------- */
+
+.provider-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 24px;
+  /* Figma strokes sit inside the box, so draw them as inset shadows. */
+  box-shadow: inset 0 0 0 1px var(--border-weakest);
+  background: #fff;
+}
+
+.provider-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.provider-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border-weakest);
+  border-radius: 46px;
+}
+
+.avatar-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 46px;
+  object-fit: cover;
+}
+
+.badge-verified {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.provider-title {
+  flex: 1 0 0;
+  min-width: 0;
+}
+
+.provider-name {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.provider-specialties {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.bookmark-button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chip-copay {
+  background: var(--surface-accentone-weak);
+  color: var(--text-accentone-strong);
+  font-weight: 700;
+}
+
+.chip-copay-high {
+  background: var(--surface-warning-weak);
+  color: var(--text-warning-strong);
+}
+
+.chip-copay-high b {
+  font-weight: 700;
+}
+
+.chip-network {
+  background: var(--surface-success-weak);
+  color: var(--text-success-strong);
+}
+
+.provider-summary {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  margin-top: -1px; /* zero-height divider in Figma; the line sits above it */
+}
+
+.clinic {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.clinic-address {
+  display: flex;
+  flex: 1 0 0;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.clinic-name {
+  font-weight: 700;
+}
+
+.clinic-street {
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.clinic-street.is-small {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.clinic-distance {
+  font-weight: 700;
+  color: var(--text-success-strongest);
+  white-space: nowrap;
+}
+
+.button-stack {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-outline,
+.btn-solid {
+  display: flex;
+  flex: 1 0 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 24px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-outline {
+  border: 0;
+  box-shadow: inset 0 0 0 1.5px var(--border-brand-strong);
+  background: #fff;
+  color: var(--surface-brand-strongest);
+}
+
+.btn-solid {
+  border: 0;
+  background: var(--surface-brand-strongest);
+  color: #fff;
+}
+
+/* ---------- Info cards ---------- */
+
+.info-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  box-shadow: inset 0 0 0 1px var(--border-weakest);
+  border-radius: 12px;
+  background: #fff;
+  scroll-margin-top: 16px;
+}
+
+.info-card-eyebrow {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.info-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.info-card-title.is-plan {
+  gap: 12px;
+}
+
+.info-card-body {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.info-card-body.is-primary {
+  color: var(--fg-primary);
+}
+
+.info-card .text-link {
+  align-self: flex-start;
+}
+
+/* Included Health logomark, 14.78 × 15.73, assembled from its five parts. */
+.logomark {
+  position: relative;
+  flex: none;
+  width: 14.751px;
+  height: 15.734px;
+  overflow: hidden;
+}
+
+.logomark img {
+  position: absolute;
+}
+
+.logomark .dot-tl { left: 0; top: 0; }
+.logomark .dot-tr { left: 10.31px; top: 0; }
+.logomark .dot-bl { left: 0; top: 11.26px; }
+.logomark .dot-br { left: 10.31px; top: 11.26px; }
+.logomark .bar { left: 0; top: 5.63px; }
+
+.map {
+  position: relative;
+  width: 458px;
+  height: 471px;
+  overflow: hidden;
+}
+
+.map img {
+  position: absolute;
+  top: -334px;
+  left: -955px;
+  width: 1687px;
+  height: 1105px;
+  max-width: none;
+  object-fit: cover;
+}
+
+/* ---------- Mobile: map with a results sheet over it (Figma 2643:30666) ---------- */
+
+.screen.mode-mobile {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.m-nav {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56.5px;
+  padding: 16px 24px;
+  background: #fff;
+  box-shadow: inset 0 -0.5px 0 #c6c6c6;
+}
+
+.m-nav h1 {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.m-nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.m-map {
+  position: absolute;
+  top: 56.5px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+.m-map img {
+  position: absolute;
+  top: -260px;
+  left: -73px;
+  width: 520px;
+  height: 1132px;
+  max-width: none;
+  object-fit: cover;
+}
+
+.m-location {
+  position: absolute;
+  z-index: 1;
+  top: 73.5px;
+  right: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #fff;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.04));
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.m-sheet {
+  position: absolute;
+  z-index: 2;
+  top: 146px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px 24px 0 0;
+  background: #fff;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  transition: top 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.m-sheet.is-map {
+  top: 421px;
+}
+
+.m-sheet.is-dragging {
+  transition: none;
+}
+
+.m-grabber {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 21px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.m-grabber span {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: #c6c6c6;
+}
+
+.m-sheet-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 24px 0 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mode-mobile .results {
+  width: auto;
+}
+
+.mode-mobile .results-header,
+.mode-mobile .cards {
+  padding: 0 20px;
+}
+
+.mode-mobile .cards {
+  margin-top: 16px;
+}
+
+.mode-mobile .cards.is-continued {
+  gap: 24px;
+}
+
+.mode-mobile .cards + .results-header,
+.mode-mobile .content-module + .results-header {
+  margin-top: 16px;
+}
+
+.m-header .section-description {
+  color: #000;
+}
+
+.m-filter-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #000;
+  cursor: pointer;
+}
+
+.m-how {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+.content-module {
+  margin: 16px 20px 0;
+}
+
+.mode-mobile .view-more {
+  width: calc(100% - 40px);
+  margin-top: 24px;
+}
+
+/* Filter sheet (mobile) */
+.filter-rows {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 1px solid #e1e1e1;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-row-label {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #3b3b3b;
+}
+
+.filter-row-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: #000;
+}
+
+.filter-row-value img {
+  transform: rotate(180deg);
+}
+
+.filter-group-title {
+  margin: 24px 0 8px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+/* ---------- V2+: network filter and out-of-network results ---------- */
+
+.screen {
+  position: relative;
+}
+
+.chip-neutral {
+  background: #f2f2f2;
+  color: var(--text-strong);
+}
+
+.chip-oon {
+  background: var(--surface-warning-weak);
+  color: var(--text-warning-strong);
+  font-weight: 700;
+}
+
+.network-menu {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 320px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 1px var(--border-weakest),
+    0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.network-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.network-option:hover {
+  background: #fafafa;
+}
+
+.network-radio {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px #c6c6c6;
+}
+
+.network-option[aria-checked="true"] .network-radio {
+  box-shadow: inset 0 0 0 6px var(--text-brand);
+}
+
+.network-option-label {
+  display: block;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--text-strongest);
+}
+
+.network-option[aria-checked="true"] .network-option-label {
+  font-weight: 700;
+}
+
+.network-option-hint {
+  display: block;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.mode-mobile .network-menu {
+  width: calc(100% - 32px);
+}
+
+/* V3: Plan Key, one card with three groups */
+.info-card.plan-key {
+  gap: 32px;
+  border-radius: 0;
+}
+
+.plan-key-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-margin-top: 16px;
+}
+
+.plan-key-title {
+  font-size: 16px; /* Title 4 */
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.plan-key-subtitle {
+  font-size: 14px; /* Title 5 */
+  line-height: 20px;
+}
+
+.plan-key-link {
+  display: inline;
+  vertical-align: baseline;
+}
+
+/* ---------- Learn more: modal on desktop, slide-up sheet on mobile ---------- */
+/* Lives outside .screen (over the frame's page area), so colors are literal. */
+
+.learn-modal {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: "Figtree", system-ui, sans-serif;
+  color: #000;
+}
+
+.learn-modal.is-sheet {
+  align-items: flex-end;
+}
+
+.learn-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.learn-dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 560px;
+  max-height: calc(100% - 64px);
+  padding: 32px;
+  overflow-y: auto;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+
+.is-sheet .learn-dialog {
+  width: 100%;
+  max-height: calc(100% - 48px);
+  padding: 12px 24px 32px;
+  border-radius: 24px 24px 0 0;
+  opacity: 1;
+  transform: translateY(100%);
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.learn-modal.is-open .learn-scrim {
+  opacity: 1;
+}
+
+.learn-modal.is-open .learn-dialog {
+  opacity: 1;
+  transform: none;
+}
+
+.learn-grabber {
+  align-self: center;
+  width: 36px;
+  height: 5px;
+  margin-bottom: 20px;
+  border-radius: 3px;
+  background: #c6c6c6;
+}
+
+.learn-close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: none;
+  color: #000;
+  cursor: pointer;
+}
+
+.learn-close:hover {
+  background: #f2f2f2;
+}
+
+.is-sheet .learn-close {
+  top: 20px;
+  right: 16px;
+}
+
+.learn-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 48px 12px 0;
+  font-size: 20px; /* Title 3 */
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.learn-intro {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.learn-points {
+  margin: 16px 0 0;
+  padding-left: 20px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #3b3b3b;
+}
+
+.learn-points li + li {
+  margin-top: 8px;
+}
+
+.learn-done {
+  align-self: flex-end;
+  min-width: 160px;
+  min-height: 48px;
+  margin-top: 32px;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: 24px;
+  background: #001048;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.is-sheet .learn-done {
+  align-self: stretch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-scrim,
+  .learn-dialog {
+    transition: none;
+  }
+}
+
+/* Care Key icon after the provider's name */
+.care-key-icon {
+  display: inline-block !important;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  vertical-align: -3px;
+}
+
+/* Badge icons in titles render at 24px (the star SVG is drawn at 16) */
+.info-card-title > img,
+.learn-title > img {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+/* Provider offering chips (Figma 2643:29840) */
+.chips {
+  row-gap: 8px;
+}
+
+.chip-offering.is-neutral {
+  background: #f2f2f2;
+  color: #000;
+}
+
+.chip-offering.is-success {
+  background: var(--surface-success-weak);
+  color: var(--text-success-strong);
+}
+
+/* "after deductible" in copay chips is not bold */
+.chip-regular {
+  font-weight: 500;
+}
+
+/* Initials avatar for providers without a headshot (Figma 2646:30729) */
+.avatar.is-initials {
+  border: 0;
+}
+
+.avatar-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-initials {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px; /* Title 3 */
+  line-height: 32px;
+  font-weight: 700;
+  color: #000;
+}
+
+/* ---------- V2+: plan summary, badge legend, tappable badges ---------- */
+
+.content-module .plan-summary {
+  margin: 0;
+}
+
+.results > .content-module {
+  margin: 16px 24px 0;
+}
+
+.mode-mobile .results > .content-module {
+  margin: 16px 20px 0;
+}
+
+.plan-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f6f5ff; /* light tint of the IH purple; placeholder */
+}
+
+.plan-summary-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-summary-title {
+  flex: 1;
+  margin: 0;
+  font-size: 14px; /* Title 5 */
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.plan-summary-link {
+  white-space: nowrap;
+}
+
+.plan-summary-amount {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.screen .plan-summary-amount {
+  margin-top: 6px; /* 14px from the plan title */
+}
+
+.plan-summary-amount b {
+  font-weight: 700;
+}
+
+.plan-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e1e1e1;
+}
+
+.plan-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: #001048;
+}
+
+.plan-summary-note {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.badge-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 8px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.legend-item img {
+  width: 16px;
+  height: 16px;
+}
+
+.badge-button {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.badge-button:focus-visible,
+.legend-item:focus-visible,
+.plan-summary-link:focus-visible {
+  outline: 2px solid var(--text-brand);
+  outline-offset: 2px;
+}
+
+.badge-button-avatar {
+  position: relative;
+  z-index: 1;
+}
+
+.badge-button-inline {
+  margin-left: 6px;
+  vertical-align: -3px;
+}
+
+.badge-button-inline .care-key-icon {
+  margin-left: 0;
+  vertical-align: 0;
+}
+
+/* Desktop map stays in view while scrolling (V2+) */
+.aside.is-sticky {
+  position: sticky;
+  top: 16px;
+}
+
+/* V2: plan summary above the map in the desktop side column */
+.aside.is-sticky {
+  gap: 16px;
+}
+
+/* Everything that opens an explainer shares one link style:
+   Body 2, dark text, light grey underline that darkens on hover. */
+.screen .legend-item,
+.screen .plan-summary-link,
+.screen .text-link[data-learn] {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strongest);
+  text-decoration: underline;
+  text-decoration-color: #c6c6c6;
+  text-underline-offset: 3px;
+}
+
+.screen .legend-item:hover,
+.screen .plan-summary-link:hover,
+.screen .text-link[data-learn]:hover {
+  text-decoration-color: currentColor;
+}
+
+/* V2: badge legend inside the plan summary */
+.plan-summary .badge-legend {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* P2 mobile: legend stacked vertically — IH Preferred, Care Key eligible, Plan details */
+.mode-mobile .plan-summary .badge-legend {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mode-mobile .plan-summary .badge-legend .plan-summary-link {
+  order: 3;
+}
+
+/* ---------- Facility search (Figma 2638:27425, card 2647:30790) ---------- */
+
+.facility-layout {
+  margin-top: 48px;
+}
+
+.facility-cards {
+  margin-top: 0;
+  gap: 36px;
+}
+
+.mode-mobile .facility-cards,
+.mode-mobile #facility-results {
+  gap: 12px;
+}
+
+.facility-avatar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+}
+
+.facility-chips {
+  gap: 8px;
+}
+
+.chip-cost {
+  font-weight: 500;
+}
+
+.chip-cost.is-lower {
+  background: var(--surface-accentone-weak);
+  color: var(--text-accentone-strong);
+}
+
+.chip-cost.is-higher {
+  background: var(--surface-warning-weak);
+  color: var(--text-warning-strong);
+}
+
+.chip-cost.is-large {
+  min-height: 32px;
+  padding: 4px 12px;
+}
+
+/* Figma rotates the arrow-left icon: down for lower cost, up for higher */
+.chip-cost.is-lower .cost-arrow {
+  transform: rotate(90deg);
+}
+
+.chip-cost.is-higher .cost-arrow {
+  transform: rotate(-90deg);
+}
+
+.facility-address {
+  flex: 1 0 0;
+  min-width: 0;
+  font-weight: 500;
+  color: var(--text-strongest);
+}
+
+.facility-distance {
+  color: #008200;
+}
+
+.facility-aside {
+  margin-top: -9px; /* map top at 231 in the frame, 9px above the cards */
+  gap: 47px;
+}
+
+.facility-aside .map {
+  height: 437px; /* 25% shorter than the Figma's 582 */
+}
+
+.facility-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--border-weakest);
+}
+
+.facility-plan-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.facility-plan-top .info-card-title {
+  gap: 12px;
+}
+
+.facility-plan-question {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.facility-plan-costs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.facility-plan-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.facility-plan-row .chip-cost {
+  flex: none;
+  min-width: 140px;
+}
+
+.mode-mobile .facility-plan-row {
+  flex-wrap: wrap;
+}
+
+/* P1: map 25% shorter on desktop (471 -> 353) */
+.map.is-short {
+  height: 353px;
+}
+
+/* Facility V2: copay range chips are bold */
+.chip-cost.is-range {
+  font-weight: 700;
+}
