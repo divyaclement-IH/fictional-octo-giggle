@@ -1639,7 +1639,7 @@
   text-align: right;
 }
 
-/* Photo border: a 2px ring around the photo in the Quality tag's color (--ring,
+/* "Photo ring": a 2px ring around the photo in the Quality tag's color (--ring,
    a color or the Dark gradient), drawn over the avatar's own edge. The
    Preferred star badge stays on top. */
 .provider-card.photo-ring .avatar::after {
@@ -1663,4 +1663,20 @@
 .provider-card.photo-ring .avatar > .badge-verified,
 .provider-card.photo-ring .avatar > .badge-button {
   z-index: 1;
+}
+
+/* "Photo badge": the Quality seal on the photo's corner, where the
+   Preferred star badge sits (16px, overflowing its box slightly like it). */
+.quality-seal {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.quality-seal > svg {
+  flex: none;
+  margin-top: -0.5px;
 }

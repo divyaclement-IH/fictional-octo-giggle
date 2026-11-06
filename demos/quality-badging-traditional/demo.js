@@ -254,9 +254,14 @@
     );
   }
 
-  // "Photo border" checkbox: a 2px ring around the photo in the Quality tag's
-  // color (or the Dark gradient), on cards that have the tag.
-  var photoBorder = false;
+  // Photo checkboxes, on cards that show the Quality tag (either or both):
+  // Photo ring: a 2px ring around the photo in the tag's color (or the Dark gradient).
+  // Photo badge: the design system's Badge Verified (Brand=Custom, Size=XS, Figma
+  //   51167:13511) on the photo's corner: a 16px seal in the tag's color with
+  //   a 1px white edge and the Quality icon in white (6px) in the center. It
+  //   takes the place of the Preferred star badge.
+  var photoRing = false; // "Photo ring" checkbox
+  var photoBadge = false; // "Photo badge" checkbox
   var QUALITY_RING = {
     q1: "var(--gradient-dark)",
     q2: "#8a5a00",
@@ -265,11 +270,43 @@
     q5: "#0012e7",
   };
   function photoRingAttrs(p) {
-    if (!photoBorder || !p.preferred || qualityVersion === "off") return "";
+    if (!photoRing || !p.preferred || qualityVersion === "off") return "";
     return ' style="--ring: ' + QUALITY_RING[qualityVersion] + '"';
   }
   function photoRingClass(p) {
     return photoRingAttrs(p) ? " photo-ring" : "";
+  }
+
+  var SEAL_PATH = "M7.2202 0.812922C7.65626 0.39547 8.34374 0.395471 8.7798 0.812923L9.58974 1.58828C9.838 1.82595 10.1811 1.93742 10.5216 1.89107L11.6326 1.73986C12.2308 1.65845 12.787 2.06253 12.8944 2.65657L13.0939 3.75992C13.155 4.09811 13.3671 4.38996 13.6698 4.55263L14.6575 5.08332C15.1893 5.36904 15.4017 6.02287 15.1394 6.56659L14.6523 7.57649C14.503 7.88604 14.503 8.24678 14.6523 8.55632L15.1394 9.56622C15.4017 10.1099 15.1893 10.7638 14.6575 11.0495L13.6698 11.5802C13.3671 11.7429 13.155 12.0347 13.0939 12.3729L12.8944 13.4762C12.787 14.0703 12.2308 14.4744 11.6326 14.393L10.5216 14.2417C10.1811 14.1954 9.83799 14.3069 9.58974 14.5445L8.7798 15.3199C8.34374 15.7373 7.65626 15.7373 7.2202 15.3199L6.41026 14.5445C6.162 14.3069 5.81892 14.1954 5.47838 14.2417L4.36738 14.393C3.76923 14.4744 3.21305 14.0703 3.10564 13.4762L2.90613 12.3729C2.84498 12.0347 2.63294 11.7429 2.3302 11.5802L1.3425 11.0495C0.810727 10.7638 0.598286 10.1099 0.860554 9.56622L1.34768 8.55632C1.497 8.24678 1.497 7.88603 1.34768 7.57649L0.860554 6.56659C0.598286 6.02287 0.810727 5.36904 1.3425 5.08332L2.3302 4.55263C2.63294 4.38996 2.84498 4.09811 2.90613 3.75992L3.10564 2.65657C3.21305 2.06253 3.76923 1.65845 4.36738 1.73986L5.47838 1.89107C5.81892 1.93742 6.162 1.82595 6.41026 1.58828L7.2202 0.812922Z";
+  var sealId = 0;
+  function showsSeal(p) {
+    return photoBadge && p.preferred && qualityVersion !== "off";
+  }
+  function qualitySeal(p) {
+    if (!showsSeal(p)) return "";
+    var defs = "";
+    var fill = QUALITY_RING[qualityVersion];
+    if (qualityVersion === "q1") {
+      var id = "quality-seal-" + ++sealId;
+      defs = '<defs><linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" x1="0.3" y1="11.2" x2="15.7" y2="5.8">' +
+        '<stop offset="0" stop-color="#0012e7"/><stop offset="1" stop-color="#6a4cde"/></linearGradient></defs>';
+      fill = "url(#" + id + ")";
+    }
+    // "Style's own" icons are drawn for color, so the white center uses the
+    // closest design system icon instead.
+    var icon = qualityIcon !== "style" ? qualityIcon : qualityVersion === "q2" ? "medal-star" : "star";
+    var box = icon === "star" ? 14 : 24;
+    var paths = icon === "star" ? [{ evenodd: false, d: STAR_PATH }] : QUALITY_ICONS[icon];
+    return (
+      '<span class="quality-seal" role="img" aria-label="' + qualityCopyText() + '">' +
+      '<svg width="16" height="17" viewBox="0 0 16 17" aria-hidden="true">' + defs +
+      '<path d="' + SEAL_PATH + '" style="fill: ' + fill + '" stroke="#fff"/>' +
+      '<svg x="5" y="5.07" width="6" height="6" viewBox="0 0 ' + box + " " + box + '">' +
+      paths.map(function (q) {
+        return "<path" + (q.evenodd ? ' fill-rule="evenodd" clip-rule="evenodd"' : "") + ' d="' + q.d + '" fill="#fff"/>';
+      }).join("") +
+      "</svg></svg></span>"
+    );
   }
 
   // The tag, only at its spot (one call per spot in the card markup): the
@@ -395,7 +432,8 @@
     showCareKeys = ctx.toggles.careKeys !== false;
     showCopays = ctx.toggles.copays !== false;
     showTierChips = ctx.toggles.tierChips !== false;
-    photoBorder = ctx.toggles.photoBorder === true;
+    photoRing = ctx.toggles.photoRing === true;
+    photoBadge = ctx.toggles.photoBadge === true;
     costTag = ctx.switches.costTag || "range";
     cardVersion = ctx.switches.card || "v1";
     pageVersion = ctx.switches.page || "v1";
@@ -522,14 +560,14 @@
     if (p.photo) {
       return (
         '<span class="avatar"' + (first ? " data-dim" : "") + '><img class="avatar-photo" src="' + A + 'avatar.png" alt="">' +
-        (p.preferred && showTierChips && !qualityAsText() ? verifiedBadge(tappable) : "") + "</span>"
+        (showsSeal(p) ? qualitySeal(p) : p.preferred && showTierChips && !qualityAsText() ? verifiedBadge(tappable) : "") + "</span>"
       );
     }
     return (
       '<span class="avatar is-initials"' + (first ? " data-dim" : "") + ">" +
       '<img class="avatar-bg" src="' + A + 'avatar-initials-bg.svg" width="48" height="48" alt="">' +
       '<span class="avatar-initials" aria-hidden="true">' + initials(p.name) + "</span>" +
-      (p.preferred && showTierChips && !qualityAsText() ? verifiedBadge(tappable) : "") + "</span>"
+      (showsSeal(p) ? qualitySeal(p) : p.preferred && showTierChips && !qualityAsText() ? verifiedBadge(tappable) : "") + "</span>"
     );
   }
 
@@ -1678,7 +1716,8 @@
       { key: "careKeys", label: "Show Care Keys", checked: false },
       { key: "copays", label: "Show copays", checked: false },
       { key: "tierChips", label: "Show tier chips", checked: false },
-      { key: "photoBorder", label: "Photo border", checked: false },
+      { key: "photoRing", label: "Photo ring", checked: false },
+      { key: "photoBadge", label: "Photo badge", checked: false },
     ],
     summary: "A member compares primary care providers and what each visit will cost.",
     onRestart: function () {
