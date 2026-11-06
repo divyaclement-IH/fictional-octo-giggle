@@ -432,7 +432,7 @@
     showCareKeys = ctx.toggles.careKeys !== false;
     showCopays = ctx.toggles.copays !== false;
     showTierChips = ctx.toggles.tierChips !== false;
-    photoRing = ctx.toggles.photoRing === true;
+    photoRing = ctx.toggles.photoRing !== false;
     photoBadge = ctx.toggles.photoBadge === true;
     costTag = ctx.switches.costTag || "range";
     cardVersion = ctx.switches.card || "v1";
@@ -1716,7 +1716,7 @@
       { key: "careKeys", label: "Show Care Keys", checked: false },
       { key: "copays", label: "Show copays", checked: false },
       { key: "tierChips", label: "Show tier chips", checked: false },
-      { key: "photoRing", label: "Photo ring", checked: false },
+      { key: "photoRing", label: "Photo ring", checked: true },
       { key: "photoBadge", label: "Photo badge", checked: false },
     ],
     summary: "A member compares primary care providers and what each visit will cost.",
