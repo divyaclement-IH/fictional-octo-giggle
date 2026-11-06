@@ -745,8 +745,8 @@
       '<p class="provider-specialties">' + p.specialties + "</p></div>" +
       headerAside(p, cardVersion === "v4" ? bestMatchChip(p) : "", bookmark) +
       "</div>" +
-      // Dot view: cap at 2 chips (copay + network); offerings are omitted here.
-      '<div class="chips">' + qualityText(p, "chips") + chips + "</div>" +
+      // Same chips as care search's mobile cards: tier, network, then offerings.
+      '<div class="chips">' + qualityText(p, "chips") + chips + offeringChips(p) + "</div>" +
       '<p class="provider-summary">' + p.summary + "</p>" +
       (cardVersion === "v3" ? whyRow(p) : "") +
       '</div><div class="card-bottom">' +
@@ -1100,22 +1100,7 @@
         ) + "</div>" +
         resultCards("providers", 0, ctx)
     );
-    // Then, without waiting to be asked, Dot steers the member to a lower-cost
-    // imaging center in case the orthopedist orders an X-ray.
-    var after = copayPlan ? "" : " after your deductible";
-    turns.push(
-      dotTurn(
-        "<p>If your provider orders X-rays or other imaging of your knee, I highly recommend one of our lower-cost imaging centers. " +
-          "You can save hundreds out of pocket compared with one that is affiliated with a hospital.</p>" +
-          "<p>" + IMAGING_CENTER.name + " is nearby. " +
-          (showCopays
-            ? "Your copay there is <b>$" + IMAGING_COPAY.recommended + "</b>" + after + ", compared with <b>$" + IMAGING_COPAY.hospital + "</b> at a hospital-affiliated imaging center."
-            : "Your copay there is lower than at a hospital-affiliated imaging center.") +
-          " If your orthopedist orders an X-ray, ask them to send the order here.</p>",
-        null,
-        { id: "turn-imaging" }
-      ) + recommendedFacility(IMAGING_CENTER, ctx)
-    );
+    // The chat ends with the results and the quick prompts below them.
     followUpTurns(turns, "providers", ctx);
     return turns.join("");
   }
@@ -1460,7 +1445,7 @@
     versionsSectionLabel: "Configure",
     menuNotes: false, // no descriptions under the dropdowns
     feedback: true,
-    summary: "A member with knee pain asks Dot, the AI assistant, to find an orthopedist, then learns how to save on an X-ray at a freestanding imaging center.",
+    summary: "A member with knee pain asks Dot, the AI assistant, to find an orthopedist.",
     demoSwitch: {
       label: "Demo",
       current: "dot",
@@ -1598,9 +1583,10 @@
         ],
       },
       {
+        // Providers only here; the switch stays so the code keeps working.
         key: "path",
         label: "Path",
-        shortcut: "p",
+        hidden: true,
         options: [
           { id: "providers", label: "Providers" },
           { id: "facilities", label: "Facilities" },
@@ -1747,15 +1733,13 @@
       {
         name: "Orthopedist results",
         address: ADDRESS,
-        instruction: "Dot pulls up orthopedists, then recommends a lower-cost imaging center in case the knee needs an X-ray.",
+        instruction: "Dot pulls up orthopedists, with quick prompts below the cards.",
         notes: function (ctx) {
           return [
             "Dot says it's pulling up matches, then pauses 2 seconds before the cards appear.",
             "With the cards, Dot explains in plain text only the tiers shown: Preferred for the first set, both once a Standard provider appears. The Plan Key box is only in Traditional.",
             "Cards use the older design: the copay chip names the tier (Preferred provider / Standard Provider), with View profile and Schedule.",
             "Three orthopedists who treat knee pain appear as cards in a swipeable row. Specialist copays: $40 Preferred, $300 Standard.",
-            "Without being asked, Dot then steers the member to low cost: if the provider orders X-rays or other imaging, use a recommended imaging center.",
-            "The recommended center ($25 copay, placeholder, vs $250 hospital-affiliated) uses the same card as facility search.",
             "Quick prompts follow; sending one shows it as the member's message and the prompts disappear.",
             "Show me more providers adds a second set of three full cards; the other prompts come back after it.",
             ctx.toggles.deductible === false ? "Deductible off: copay chips drop \"after deductible\"." : null,

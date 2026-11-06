@@ -21,6 +21,8 @@
  * Optional demo.switches: [{ key, label, shortcut, options: [{ id, label }] }]
  * adds a segmented control under Mobile/Desktop (e.g. Providers | Facilities);
  * ctx.switches holds the selected option ids, and the shortcut key cycles it.
+ * hidden: true keeps a switch in state (from the URL or its first option) but
+ * shows no control for it.
  * An option with hideVersions: true hides the version picker while selected.
  * An option can also bring its own render-only variants:
  *   variants: { param, items: [{ id, label, description }] }
@@ -344,6 +346,7 @@
     var switchWraps = {}; // switch key -> its element, for showIf
     var versionItems = [];
     switches.forEach(function (sw) {
+      if (sw.hidden) return; // kept in state (URL or first option), no control
       if (sw.menu) {
         var menu = el("div", "version-picker");
         var menuWrap = el("div", "version-select");
@@ -670,7 +673,7 @@
       });
       if (versions.length > 1 && !hideVersions && !storySteps()) add(versions[state.version].label);
       switches.forEach(function (sw) {
-        if (sw.menu) return;
+        if (sw.menu || sw.hidden) return;
         if (sw.showIf && state.switches[sw.showIf.key] !== sw.showIf.id) return; // hidden right now
         sw.options.forEach(function (o) {
           if (o.id !== state.switches[sw.key]) return;
@@ -814,7 +817,7 @@
       }
       // showIf: { key, id } shows a switch only while another switch is on that option.
       switches.forEach(function (sw) {
-        if (sw.showIf) switchWraps[sw.key].hidden = state.switches[sw.showIf.key] !== sw.showIf.id;
+        if (sw.showIf && switchWraps[sw.key]) switchWraps[sw.key].hidden = state.switches[sw.showIf.key] !== sw.showIf.id;
       });
       for (var menuKey in switchMenus) {
         var m = switchMenus[menuKey];

@@ -1558,9 +1558,10 @@
         ],
       },
       {
+        // Providers only here; the switch stays so the code keeps working.
         key: "search",
         label: "Search type",
-        shortcut: "f",
+        hidden: true,
         options: [
           { id: "providers", label: "Providers" },
           {
@@ -1590,7 +1591,7 @@
       { key: "copays", label: "Show copays", checked: false },
       { key: "tierChips", label: "Show tier chips", checked: false },
     ],
-    summary: "A member compares primary care providers, or lab and imaging facilities, and what each visit will cost.",
+    summary: "A member compares primary care providers and what each visit will cost.",
     onRestart: function () {
       network.includeOON = false;
       closeMenu();

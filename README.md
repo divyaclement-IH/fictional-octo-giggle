@@ -45,6 +45,9 @@ Demos:
 
 - `demos/quality-badging/`: "Provider Quality Badging", a copy of the tiering demo to try
   versions of the provider card. Its **Traditional** side is `demos/quality-badging-traditional/`.
+  Providers only: the Providers / Facilities switch is hidden (shell `hidden: true`), and the Dot
+  chat ends at the provider results and quick prompts. Dot's cards show the same chips as care
+  search's mobile cards, offerings included.
   A bare link opens on: gradient style, "Highest Quality Provider", top right corner on web and
   above the photo on mobile, save icon next to the name on both, and deductible, Care Keys,
   copays and tier chips all off.
