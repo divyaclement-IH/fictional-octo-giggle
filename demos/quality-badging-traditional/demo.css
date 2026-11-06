@@ -1840,6 +1840,11 @@
   color: #6a4cde;
 }
 
+/* Style: brand blue, color/text/brand/base (color/blue/700). */
+.quality-text.is-brand {
+  color: #0012e7;
+}
+
 /* Style: green. */
 .quality-text.is-green {
   color: var(--text-success-strong);

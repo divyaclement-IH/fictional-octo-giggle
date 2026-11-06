@@ -120,8 +120,8 @@
   // placement (the spot, per device).
   // Styles: q1 blue-to-purple gradient with a star, q2 gold with a medal,
   // q3 green with a shield, q4 accent purple (color/text/accentOne/base) with
-  // a star.
-  var qualityVersion = "q1"; // "Quality style" menu: off | q1 | q2 | q3 | q4
+  // a star, q5 brand blue (color/text/brand/base) with a star.
+  var qualityVersion = "q1"; // "Quality style" menu: off | q1 | q2 | q3 | q4 | q5
   var qualityCopy = "c1"; // "Quality copy" menu: c1 | c2 | c3
 
   function qualityCopyText() {
@@ -235,8 +235,8 @@
         '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M4 0.8h2.2L7 3.2 7.8.8H10L8.6 4.6A4.2 4.2 0 1 1 5.4 4.6z" fill="currentColor" opacity=".45"/>' +
         '<circle cx="7" cy="8.6" r="3.6" fill="currentColor"/><path d="M7 6.6l.6 1.3 1.4.2-1 1 .2 1.4L7 9.8l-1.2.7.2-1.4-1-1 1.4-.2z" fill="#fff"/></svg>';
       info = qualityInfo();
-    } else if (qualityVersion === "q4") {
-      style = "is-accent";
+    } else if (qualityVersion === "q4" || qualityVersion === "q5") {
+      style = qualityVersion === "q4" ? "is-accent" : "is-brand";
       icon =
         '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">' +
         '<path d="M7 1l1.8 3.7 4 .6-2.9 2.8.7 4L7 10.2 3.4 12.1l.7-4L1.2 5.3l4-.6z" fill="currentColor"/></svg>';
@@ -1477,6 +1477,7 @@
           { id: "q2", label: "Gold with a medal", description: "Gold text and medal." },
           { id: "q3", label: "Green with a shield", description: "Green text and shield." },
           { id: "q4", label: "Accent purple with a star", description: "color/text/accentOne/base (#6A4CDE) text and star, no gradient." },
+          { id: "q5", label: "Brand blue with a star", description: "color/text/brand/base (#0012E7) text and star, no gradient." },
         ],
       },
       {
