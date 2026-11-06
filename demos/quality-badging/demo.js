@@ -300,7 +300,7 @@
     );
   }
 
-  // "Photo border" checkbox: a 1px ring around the photo in the Quality tag's
+  // "Photo border" checkbox: a 2px ring around the photo in the Quality tag's
   // color (or the Dark gradient), on cards that have the tag.
   var photoBorder = false;
   var QUALITY_RING = {
