@@ -1572,15 +1572,17 @@
     },
     switches: [
       {
-        // Milestones: whole-experience versions. P0 is everything shown today;
-        // P1 is the same flow for now, to change once its design is ready.
+        // Presets: whole-configuration versions. Picking one sets the menus
+        // and checkboxes below (V1 is the defaults; V2 moves the quality tag
+        // above the photo on web, to the top right on mobile, and the web save
+        // icon to the top right corner). Tweaks after that stay as they are.
         key: "milestone",
         label: "Presets",
         section: "versions",
         menu: true,
         options: [
-          { id: "p0", label: "P0", description: "The current experience." },
-          { id: "p1", label: "P1", description: "A copy of P0 for now." },
+          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
+          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "top-right", save: "top", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
         ],
       },
       {

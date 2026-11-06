@@ -22,7 +22,8 @@
  * adds a segmented control under Mobile/Desktop (e.g. Providers | Facilities);
  * ctx.switches holds the selected option ids, and the shortcut key cycles it.
  * hidden: true keeps a switch in state (from the URL or its first option) but
- * shows no control for it.
+ * shows no control for it. An option's apply: { switches, toggles } sets
+ * those when it's picked (a preset), and fills them in from a shared link.
  * An option with hideVersions: true hides the version picker while selected.
  * An option can also bring its own render-only variants:
  *   variants: { param, items: [{ id, label, description }] }
@@ -244,6 +245,31 @@
     toggles.forEach(function (t) {
       var fromUrl = params.get(t.key);
       state.toggles[t.key] = fromUrl === "0" ? false : fromUrl === "1" ? true : t.checked !== false;
+    });
+    // Preset options (apply: { switches, toggles }) set other switches and
+    // toggles when picked. On load, a preset in the URL fills in whatever the
+    // URL doesn't set itself.
+    var toggleInputs = {}; // toggle key -> its checkbox, to sync after a preset
+    function presetFor(key, id) {
+      var sw = switches.filter(function (s) { return s.key === key; })[0];
+      var o = sw && sw.options.filter(function (x) { return x.id === id; })[0];
+      return o && o.apply;
+    }
+    function applyPreset(apply, onlyMissing) {
+      var k;
+      for (k in apply.switches || {}) {
+        if (!(k in state.switches) || (onlyMissing && params.get(k))) continue;
+        state.switches[k] = apply.switches[k];
+      }
+      for (k in apply.toggles || {}) {
+        if (!(k in state.toggles) || (onlyMissing && params.get(k))) continue;
+        state.toggles[k] = apply.toggles[k];
+        if (toggleInputs[k]) toggleInputs[k].checked = state.toggles[k];
+      }
+    }
+    switches.forEach(function (sw) {
+      var apply = params.get(sw.key) && presetFor(sw.key, state.switches[sw.key]);
+      if (apply) applyPreset(apply, true);
     });
     // "&key=1|0" for every toggle, so a linked demo opens with the same options.
     function toggleQuery() {
@@ -586,6 +612,7 @@
         var input = el("input");
         input.type = "checkbox";
         input.checked = state.toggles[t.key];
+        toggleInputs[t.key] = input;
         input.addEventListener("change", function () {
           state.toggles[t.key] = input.checked;
           renderPanel();
@@ -942,6 +969,8 @@
     function setSwitch(key, id) {
       if (state.switches[key] === id) return;
       state.switches[key] = id;
+      var apply = presetFor(key, id);
+      if (apply) applyPreset(apply, false);
       renderPanel();
       renderScreen();
     }
