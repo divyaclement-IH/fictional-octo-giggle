@@ -70,7 +70,7 @@ Demos:
   - **V2 · Ranked for you**: headers and Dot's message say providers are listed best match first,
     and each card has its rank (1, 2, 3...) just left of it, in the margin on desktop care search
     and on the card's left edge on phone and in Dot, so the cards don't move.
-  **Save icon (web)** (`&save=name`) places the save icon on web: **Top right** (right-aligned at
+  **Save icon (web)** (`&save=name`) places the save icon on web: **Top right corner** (pinned to
   the card's top, under the quality tag or V4 chip when there is one) or **Next to name** (16px).
   **Save icon (mobile)** (`&saveMobile=header`) does the same on mobile: **Top right corner**
   (pinned to the card's corner at 20px), **Top right, by the name** (20px), or **Next to name** (16px).

@@ -1912,26 +1912,39 @@
   height: 20px;
 }
 
-/* Mobile "Top right corner": pinned to the card's corner (level with a quality
+/* "Top right corner" (mobile, and web's "Top right corner"): pinned to the card's corner (level with a quality
    tag above the photo), not centered on the name. The header keeps room for it. */
-.mode-mobile .provider-card.save-corner {
+.provider-card.save-corner {
   position: relative;
 }
 
-.mode-mobile .provider-card.save-corner .provider-header > .bookmark-button {
+.provider-card.save-corner .provider-header > .bookmark-button {
   position: absolute;
   top: 14px;
   right: 16px;
   padding: 0;
 }
 
-.mode-mobile .provider-card.save-corner .provider-header:has(> .bookmark-button) {
+.provider-card.save-corner .provider-header:has(> .bookmark-button) {
   padding-right: 28px;
 }
 
 /* Below V5's band when it's there. */
-.mode-mobile .provider-card.save-corner:has(.best-match-band) .provider-header > .bookmark-button {
+.provider-card.save-corner:has(.best-match-band) .provider-header > .bookmark-button {
   top: 26px;
+}
+
+/* Web "Top right corner": the 24px icon, centered on the card's first line. */
+.mode-desktop .provider-card.save-corner .provider-header > .bookmark-button {
+  top: 12px;
+}
+
+.mode-desktop .provider-card.save-corner .provider-header:has(> .bookmark-button) {
+  padding-right: 32px;
+}
+
+.mode-desktop .provider-card.save-corner:has(.best-match-band) .provider-header > .bookmark-button {
+  top: 24px;
 }
 
 /* Quality placement (mobile) "Top right corner": the tag (with the save icon

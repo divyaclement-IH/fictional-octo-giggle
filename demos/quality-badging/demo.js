@@ -245,9 +245,11 @@
     return deviceMode === "desktop" ? saveSpot === "name" : saveMobile === "name";
   }
 
-  // Mobile "Top right corner": the card's class that pins the save icon there.
+  // "Top right corner" (mobile) and "Top right" (web): the card's class that
+  // pins the save icon to the card's corner, not the name row.
   function saveCornerClass() {
-    return deviceMode === "mobile" && saveMobile === "corner" ? " save-corner" : "";
+    if (deviceMode === "mobile") return saveMobile === "corner" ? " save-corner" : "";
+    return saveSpot === "top" ? " save-corner" : "";
   }
 
   // The header's top right, stacked: the Quality tag (Top right corner), V4's
@@ -1681,7 +1683,7 @@
         showIf: { key: "path", id: "providers" },
         options: [
           { id: "name", label: "Next to name", description: "Right after the provider's name, at 16px." },
-          { id: "top", label: "Top right", description: "Right-aligned at the top of the card, below the quality tag or chip if there is one." },
+          { id: "top", label: "Top right corner", description: "Pinned to the card's top right corner, below the quality tag or chip if there is one." },
         ],
       },
       {
