@@ -1574,15 +1574,15 @@
       {
         // Presets: whole-configuration versions. Picking one sets the menus
         // and checkboxes below (V1 is the defaults; V2 puts the quality tag
-        // above the photo, left-aligned, on web and mobile, and the web save
-        // icon in the top right corner). Tweaks after that stay as they are.
+        // above the photo, left-aligned, on web and mobile, and the save icon
+        // in the top right corner on both). Tweaks after that stay as they are.
         key: "milestone",
         label: "Presets",
         section: "versions",
         menu: true,
         options: [
           { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
-          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
+          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
         ],
       },
       {
