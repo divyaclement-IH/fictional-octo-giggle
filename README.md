@@ -46,7 +46,9 @@ Demos:
 - `demos/quality-badging/`: "Provider Quality Badging", a copy of the tiering demo to try
   versions of the provider card. Its **Traditional** side is `demos/quality-badging-traditional/`.
   Providers only: the Providers / Facilities switch is hidden (shell `hidden: true`), and the Dot
-  chat ends at the provider results and quick prompts. Dot's cards show the same chips as care
+  chat ends at the provider results (no imaging message or quick prompts after them). The Dot
+  switch opens step 8 already finished (`?complete=1`), and Dot's cards use the mobile card
+  design (335px, mobile placement and save menus) on web too. Dot's cards show the same chips as care
   search's mobile cards, offerings included.
   A bare link opens on: gradient style, "Highest Quality Provider", top right corner on web and
   above the photo on mobile, save icon next to the name on both, and deductible, Care Keys,
@@ -72,7 +74,8 @@ Demos:
   (pinned to the card's corner at 20px), **Top right, by the name** (20px), or **Next to name** (16px).
   Card buttons read **View profile** and **Schedule**.
   Quality is three menus, shown as styled text rather than a chip:
-  **Quality style** (`&quality=q1`: gradient with a star, gold with a medal, or green with a shield),
+  **Quality style** (`&quality=q1`: gradient with a star, gold with a medal, green with a shield, or accent purple
+  (color/text/accentOne/base, #6A4CDE) with a star),
   **Quality copy** (`&qualityCopy=c2`: "Top 10% of Orthopedists" (Primary Care Providers on
   Traditional), "Top provider", or "Highest Quality Provider"), and
   **Quality placement (web)** (`&qualityPlace=under-name`), which picks where it sits on web: top

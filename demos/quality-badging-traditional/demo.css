@@ -1835,6 +1835,11 @@
   color: #8a5a00;
 }
 
+/* Style: accent purple, color/text/accentOne/base (color/purple/700). */
+.quality-text.is-accent {
+  color: #6a4cde;
+}
+
 /* Style: green. */
 .quality-text.is-green {
   color: var(--text-success-strong);

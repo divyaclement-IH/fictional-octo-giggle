@@ -1014,9 +1014,14 @@
 }
 
 
-/* Older provider cards are 552px wide on desktop, as in the Figma frame. */
+/* Provider cards use care search's mobile card on web too: 335px wide, the
+   width of a card on a 375px phone. */
 .mode-desktop .dot-results.is-providers .carousel-item {
-  flex-basis: 552px;
+  flex-basis: 335px;
+}
+
+.mode-desktop .dot-results.is-providers .carousel-track {
+  grid-auto-columns: 335px;
 }
 
 /* "Label cost level": "Lower cost facility:" in regular weight, the range in bold. */
@@ -1347,6 +1352,11 @@
   color: #8a5a00;
 }
 
+/* Style: accent purple, color/text/accentOne/base (color/purple/700). */
+.quality-text.is-accent {
+  color: #6a4cde;
+}
+
 /* Style: green. */
 .quality-text.is-green {
   color: var(--text-success-strong);
@@ -1556,61 +1566,62 @@
   --gradient-dark: linear-gradient(71deg, #0012e7 0%, #6a4cde 100%);
 }
 
-/* Mobile: the save icon at the header's right is 20px ("Top right corner" and
+/* Dot's cards are always the mobile card (on web too). The save icon at the
+   header's right is 20px ("Top right corner" and
    "Top right, by the name"); next to the name it stays 16px. */
-.mode-mobile .provider-card:not(.facility-card) .provider-header > .bookmark-button img,
-.mode-mobile .provider-card:not(.facility-card) .header-aside > .bookmark-button img {
+.provider-card:not(.facility-card) .provider-header > .bookmark-button img,
+.provider-card:not(.facility-card) .header-aside > .bookmark-button img {
   width: 20px;
   height: 20px;
 }
 
 /* Mobile "Top right corner": pinned to the card's corner (level with a quality
    tag above the photo), not centered on the name. The header keeps room for it. */
-.mode-mobile .provider-card.save-corner {
+.provider-card.save-corner {
   position: relative;
 }
 
-.mode-mobile .provider-card.save-corner .provider-header > .bookmark-button {
+.provider-card.save-corner .provider-header > .bookmark-button {
   position: absolute;
   top: 14px;
   right: 16px;
   padding: 0;
 }
 
-.mode-mobile .provider-card.save-corner .provider-header:has(> .bookmark-button) {
+.provider-card.save-corner .provider-header:has(> .bookmark-button) {
   padding-right: 28px;
 }
 
 /* Below V5's band when it's there. */
-.mode-mobile .provider-card.save-corner:has(.best-match-band) .provider-header > .bookmark-button {
+.provider-card.save-corner:has(.best-match-band) .provider-header > .bookmark-button {
   top: 26px;
 }
 
 /* Quality placement (mobile) "Top right corner": the tag (with the save icon
    beside it when that's at the top right) gets its own row at the card's top
    right, so the name keeps its width. */
-.mode-mobile .provider-header:has(.is-at-top-right) {
+.provider-header:has(.is-at-top-right) {
   flex-wrap: wrap;
 }
 
-.mode-mobile .provider-header > .quality-text.is-at-top-right,
-.mode-mobile .header-aside:has(> .is-at-top-right) {
+.provider-header > .quality-text.is-at-top-right,
+.header-aside:has(> .is-at-top-right) {
   flex-basis: 100%;
   order: -1;
 }
 
-.mode-mobile .provider-header > .quality-text.is-at-top-right {
+.provider-header > .quality-text.is-at-top-right {
   text-align: right;
 }
 
-.mode-mobile .header-aside:has(> .is-at-top-right) {
+.header-aside:has(> .is-at-top-right) {
   flex-direction: row;
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
 }
 
-.mode-mobile .header-aside > .quality-text.is-at-top-right {
+.header-aside > .quality-text.is-at-top-right {
   min-width: 0;
   text-align: right;
 }
