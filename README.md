@@ -74,9 +74,9 @@ Demos:
   (pinned to the card's corner at 20px), **Top right, by the name** (20px), or **Next to name** (16px).
   Card buttons read **View profile** and **Schedule**.
   Quality is three menus, shown as styled text rather than a chip:
-  **Quality style** (`&quality=q1`: gradient with a star, gold with a medal, green with a shield, accent purple
-  (color/text/accentOne/base, #6A4CDE) with a star, or brand blue (color/text/brand/base,
-  #0012E7) with a star),
+  **Quality style** (`&quality=q1`: Dark gradient, gold, green, accent purple
+  (color/text/accentOne/base, #6A4CDE), or brand blue (color/text/brand/base, #0012E7)), **Quality icon** (`&qualityIcon=medal-star`: star, or the design system's
+  medal-star, award-ribbons-heart or award-ribbon-star, or each style's own),
   **Quality copy** (`&qualityCopy=c2`: "Top 10% of Orthopedists" (Primary Care Providers on
   Traditional), "Top provider", or "Highest Quality Provider"), and
   **Quality placement (web)** (`&qualityPlace=under-name`), which picks where it sits on web: top
