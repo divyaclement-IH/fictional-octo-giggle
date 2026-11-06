@@ -47,7 +47,8 @@
  * Optional Versions section: switches with section: "versions" (e.g. a
  * Milestones menu with P0, P1...) and the version picker (labelled
  * demo.versionsLabel) sit in an open "Versions" section above Scenario (rename
- * it with demo.versionsSectionLabel), each
+ * it with demo.versionsSectionLabel; demo.versionsSectionOpen: false starts
+ * it closed), each
  * under its own label, instead of at the top of the panel.
  *
  * Optional demo.home: { label, address, render(ctx), instruction, notes } is a
@@ -523,7 +524,7 @@
 
     // Versions
     if (versionItems.length) {
-      var versionsSection = section("versions", demo.versionsSectionLabel || "Versions", false, true);
+      var versionsSection = section("versions", demo.versionsSectionLabel || "Versions", false, demo.versionsSectionOpen !== false);
       versionItems.forEach(function (item) {
         versionsSection.body.appendChild(item);
       });

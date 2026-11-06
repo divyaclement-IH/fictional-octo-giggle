@@ -50,7 +50,7 @@ Demos:
   switch opens step 8 already finished (`?complete=1`), and Dot's cards use the mobile card
   design (335px, mobile placement and save menus) on web too. Dot's cards show the same chips as care
   search's mobile cards, offerings included.
-  **Presets** (above Mobile / Desktop) pick a whole configuration: **V1** (the defaults below) or **V2** (quality tag above
+  **Versions** (above Mobile / Desktop) pick a whole configuration: **V1** (the defaults below) or **V2** (quality tag above
   the photo, left-aligned, on web and mobile; save icon in the top right corner on web and mobile).
   Picking one sets the menus and checkboxes; `&milestone=v2` opens on V2.
   A bare link opens on: gradient style, "Highest Quality Provider", top right corner on web and
@@ -58,7 +58,7 @@ Demos:
   copays and tier chips all off. **Photo ring** (on by default) and **Photo badge** (off by
   default), either or both, add a 2px ring around the photo and/or the design system's Badge Verified seal on its
   corner, in the Quality tag's color with the Quality icon in white, on cards with the tag.
-  The side panel calls its Versions section **Configure** here, and Milestones **Presets**, with no
+  The side panel calls its Versions section **Configure** here (closed by default), and Milestones **Versions** (moved above Mobile / Desktop), with no
   descriptions under the dropdowns.
   The **Provider card** menu in Configure (`&card=v2`) picks the card:
   - **V1**: the tier chip ("Preferred provider: $40 copay") and the avatar badge.

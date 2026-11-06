@@ -1529,6 +1529,7 @@
     backLink: backLink,
     title: "Provider Quality Badging",
     versionsSectionLabel: "Configure",
+    versionsSectionOpen: false, // Configure starts closed
     menuNotes: false, // no descriptions under the dropdowns
     feedback: true,
     demoSwitch: {
@@ -1547,7 +1548,7 @@
         // above the photo, left-aligned, on web and mobile, and the save icon
         // in the top right corner on both). Tweaks after that stay as they are.
         key: "milestone",
-        label: "Presets",
+        label: "Versions",
         section: "top",
         menu: true,
         options: [

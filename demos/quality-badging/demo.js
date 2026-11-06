@@ -1559,6 +1559,7 @@
   app = DemoShell.mount({
     title: "Provider Quality Badging",
     versionsSectionLabel: "Configure",
+    versionsSectionOpen: false, // Configure starts closed
     menuNotes: false, // no descriptions under the dropdowns
     feedback: true,
     summary: "A member with knee pain asks Dot, the AI assistant, to find an orthopedist.",
@@ -1577,7 +1578,7 @@
         // above the photo, left-aligned, on web and mobile, and the save icon
         // in the top right corner on both). Tweaks after that stay as they are.
         key: "milestone",
-        label: "Presets",
+        label: "Versions",
         section: "top",
         menu: true,
         options: [
