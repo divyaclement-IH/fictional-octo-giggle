@@ -1784,21 +1784,26 @@
   display: block;
 }
 
+/* The icon (14px) and the info icon (12px) are centered on the 16px text
+   line: each sits at the line's top, pushed down by half the leftover space. */
 .quality-text svg {
   display: inline-block;
+  margin-top: 1px;
   margin-right: 4px;
-  vertical-align: -2px;
+  vertical-align: top;
 }
 
 .quality-text .quality-info {
   display: inline-flex;
+  height: 12px;
+  margin-top: 2px;
   margin-left: 4px;
-  vertical-align: -2px;
+  vertical-align: top;
 }
 
 .quality-text .quality-info svg {
-  margin-right: 0;
-  vertical-align: 0;
+  margin: 0;
+  vertical-align: top;
 }
 
 .quality-text .nowrap {
@@ -1865,9 +1870,12 @@
 }
 
 /* Quality placement: spots that need their own layout. */
+/* One unit on the 24px name line, centered on it (its own line is 16px). */
 .provider-card .quality-text.is-at-name-line {
-  display: inline;
+  display: inline-block;
+  margin-top: 4px;
   margin-left: 8px;
+  vertical-align: top;
 }
 
 .quality-text.is-at-under-name {
