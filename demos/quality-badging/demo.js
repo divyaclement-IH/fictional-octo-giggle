@@ -1578,7 +1578,7 @@
         // in the top right corner on both). Tweaks after that stay as they are.
         key: "milestone",
         label: "Presets",
-        section: "versions",
+        section: "top",
         menu: true,
         options: [
           { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },

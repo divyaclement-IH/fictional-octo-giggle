@@ -50,7 +50,7 @@ Demos:
   switch opens step 8 already finished (`?complete=1`), and Dot's cards use the mobile card
   design (335px, mobile placement and save menus) on web too. Dot's cards show the same chips as care
   search's mobile cards, offerings included.
-  **Presets** pick a whole configuration: **V1** (the defaults below) or **V2** (quality tag above
+  **Presets** (above Mobile / Desktop) pick a whole configuration: **V1** (the defaults below) or **V2** (quality tag above
   the photo, left-aligned, on web and mobile; save icon in the top right corner on web and mobile).
   Picking one sets the menus and checkboxes; `&milestone=v2` opens on V2.
   A bare link opens on: gradient style, "Highest Quality Provider", top right corner on web and

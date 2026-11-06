@@ -22,7 +22,8 @@
  * adds a segmented control under Mobile/Desktop (e.g. Providers | Facilities);
  * ctx.switches holds the selected option ids, and the shortcut key cycles it.
  * hidden: true keeps a switch in state (from the URL or its first option) but
- * shows no control for it. An option's apply: { switches, toggles } sets
+ * shows no control for it. section: "top" puts a menu above the Mobile /
+ * Desktop switch. An option's apply: { switches, toggles } sets
  * those when it's picked (a preset), and fills them in from a shared link.
  * An option with hideVersions: true hides the version picker while selected.
  * An option can also bring its own render-only variants:
@@ -397,6 +398,11 @@
           menu.classList.add("versions-item");
           menu.insertBefore(el("p", "versions-label", escapeHtml(sw.label)), menuWrap);
           versionItems.push(menu);
+        } else if (sw.section === "top") {
+          // Above the Mobile / Desktop switch, under its label.
+          menu.classList.add("versions-item", "panel-top-menu");
+          menu.insertBefore(el("p", "versions-label", escapeHtml(sw.label)), menuWrap);
+          panel.insertBefore(menu, deviceSwitch);
         } else {
           panel.appendChild(menu);
         }

@@ -732,6 +732,11 @@ body.is-real-phone {
   margin-bottom: 0;
 }
 
+/* A menu placed above the Mobile / Desktop switch (section: "top"). */
+.versions-item.version-picker.panel-top-menu {
+  margin-bottom: 16px;
+}
+
 /* Panel pieces hidden by state (showIf, version picker) stay hidden even
    when their class sets a display, like the grid on .device-switch. */
 .panel [hidden] {
