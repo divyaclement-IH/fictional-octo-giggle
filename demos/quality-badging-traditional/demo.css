@@ -1934,9 +1934,9 @@
   top: 26px;
 }
 
-/* Web "Top right corner": the 24px icon, centered on the card's first line. */
+/* Web "Top right corner": the 24px icon, 16px from the card's top. */
 .mode-desktop .provider-card.save-corner .provider-header > .bookmark-button {
-  top: 12px;
+  top: 16px;
 }
 
 .mode-desktop .provider-card.save-corner .provider-header:has(> .bookmark-button) {
@@ -1944,7 +1944,7 @@
 }
 
 .mode-desktop .provider-card.save-corner:has(.best-match-band) .provider-header > .bookmark-button {
-  top: 24px;
+  top: 28px;
 }
 
 /* Quality placement (mobile) "Top right corner": the tag (with the save icon
