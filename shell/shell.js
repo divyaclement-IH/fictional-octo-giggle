@@ -36,12 +36,14 @@
  * Optional demo.backLink: { label, href } shows a link beside it.
  *
  * A switch with menu: true shows as a dropdown instead of buttons; an
- * option's description shows under it. showIf: { key, id } shows a switch
+ * option's description shows under it (demo.menuNotes: false hides these
+ * notes under every dropdown). showIf: { key, id } shows a switch
  * only while another switch is on that option.
  *
  * Optional Versions section: switches with section: "versions" (e.g. a
  * Milestones menu with P0, P1...) and the version picker (labelled
- * demo.versionsLabel) sit in an open "Versions" section above Scenario, each
+ * demo.versionsLabel) sit in an open "Versions" section above Scenario (rename
+ * it with demo.versionsSectionLabel), each
  * under its own label, instead of at the top of the panel.
  *
  * Optional demo.home: { label, address, render(ctx), instruction, notes } is a
@@ -486,7 +488,7 @@
 
     // Versions
     if (versionItems.length) {
-      var versionsSection = section("versions", "Versions", false, true);
+      var versionsSection = section("versions", demo.versionsSectionLabel || "Versions", false, true);
       versionItems.forEach(function (item) {
         versionsSection.body.appendChild(item);
       });
@@ -821,7 +823,7 @@
           return o.id === state.switches[menuKey];
         })[0];
         m.note.textContent = (picked && picked.description) || "";
-        m.note.hidden = !m.note.textContent;
+        m.note.hidden = !m.note.textContent || demo.menuNotes === false;
       }
 
       if (versionSelect) {
@@ -832,7 +834,7 @@
         });
         versionSelect.value = String(state.version);
         versionNote.textContent = versions[state.version].description || "";
-        versionNote.hidden = !versions[state.version].description;
+        versionNote.hidden = !versions[state.version].description || demo.menuNotes === false;
       }
       variantPickers.forEach(function (vp) {
         vp.wrap.hidden = state.switches[vp.sw.key] !== vp.option.id;
@@ -841,7 +843,7 @@
           return v.id === state.variants[vp.option.id];
         })[0];
         vp.note.textContent = (item && item.description) || "";
-        vp.note.hidden = !vp.note.textContent;
+        vp.note.hidden = !vp.note.textContent || demo.menuNotes === false;
       });
       syncUrl();
     }

@@ -43,6 +43,43 @@ Demos:
   separately. Its **Traditional** side is `demos/crown-castle-traditional/`; like the original,
   the bare link opens on Traditional.
 
+- `demos/quality-badging/`: "Provider Quality Badging", a copy of the tiering demo to try
+  versions of the provider card. Its **Traditional** side is `demos/quality-badging-traditional/`.
+  The side panel calls its Versions section **Configure** here, and Milestones **Presets**, with no
+  descriptions under the dropdowns.
+  The **Provider card** menu in Configure (`&card=v2`) picks the card:
+  - **V1**: the tier chip ("Preferred provider: $40 copay") and the avatar badge.
+  - **V2 · Attribute line**: plain text under the address, "Top quality for orthopedics · 8 mi · Available today".
+  - **V3 · Why this provider**: a row on Preferred cards that opens to the quality reasons.
+  - **V4 · Recommended chip**: V1 plus a "Recommended" pill in the design system's Dark gradient at the card's top right, on Preferred
+    cards.
+  - **V5 · Best match band**: V1 plus a thin Dark gradient band across the top of Preferred cards,
+    "Best match for you" in white.
+  The **Page structure** menu (`&page=v2`) frames the list:
+  - **V1**: the current page copy.
+  - **V2 · Ranked for you**: headers and Dot's message say providers are listed best match first,
+    and each card has its rank (1, 2, 3...) just left of it, in the margin on desktop care search
+    and on the card's left edge on phone and in Dot, so the cards don't move.
+  **Save icon (web)** (`&save=name`) places the save icon on web: **Top right** (right-aligned at
+  the card's top, under the quality tag or V4 chip when there is one) or **Next to name** (16px).
+  **Save icon (mobile)** (`&saveMobile=header`) does the same on mobile: **Top right corner**
+  (pinned to the card's corner at 20px), **Top right, by the name** (20px), or **Next to name** (16px).
+  Card buttons read **View profile** and **Schedule**.
+  Quality is three menus, off by default, shown as styled text rather than a chip:
+  **Quality style** (`&quality=q1`: gradient with a star, gold with a medal, or green with a shield),
+  **Quality copy** (`&qualityCopy=c2`: "Top 10% of Orthopedists" (Primary Care Providers on
+  Traditional), "Top provider", or "Highest Quality Provider"), and
+  **Quality placement (web)** (`&qualityPlace=under-name`), which picks where it sits on web: the
+  default (top right corner, wherever the save icon is), above the photo, top right corner, under
+  the name, next to the name, in the chip row, or under the address. **Quality placement (mobile)**
+  (`&qualityPlaceMobile=top-right`) picks the same spots on mobile (default: above the photo); its
+  top right corner is a row of its own, beside the save icon when that's at the top right.
+  Each tag ends in a small info icon in its own color; it opens a popup (modal on desktop, sheet on
+  phone) explaining the rating. The popup copy is a placeholder.
+  V2 and V3 drop the tier name from the chip (just the copay) and the avatar badge. Quality
+  reasons and availability are placeholders. Show deductible and Show Care Keys start off. **Show tier chips** turns the
+  Preferred/Standard copay chip, the star on the photo and the Plan Key on and off.
+
 Plain HTML, CSS and JS with no build step. Serve the repo and open it:
 
 ```bash
