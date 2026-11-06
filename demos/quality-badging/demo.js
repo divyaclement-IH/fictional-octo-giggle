@@ -300,6 +300,24 @@
     );
   }
 
+  // "Photo border" checkbox: a 1px ring around the photo in the Quality tag's
+  // color (or the Dark gradient), on cards that have the tag.
+  var photoBorder = false;
+  var QUALITY_RING = {
+    q1: "var(--gradient-dark)",
+    q2: "#8a5a00",
+    q3: "var(--text-success-strong)",
+    q4: "#6a4cde",
+    q5: "#0012e7",
+  };
+  function photoRingAttrs(p) {
+    if (!photoBorder || !p.preferred || qualityVersion === "off") return "";
+    return ' style="--ring: ' + QUALITY_RING[qualityVersion] + '"';
+  }
+  function photoRingClass(p) {
+    return photoRingAttrs(p) ? " photo-ring" : "";
+  }
+
   // The tag, only at its spot (one call per spot in the card markup): the
   // Quality style's icon and color with the Quality copy.
   function qualityText(p, spot) {
@@ -783,7 +801,7 @@
       copayChip(p) +
       '<span class="chip chip-network"><img src="' + PS + 'check-circle.svg" width="12" height="12" alt="">In-network</span>';
     return (
-      '<article class="provider-card' + saveCornerClass() + '" data-card="' + cardVersion + '">' +
+      '<article class="provider-card' + saveCornerClass() + photoRingClass(p) + '" data-card="' + cardVersion + '"' + photoRingAttrs(p) + ">" +
       rankMarker(rank) +
       // The band goes inside card-top so carousel cards keep their three shared rows.
       '<div class="provider-content"><div class="card-top">' +
@@ -1203,6 +1221,7 @@
     showCareKeys = ctx.toggles.careKeys !== false;
     showCopays = ctx.toggles.copays !== false;
     showTierChips = ctx.toggles.tierChips !== false;
+    photoBorder = ctx.toggles.photoBorder === true;
     costTag = ctx.switches.costTag || "range";
     cardVersion = ctx.switches.card || "v1";
     pageVersion = ctx.switches.page || "v1";
@@ -1685,6 +1704,7 @@
       { key: "careKeys", label: "Show Care Keys", checked: false },
       { key: "copays", label: "Show copays", checked: false },
       { key: "tierChips", label: "Show tier chips", checked: false },
+      { key: "photoBorder", label: "Photo border", checked: false },
     ],
     onRestart: function () {
       lastStep = null;

@@ -52,7 +52,8 @@ Demos:
   search's mobile cards, offerings included.
   A bare link opens on: gradient style, "Highest Quality Provider", top right corner on web and
   above the photo on mobile, save icon next to the name on both, and deductible, Care Keys,
-  copays and tier chips all off.
+  copays and tier chips all off. **Photo border** (off by default) rings the photo at 1px in the
+  Quality tag's color, on cards with the tag.
   The side panel calls its Versions section **Configure** here, and Milestones **Presets**, with no
   descriptions under the dropdowns.
   The **Provider card** menu in Configure (`&card=v2`) picks the card:

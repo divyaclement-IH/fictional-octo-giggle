@@ -254,6 +254,24 @@
     );
   }
 
+  // "Photo border" checkbox: a 1px ring around the photo in the Quality tag's
+  // color (or the Dark gradient), on cards that have the tag.
+  var photoBorder = false;
+  var QUALITY_RING = {
+    q1: "var(--gradient-dark)",
+    q2: "#8a5a00",
+    q3: "var(--text-success-strong)",
+    q4: "#6a4cde",
+    q5: "#0012e7",
+  };
+  function photoRingAttrs(p) {
+    if (!photoBorder || !p.preferred || qualityVersion === "off") return "";
+    return ' style="--ring: ' + QUALITY_RING[qualityVersion] + '"';
+  }
+  function photoRingClass(p) {
+    return photoRingAttrs(p) ? " photo-ring" : "";
+  }
+
   // The tag, only at its spot (one call per spot in the card markup): the
   // Quality style's icon and color with the Quality copy.
   function qualityText(p, spot) {
@@ -377,6 +395,7 @@
     showCareKeys = ctx.toggles.careKeys !== false;
     showCopays = ctx.toggles.copays !== false;
     showTierChips = ctx.toggles.tierChips !== false;
+    photoBorder = ctx.toggles.photoBorder === true;
     costTag = ctx.switches.costTag || "range";
     cardVersion = ctx.switches.card || "v1";
     pageVersion = ctx.switches.page || "v1";
@@ -542,7 +561,7 @@
       }
     }
     return (
-      '<article class="provider-card' + saveCornerClass() + '" data-card="' + cardVersion + '"' + (first ? " data-space data-dim" : "") + ">" +
+      '<article class="provider-card' + saveCornerClass() + photoRingClass(p) + '" data-card="' + cardVersion + '"' + photoRingAttrs(p) + (first ? " data-space data-dim" : "") + ">" +
       rankMarker(opts.rank) +
       (opts.oon ? "" : bestMatchBand(p)) +
       '<div class="provider-content"' + (first ? " data-space" : "") + ">" +
@@ -1659,6 +1678,7 @@
       { key: "careKeys", label: "Show Care Keys", checked: false },
       { key: "copays", label: "Show copays", checked: false },
       { key: "tierChips", label: "Show tier chips", checked: false },
+      { key: "photoBorder", label: "Photo border", checked: false },
     ],
     summary: "A member compares primary care providers and what each visit will cost.",
     onRestart: function () {
