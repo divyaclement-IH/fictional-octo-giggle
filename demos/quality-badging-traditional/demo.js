@@ -440,12 +440,12 @@
     cardVersion = ctx.switches.card || "v1";
     pageVersion = ctx.switches.page || "v1";
     deviceMode = ctx.mode;
-    saveSpot = ctx.switches.save || "name";
-    saveMobile = ctx.switches.saveMobile || "name";
+    saveSpot = ctx.switches.save || "top";
+    saveMobile = ctx.switches.saveMobile || "corner";
     qualityVersion = ctx.switches.quality || "q1";
     qualityCopy = ctx.switches.qualityCopy || "c3";
     qualityIcon = ctx.switches.qualityIcon || "star";
-    qualityPlace = ctx.switches.qualityPlace || "top-right";
+    qualityPlace = ctx.switches.qualityPlace || "above-avatar";
     qualityPlaceMobile = ctx.switches.qualityPlaceMobile || "above-avatar";
   }
 
@@ -1543,17 +1543,18 @@
     },
     switches: [
       {
-        // Presets: whole-configuration versions. Picking one sets the menus
-        // and checkboxes below (V1 is the defaults; V2 puts the quality tag
-        // above the photo, left-aligned, on web and mobile, and the save icon
-        // in the top right corner on both). Tweaks after that stay as they are.
+        // Versions: whole configurations. Picking one sets the menus and
+        // checkboxes below. V1 (the default) puts the quality tag above the
+        // photo, left-aligned, and the save icon in the card's top right corner,
+        // on web and mobile. V2 puts the tag top right on web and the save icon
+        // next to the name. Tweaks after picking stay as they are.
         key: "milestone",
         label: "Versions",
         section: "top",
         menu: true,
         options: [
-          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
-          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
+          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
+          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
         ],
       },
       {
@@ -1622,8 +1623,8 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
-          { id: "top-right", label: "Top right corner", description: "Above the save icon, wherever that is." },
           { id: "above-avatar", label: "Above the photo", description: "Left-aligned at the top of the card." },
+          { id: "top-right", label: "Top right corner", description: "Above the save icon, wherever that is." },
           { id: "under-name", label: "Under the name", description: "Between the name and the specialty." },
           { id: "name-line", label: "Next to the name", description: "On the name line, right after the name." },
           { id: "chips", label: "In the chip row", description: "First in the row with the copay and network chips, still as text." },
@@ -1655,8 +1656,8 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
-          { id: "name", label: "Next to name", description: "Right after the provider's name, at 16px." },
           { id: "top", label: "Top right corner", description: "Pinned to the card's top right corner, below the quality tag or chip if there is one." },
+          { id: "name", label: "Next to name", description: "Right after the provider's name, at 16px." },
         ],
       },
       {
@@ -1667,8 +1668,8 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
-          { id: "name", label: "Next to name", description: "Right after the provider's name, at 16px." },
           { id: "corner", label: "Top right corner", description: "Pinned to the card's corner at 20px, level with a quality tag above the photo." },
+          { id: "name", label: "Next to name", description: "Right after the provider's name, at 16px." },
           { id: "header", label: "Top right, by the name", description: "At the header's right, centered on the name, at 20px." },
         ],
       },

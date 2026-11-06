@@ -50,11 +50,12 @@ Demos:
   switch opens step 8 already finished (`?complete=1`), and Dot's cards use the mobile card
   design (335px, mobile placement and save menus) on web too. Dot's cards show the same chips as care
   search's mobile cards, offerings included.
-  **Versions** (above Mobile / Desktop) pick a whole configuration: **V1** (the defaults below) or **V2** (quality tag above
-  the photo, left-aligned, on web and mobile; save icon in the top right corner on web and mobile).
+  **Versions** (above Mobile / Desktop) pick a whole configuration: **V1** (the default: quality
+  tag above the photo, left-aligned, and the save icon in the card's top right corner, on web and
+  mobile) or **V2** (quality tag in the top right corner on web, save icon next to the name).
   Picking one sets the menus and checkboxes; `&milestone=v2` opens on V2.
-  A bare link opens on: gradient style, "Highest Quality Provider", top right corner on web and
-  above the photo on mobile, save icon next to the name on both, and deductible, Care Keys,
+  A bare link opens on V1: gradient style, "Highest Quality Provider", above the photo on web
+  and mobile, save icon in the card's top right corner on both, and deductible, Care Keys,
   copays and tier chips all off. **Photo ring** (on by default) and **Photo badge** (off by
   default), either or both, add a 2px ring around the photo and/or the design system's Badge Verified seal on its
   corner, in the Quality tag's color with the Quality icon in white, on cards with the tag.
