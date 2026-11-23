@@ -170,7 +170,7 @@
   var qualityCopy = "c1"; // "Quality copy" menu: c1 | c2 | c3
 
   function qualityCopyText() {
-    return { c1: "Top 10% of " + QUALITY_GROUP, c2: "Top provider", c3: "Highest Quality Provider" }[qualityCopy];
+    return { c1: "Top 10% of " + QUALITY_GROUP, c2: "Top provider", c3: "Highest quality provider" }[qualityCopy];
   }
   var qualityPlace = "top-right"; // "Quality placement (web)" menu (see qualitySpot)
   var qualityPlaceMobile = "above-avatar"; // "Quality placement (mobile)" menu
@@ -1594,7 +1594,7 @@
         menu: true,
         showIf: { key: "path", id: "providers" },
         options: [
-          { id: "c3", label: "Highest Quality Provider" },
+          { id: "c3", label: "Highest quality provider" },
           { id: "c1", label: "Top 10% of Orthopedists" },
           { id: "c2", label: "Top provider" },
         ],
