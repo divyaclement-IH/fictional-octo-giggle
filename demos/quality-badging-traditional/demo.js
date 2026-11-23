@@ -442,7 +442,7 @@
     deviceMode = ctx.mode;
     saveSpot = ctx.switches.save || "top";
     saveMobile = ctx.switches.saveMobile || "corner";
-    qualityVersion = ctx.switches.quality || "q1";
+    qualityVersion = ctx.switches.quality || "q5";
     qualityCopy = ctx.switches.qualityCopy || "c3";
     qualityIcon = ctx.switches.qualityIcon || "star";
     qualityPlace = ctx.switches.qualityPlace || "above-avatar";
@@ -1553,7 +1553,7 @@
         section: "top",
         menu: true,
         options: [
-          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
+          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q5", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
           { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
         ],
       },
@@ -1579,12 +1579,12 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
+          { id: "q5", label: "Brand blue (brand)", description: "color/text/brand/base (#0012E7) text and star, no gradient." },
           { id: "q1", label: "Dark gradient", description: "Blue-to-purple gradient text and star." },
           { id: "off", label: "Off", description: "No quality text." },
           { id: "q2", label: "Gold", description: "Gold text and medal." },
           { id: "q3", label: "Green", description: "Green text and shield." },
           { id: "q4", label: "Accent purple (accentOne)", description: "color/text/accentOne/base (#6A4CDE) text and star, no gradient." },
-          { id: "q5", label: "Brand blue (brand)", description: "color/text/brand/base (#0012E7) text and star, no gradient." },
         ],
       },
       {

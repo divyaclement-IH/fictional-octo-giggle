@@ -54,7 +54,7 @@ Demos:
   tag above the photo, left-aligned, and the save icon in the card's top right corner, on web and
   mobile) or **V2** (quality tag in the top right corner on web, save icon next to the name).
   Picking one sets the menus and checkboxes; `&milestone=v2` opens on V2.
-  A bare link opens on V1: gradient style, "Highest Quality Provider", above the photo on web
+  A bare link opens on V1: brand blue style, "Highest Quality Provider", above the photo on web
   and mobile, save icon in the card's top right corner on both, and deductible, Care Keys,
   copays and tier chips all off. **Photo ring** (on by default) and **Photo badge** (off by
   default), either or both, add a 2px ring around the photo and/or the design system's Badge Verified seal on its
