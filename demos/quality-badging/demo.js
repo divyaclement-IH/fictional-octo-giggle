@@ -158,7 +158,6 @@
   var copayPlan = false; // "Show deductible" unchecked: no deductible wording
   var showCopays = true; // "Show copays" checkbox: dollar amounts in chips and Dot's copy
   var costTag = "range"; // "Facility cost tag" switch: range | level | both
-  var showTierChips = true; // "Show tier chips" checkbox: the Preferred/Standard copay chip and the avatar star
   var cardVersion = "v1"; // "Provider card" menu: v1 | v2 | v3 | v4 | v5
 
   // A Preferred provider's quality as styled text, not a chip. Three menus:
@@ -742,13 +741,6 @@
 
   // Avatar badge (Carrum Figma 141:1172): purple verification badge with a
   // white star, in a 16px box that it overflows slightly top and bottom.
-  function verifiedBadge() {
-    return (
-      '<span class="badge-verified badge-star-verified" role="img" aria-label="IH Preferred Provider" title="IH Preferred Provider" data-icon="Verification Badge">' +
-      '<img src="' + A + 'badge-verified-avatar.svg" width="16.0256" height="16.6718" alt=""></span>'
-    );
-  }
-
   function careKeyIcon() {
     return '<img class="care-key-icon" src="' + PS + 'badge-care-key.svg" width="24" height="24" alt="Care Key eligible" title="Care Key eligible">';
   }
@@ -782,50 +774,33 @@
     if (p.photo) {
       return (
         '<span class="avatar"><img class="avatar-photo" src="' + PS + 'avatar.png" alt="">' +
-        (showsSeal(p) ? qualitySeal(p) : p.preferred && showTierChips && !qualityAsText() ? verifiedBadge() : "") + "</span>"
+        (showsSeal(p) ? qualitySeal(p) : "") + "</span>"
       );
     }
     return (
       '<span class="avatar is-initials">' +
       '<img class="avatar-bg" src="' + PS + 'avatar-initials-bg.svg" width="48" height="48" alt="">' +
       '<span class="avatar-initials" aria-hidden="true">' + initials(p.name) + "</span>" +
-      (showsSeal(p) ? qualitySeal(p) : p.preferred && showTierChips && !qualityAsText() ? verifiedBadge() : "") + "</span>"
+      (showsSeal(p) ? qualitySeal(p) : "") + "</span>"
     );
   }
 
-  // In-network copays: Preferred providers $10 primary care / $40 specialist;
-  // every other in-network provider $100 / $300. Orthopedists are specialists.
-  var COPAY = { preferred: { primary: 10, specialty: 40 }, standard: { primary: 100, specialty: 300 } };
+  // In-network copays (placeholders): the same for every in-network provider,
+  // $10 primary care / $40 specialist. Orthopedists are specialists. No
+  // provider tiers here.
+  var COPAY = { primary: 10, specialty: 40 };
 
-  // Older card design: the chip names the tier, then the copay in bold.
-  function copayChip(p) {
-    var preferred = !!p.preferred;
-    var amount = "$" + COPAY[preferred ? "preferred" : "standard"].specialty + " copay" + (copayPlan ? "" : " after deductible");
-    // Without copays the chip just names the tier.
-    var label = preferred ? "Preferred provider" : "Standard Provider";
-    var text = showCopays ? label + ": <b>" + amount + "</b>" : label;
-    // V2 and V3 leave quality to the text, so the chip is just the copay.
-    if (qualityAsText()) {
-      if (!showCopays) return "";
-      text = "<b>" + amount + "</b>";
-    }
-    if (!showTierChips) return "";
-    return '<span class="chip chip-tier is-' + (preferred ? "preferred" : "standard") + '"><span>' + text + "</span></span>";
+  // The copay chip, only with Show copays.
+  function copayChip() {
+    if (!showCopays) return "";
+    return '<span class="chip chip-copay-plain"><span><b>$' + COPAY.specialty + " copay</b>" + (copayPlan ? "" : " after deductible") + "</span></span>";
   }
 
-  // Plain-text tier explainer for a set of provider cards. Dot only explains
-  // the tiers actually shown: Preferred, Standard, or both. (The Included
-  // Health Plan Key box is only in the Traditional experience.)
-  // lead: the sentence before it. One tier reads as one paragraph; when both
-  // show, each tier gets its own bullet.
-  function tierMessage(lead, list) {
-    var preferred = list.some(function (p) { return p.preferred; });
-    var standard = list.some(function (p) { return !p.preferred; });
-    var parts = [];
-    if (preferred) parts.push("<b>Preferred providers</b> meet our highest quality standards and usually have a lower copay.");
-    if (standard) parts.push("<b>Standard providers</b> are covered too, usually with a higher copay.");
-    if (parts.length < 2) return "<p>" + lead + " " + parts.join("") + "</p>";
-    return "<p>" + lead + "</p><ul>" + parts.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>";
+  // Dot's line above a set of cards: the lead, plus what the quality tag means
+  // when any card in the set shows it.
+  function resultsMessage(lead, list) {
+    var tagged = qualityVersion !== "off" && list.some(function (p) { return p.preferred; });
+    return "<p>" + lead + (tagged ? " Look for <b>" + qualityCopyText() + "</b> on providers who meet Included Health's highest quality standards." : "") + "</p>";
   }
 
   function providerSet(set) {
@@ -837,7 +812,7 @@
       '<button class="bookmark-button" type="button" aria-label="Save ' + p.name + '">' +
       '<img src="' + PS + 'bookmark.svg" width="24" height="24" alt=""></button>';
     var chips =
-      copayChip(p) +
+      copayChip() +
       '<span class="chip chip-network"><img src="' + PS + 'check-circle.svg" width="12" height="12" alt="">In-network</span>';
     return (
       '<article class="provider-card' + saveCornerClass() + photoRingClass(p) + '" data-card="' + cardVersion + '"' + photoRingAttrs(p) + ">" +
@@ -941,19 +916,14 @@
     );
   }
 
-  // Dot opens by explaining how provider tier affects primary vs specialty cost.
+  // Dot opens with what care costs on this plan.
   function intro() {
     return (
-      "<p>The providers you choose can affect what you pay. Your plan has two in-network provider tiers:</p>" +
-      "<ul><li><b>Preferred:</b> higher-quality care with a lower copay</li>" +
-      "<li><b>Standard:</b> covered care with a higher copay</li></ul>" +
+      "<p>I can help you find in-network care near you.</p>" +
       (showCopays
-        ? "<p>For <b>primary care</b>, a Preferred visit is <b>$" + COPAY.preferred.primary + "</b>" + (copayPlan ? "" : " after your deductible") +
-          " ($" + COPAY.standard.primary + " Standard). " +
-          "For <b>specialty care</b>, it's <b>$" + COPAY.preferred.specialty + "</b> Preferred ($" + COPAY.standard.specialty + " Standard). " +
-          "Virtual visits through Included Health are <b>$0</b>.</p>"
-        : "<p>For both <b>primary care</b> and <b>specialty care</b>, a Preferred visit costs less than a Standard one" +
-          (copayPlan ? "" : " once you meet your deductible") + ". Virtual visits through Included Health cost less too.</p>") +
+        ? "<p>For <b>primary care</b>, your copay is <b>$" + COPAY.primary + "</b>" + (copayPlan ? "" : " after your deductible") +
+          ". For <b>specialty care</b>, it's <b>$" + COPAY.specialty + "</b>. Virtual visits through Included Health are <b>$0</b>.</p>"
+        : "<p>Virtual visits through Included Health cost less" + (copayPlan ? "" : ", even before you meet your deductible") + ".</p>") +
       "<p>Want me to find care for you?</p>"
     );
   }
@@ -1000,7 +970,7 @@
       return (
         dotTurn(
           providers
-            ? tierMessage(
+            ? resultsMessage(
                 pageVersion === "v2"
                   ? "Here are your next three matches, ranked <b>#4</b> to <b>#6</b>. They're in-network orthopedists near you who treat knee pain."
                   : "Here are three more in-network orthopedists near you who treat knee pain.",
@@ -1013,7 +983,7 @@
     if (id === "refine") {
       return dotTurn(
         providers
-          ? "<p>Sure. What would you like to change? You can tell me a different ZIP code, a preferred gender, languages spoken, or a focus like sports injuries or knee surgery.</p>"
+          ? "<p>Sure. What would you like to change? You can tell me a different ZIP code, a gender, languages spoken, or a focus like sports injuries or knee surgery.</p>"
           : "<p>Sure. What would you like to change? You can tell me a different ZIP code, the type of test or scan, or how far you're willing to travel.</p>"
       );
     }
@@ -1200,9 +1170,9 @@
         null,
         { id: "turn-results", holdMs: 2000 }
       ) +
-        // The tier explainer appears with the cards, after the pause.
+        // Dot's line about the matches appears with the cards, after the pause.
         '<div class="dot-message results-note" data-type="Body 1 · 16/24 Medium">' +
-        tierMessage(
+        resultsMessage(
           pageVersion === "v2"
             ? "Here are your top matches, ranked for you. <b>#1</b> is the best fit for your knee pain, based on your preferences and each provider's quality of care."
             : "Here are your top matches.",
@@ -1259,7 +1229,6 @@
     copayPlan = ctx.toggles.deductible === false;
     showCareKeys = ctx.toggles.careKeys !== false;
     showCopays = ctx.toggles.copays !== false;
-    showTierChips = ctx.toggles.tierChips !== false;
     photoRing = ctx.toggles.photoRing !== false;
     photoBadge = ctx.toggles.photoBadge === true;
     costTag = ctx.switches.costTag || "range";
@@ -1583,8 +1552,8 @@
         section: "top",
         menu: true,
         options: [
-          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q5", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
-          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
+          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q5", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, photoRing: true, photoBadge: false } } },
+          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, photoRing: true, photoBadge: false } } },
         ],
       },
       {
@@ -1712,7 +1681,7 @@
         menu: true,
         showIf: { key: "path", id: "providers" },
         options: [
-          { id: "v1", label: "V1", description: "The current card: tier chip with the copay." },
+          { id: "v1", label: "V1", description: "The current card." },
           { id: "v2", label: "V2 · Attribute line", description: "Plain text by distance and availability, like \"Top quality for orthopedics.\"" },
           { id: "v3", label: "V3 · Why this provider", description: "A row that opens to the quality reason, keeping the default card clean." },
           { id: "v4", label: "V4 · Recommended chip", description: "V1 plus a blue-to-purple \"Recommended\" chip at the top right." },
@@ -1747,7 +1716,6 @@
       { key: "deductible", label: "Show deductible", checked: false },
       { key: "careKeys", label: "Show Care Keys", checked: false },
       { key: "copays", label: "Show copays", checked: false },
-      { key: "tierChips", label: "Show tier chips", checked: false },
       { key: "photoRing", label: "Photo ring", checked: true },
       { key: "photoBadge", label: "Photo badge", checked: false },
     ],
@@ -1766,11 +1734,11 @@
       {
         name: "Dot explains cost",
         address: ADDRESS,
-        instruction: "Dot opens by explaining how provider tier affects cost. Select Search for care.",
+        instruction: "Dot opens by explaining what care costs. Select Search for care.",
         notes: function (ctx) {
           return [
-            "The demo starts on Dot's message: Preferred vs Standard tiers and primary vs specialty copays.",
-            "Copays: $10 Preferred / $100 Standard for primary care, $40 Preferred / $300 Standard for specialists.",
+            "The demo starts on Dot's message about what care costs on this plan.",
+            "Copays (with Show copays): $10 for primary care, $40 for specialists, $0 for virtual visits.",
             "Checkboxes in Versions: Show deductible, Show Care Keys and Show copays each turn their mentions on or off.",
             ctx.toggles.deductible === false
               ? "Deductible off: no deductible, so copays apply from the first visit."
@@ -1876,9 +1844,8 @@
         notes: function (ctx) {
           return [
             "Dot says it's pulling up matches, then pauses 2 seconds before the cards appear.",
-            "With the cards, Dot explains in plain text only the tiers shown: Preferred for the first set, both once a Standard provider appears. The Plan Key box is only in Traditional.",
-            "Cards use the older design: the copay chip names the tier (Preferred provider / Standard Provider), with View profile and Schedule.",
-            "Three orthopedists who treat knee pain appear as cards in a swipeable row. Specialist copays: $40 Preferred, $300 Standard.",
+            "With the cards, Dot says what the quality tag means when any card shows it.",
+            "Three orthopedists who treat knee pain appear as cards in a swipeable row, with View profile and Schedule.",
             ctx.toggles.deductible === false ? "Deductible off: copay chips drop \"after deductible\"." : null,
             ctx.toggles.copays === false ? "Copays off: no dollar amounts in the chips or Dot's messages." : null,
             ctx.toggles.careKeys !== false ? "The Care Key icon by the name marks Care Key providers, matching care search." : null,

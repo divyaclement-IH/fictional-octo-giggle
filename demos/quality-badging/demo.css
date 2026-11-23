@@ -1680,3 +1680,14 @@
   flex: none;
   margin-top: -0.5px;
 }
+
+/* The copay chip (Show copays): one copay for every in-network provider, no
+   provider tiers, in the neutral chip color. */
+.chip-copay-plain {
+  background: #f2f2f2;
+  color: #000;
+}
+
+.chip-copay-plain b {
+  font-weight: 700;
+}

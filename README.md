@@ -44,6 +44,7 @@ Demos:
   the bare link opens on Traditional.
 
 - `demos/quality-badging/`: "Provider Quality Badging", a copy of the tiering demo to try
+  quality badging for clients without provider tiers (no Preferred / Standard anywhere), and to try
   versions of the provider card. Its **Traditional** side is `demos/quality-badging-traditional/`.
   Providers only: the Providers / Facilities switch is hidden (shell `hidden: true`), and the Dot
   chat ends at the provider results (no imaging message or quick prompts after them). The Dot
@@ -56,18 +57,18 @@ Demos:
   Picking one sets the menus and checkboxes; `&milestone=v2` opens on V2.
   A bare link opens on V1: brand blue style, "Highest Quality Provider", above the photo on web
   and mobile, save icon in the card's top right corner on both, and deductible, Care Keys,
-  copays and tier chips all off. **Photo ring** (on by default) and **Photo badge** (off by
+  and copays all off. **Photo ring** (on by default) and **Photo badge** (off by
   default), either or both, add a 2px ring around the photo and/or the design system's Badge Verified seal on its
   corner, in the Quality tag's color with the Quality icon in white, on cards with the tag.
   The side panel calls its Versions section **Configure** here (closed by default), and Milestones **Versions** (moved above Mobile / Desktop), with no
   descriptions under the dropdowns.
   The **Provider card** menu in Configure (`&card=v2`) picks the card:
-  - **V1**: the tier chip ("Preferred provider: $40 copay") and the avatar badge.
+  - **V1**: the current card (a plain copay chip with Show copays).
   - **V2 · Attribute line**: plain text under the address, "Top quality for orthopedics · 8 mi · Available today".
-  - **V3 · Why this provider**: a row on Preferred cards that opens to the quality reasons.
-  - **V4 · Recommended chip**: V1 plus a "Recommended" pill in the design system's Dark gradient at the card's top right, on Preferred
+  - **V3 · Why this provider**: a row on top-quality cards that opens to the quality reasons.
+  - **V4 · Recommended chip**: V1 plus a "Recommended" pill in the design system's Dark gradient at the card's top right, on top-quality
     cards.
-  - **V5 · Best match band**: V1 plus a thin Dark gradient band across the top of Preferred cards,
+  - **V5 · Best match band**: V1 plus a thin Dark gradient band across the top of top-quality cards,
     "Best match for you" in white.
   The **Page structure** menu (`&page=v2`) frames the list:
   - **V1**: the current page copy.
@@ -91,9 +92,9 @@ Demos:
   top right corner is a row of its own, beside the save icon when that's at the top right.
   Each tag ends in a small info icon in its own color; it opens a popup (modal on desktop, sheet on
   phone) explaining the rating. The popup copy is a placeholder.
-  V2 and V3 drop the tier name from the chip (just the copay) and the avatar badge. Quality
-  reasons and availability are placeholders. Show deductible and Show Care Keys start off. **Show tier chips** turns the
-  Preferred/Standard copay chip, the star on the photo and the Plan Key on and off.
+  Quality reasons and availability are placeholders. Show deductible and Show Care Keys start
+  off. Every in-network provider has the same copay ($10 primary care, $40 specialist,
+  placeholders); Traditional's plan card shows only with Show deductible or Show copays.
 
 Plain HTML, CSS and JS with no build step. Serve the repo and open it:
 

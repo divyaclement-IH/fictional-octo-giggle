@@ -112,7 +112,7 @@
   var copayOnly = false; // "Show deductible" unchecked: a copay plan with no deductible
   var showCopays = true; // "Show copays" unchecked: no dollar amounts on cards or plan cards
   var costTag = "range"; // "Facility cost tag" switch: range | level | both
-  var showTierChips = true; // "Show tier chips" checkbox: the Preferred/Standard copay chip and the avatar star
+  var COPAY_PRIMARY = 10; // one in-network primary care copay (placeholder); no provider tiers
   var cardVersion = "v1"; // "Provider card" menu: v1 | v2 | v3 | v4 | v5
 
   // A Preferred provider's quality as styled text, not a chip. Three menus:
@@ -433,7 +433,6 @@
     copayOnly = ctx.toggles.deductible === false;
     showCareKeys = ctx.toggles.careKeys !== false;
     showCopays = ctx.toggles.copays !== false;
-    showTierChips = ctx.toggles.tierChips !== false;
     photoRing = ctx.toggles.photoRing !== false;
     photoBadge = ctx.toggles.photoBadge === true;
     costTag = ctx.switches.costTag || "range";
@@ -504,20 +503,6 @@
     );
   }
 
-  // IH Preferred badge: purple badge with a white star (Figma node 2583:24045), used everywhere.
-  // Avatar badge (Carrum Figma 141:1172): purple verification badge with a
-  // white star, in a 16px box that it overflows slightly top and bottom.
-  function verifiedBadge(tappable) {
-    var img =
-      '<span class="badge-verified badge-star-verified"' + (tappable ? "" : ' role="img" aria-label="IH Preferred Provider"') +
-      ' title="IH Preferred Provider" data-icon="Verification Badge">' +
-      '<img src="../quality-badging/assets/badge-verified-avatar.svg" width="16.0256" height="16.6718" alt=""></span>';
-    // V2+: the badge is a button that explains itself.
-    return tappable
-      ? '<button class="badge-button badge-button-avatar" type="button" data-learn="preferred" aria-label="IH Preferred Provider, learn more">' + img + "</button>"
-      : img;
-  }
-
   function careKeyIcon(tappable) {
     var img = '<img class="care-key-icon" src="' + A + 'badge-care-key.svg" width="24" height="24" alt="' +
       (tappable ? "" : "Care Key eligible") + '" title="Care Key eligible">';
@@ -562,14 +547,14 @@
     if (p.photo) {
       return (
         '<span class="avatar"' + (first ? " data-dim" : "") + '><img class="avatar-photo" src="' + A + 'avatar.png" alt="">' +
-        (showsSeal(p) ? qualitySeal(p) : p.preferred && showTierChips && !qualityAsText() ? verifiedBadge(tappable) : "") + "</span>"
+        (showsSeal(p) ? qualitySeal(p) : "") + "</span>"
       );
     }
     return (
       '<span class="avatar is-initials"' + (first ? " data-dim" : "") + ">" +
       '<img class="avatar-bg" src="' + A + 'avatar-initials-bg.svg" width="48" height="48" alt="">' +
       '<span class="avatar-initials" aria-hidden="true">' + initials(p.name) + "</span>" +
-      (showsSeal(p) ? qualitySeal(p) : p.preferred && showTierChips && !qualityAsText() ? verifiedBadge(tappable) : "") + "</span>"
+      (showsSeal(p) ? qualitySeal(p) : "") + "</span>"
     );
   }
 
@@ -584,16 +569,11 @@
         '<span class="chip chip-neutral">Out-of-network rates apply</span>' +
         '<span class="chip chip-oon">Out-of-network</span>';
     } else {
-      // Older card design: the chip names the tier, then the copay in bold.
-      // Without copays it just names the tier; without a deductible it drops "after deductible".
-      var amount = (opts.top ? "$10" : "$100") + " copay" + (copayOnly ? "" : " after deductible");
-      var label = opts.top ? "Preferred provider" : "Standard Provider";
-      var text = showCopays ? label + ": <b>" + amount + "</b>" : label;
-      // V2 and V3 leave quality to the text, so the chip is just the copay.
-      if (qualityAsText()) text = showCopays ? "<b>" + amount + "</b>" : "";
-      chips = !text || !showTierChips ? "" :
-        '<span class="chip chip-tier is-' + (opts.top ? "preferred" : "standard") + '"' +
-        (first ? ' data-type="Caption · 12/16 Medium"' : "") + "><span>" + text + "</span></span>";
+      // No provider tiers here: every in-network visit has the same copay,
+      // shown only with Show copays (without a deductible it drops "after deductible").
+      chips = !showCopays ? "" :
+        '<span class="chip chip-copay-plain"' + (first ? ' data-type="Caption · 12/16 Medium"' : "") + "><span><b>" +
+        "$" + COPAY_PRIMARY + " copay</b>" + (copayOnly ? "" : " after deductible") + "</span></span>";
       if (opts.cfg.networkChip) {
         chips +=
           '<span class="chip chip-network"><img src="' + A + 'check-circle.svg" width="12" height="12" alt=""' +
@@ -638,7 +618,6 @@
   function badgeLegend(lead) {
     return (
       '<div class="badge-legend" id="badge-legend" aria-label="Badges">' + (lead || "") +
-      '<button class="legend-item" type="button" data-learn="preferred"><img src="' + A + 'badge-preferred-star.svg" width="16" height="16" alt="">IH Preferred</button>' +
       (showCareKeys
         ? '<button class="legend-item" type="button" data-learn="carekey"><img src="' + A + 'badge-care-key.svg" width="24" height="24" alt="">Care Key eligible</button>'
         : "") +
@@ -771,15 +750,6 @@
     );
   }
 
-  function preferredCard() {
-    return (
-      '<div class="info-card" id="preferred-card">' +
-      '<p class="info-card-title"><img src="' + A + 'badge-preferred-star.svg" width="16" height="16" alt="" data-icon="Verification Badge">IH Preferred Providers</p>' +
-      '<p class="info-card-body">These providers are recommended by Included Health because their patients have strong outcomes and their care usually costs you less.</p>' +
-      '<button class="text-link" type="button" data-learn="preferred" data-color="text/brand">Learn more</button></div>'
-    );
-  }
-
   function careKeyCard() {
     return (
       '<div class="info-card">' +
@@ -789,28 +759,19 @@
     );
   }
 
-  // Included Health Plan Key (Figma 2671:32131): what the two in-network tiers
-  // mean. Replaces the earlier Plan Key card (Figma 2638:27114) in this demo.
+  // Your plan (was the Plan Key, Figma 2671:32131): what the copays mean for
+  // this plan. No provider tiers here. Shown only when there's plan info to
+  // show (Show deductible or Show copays).
   function planKeyCard() {
-    // It explains the tier chips, so it goes when "Show tier chips" is off.
-    if (!showTierChips) return "";
+    if (copayOnly && !showCopays) return "";
     return (
       '<div class="tier-key" id="plan-card" data-space data-dim>' +
-      '<p class="tier-key-title" data-type="Body 1 - Bold · 16/24">Plan Key</p>' +
-      // Follows the Show deductible / Show copays checkboxes.
+      '<p class="tier-key-title" data-type="Body 1 - Bold · 16/24">Your plan</p>' +
       '<p class="tier-key-plan" data-type="Body 1 · 16/24 Medium">' +
       (copayOnly
-        ? "You’re on a copay plan. " + (showCopays ? "The copays shown are what you pay per visit." : "You pay a copay per visit.")
+        ? "You’re on a copay plan. The copays shown are what you pay per visit."
         : "You’re on a plan with a deductible. " + (showCopays ? "The copays shown only apply after you’ve met your deductible." : "Copays only apply after you’ve met your deductible.")) +
-      "</p>" +
-      '<p class="tier-key-plan" data-type="Body 1 · 16/24 Medium">Both tiers shown below are in-network.</p>' +
-      '<div class="tier-key-rows" id="preferred-card">' +
-      '<div class="tier-key-row"><span class="tier-key-tag is-preferred">Preferred provider</span>' +
-      '<img src="../quality-badging/assets/badge-preferred-key-16.svg" width="16" height="16" alt="" data-icon="Verification Badge">' +
-      "<span>Highest quality standards, lower copay</span></div>" +
-      '<div class="tier-key-row is-standard"><span class="tier-key-tag is-standard">Standard provider</span>' +
-      "<span>Covered, usually a higher copay</span></div>" +
-      "</div></div>"
+      "</p></div>"
     );
   }
 
@@ -833,8 +794,8 @@
         '<div class="results-layout">' + results(cfg, false, cfg.planInfo && !cfg.summaryAboveMap ? planSummary(cfg) : "") +
         (cfg.planInfo
           ? '<aside class="aside is-sticky">' + (cfg.summaryAboveMap ? planSummary(cfg) : "") + map() + "</aside>"
-          : '<aside class="aside">' + map(cfg.shortMap && !(cfg.planKey && !showTierChips)) +
-            (cfg.planKey ? planKeyCard() : '<div class="info-cards" data-space>' + planCard() + preferredCard() + (showCareKeys ? careKeyCard() : "") + "</div>") +
+          : '<aside class="aside">' + map(cfg.shortMap && !(cfg.planKey && !planKeyCard())) +
+            (cfg.planKey ? planKeyCard() : '<div class="info-cards" data-space>' + planCard() + (showCareKeys ? careKeyCard() : "") + "</div>") +
             "</aside>") +
         "</div>"
       );
@@ -851,7 +812,7 @@
       ? planSummary(cfg)
       : cfg.planKey
         ? planKeyCard()
-        : '<div class="info-cards">' + planCard() + preferredCard() + (showCareKeys ? careKeyCard() : "") + "</div>";
+        : '<div class="info-cards">' + planCard() + (showCareKeys ? careKeyCard() : "") + "</div>";
     return (
       '<nav class="m-nav" data-space>' +
       '<button class="m-nav-button" type="button" aria-label="Back"><img src="' + A + 'm-arrow-left.svg" width="20" height="20" alt="" data-icon="arrow-left"></button>' +
@@ -1023,18 +984,8 @@
       intro: "Your deductible is what you pay for covered care each year before your plan starts sharing the cost.",
       points: [
         "Until you meet it, you pay the full negotiated price for most visits.",
-        "After you meet it, you pay only the copay shown on each provider, like $10 for preferred providers.",
+        "After you meet it, you pay only the copay shown on each provider, like $10 for a primary care visit.",
         "Preventive care, like your annual checkup, is covered before you meet your deductible.",
-      ],
-    },
-    preferred: {
-      icon: "badge-preferred-star.svg",
-      title: "IH Preferred Providers",
-      intro: "These providers are recommended by Included Health because their patients have strong outcomes and their care usually costs you less.",
-      points: [
-        "Strong outcomes: their patients tend to have fewer repeat visits and complications.",
-        "Lower costs: visits usually cost you less than with other in-network providers.",
-        "Easy to spot: look for the purple star badge on a provider's photo.",
       ],
     },
     carekey: {
@@ -1071,7 +1022,7 @@
       '<h2 class="learn-title" id="learn-title">' + (info.icon ? '<img src="' + A + info.icon + '" width="24" height="24" alt="">' : "") + info.title + "</h2>" +
         '<p class="learn-intro">' + info.intro + "</p>" +
         '<ul class="learn-points">' + info.points.map(function (pt) {
-          return "<li>" + (showCopays ? pt : pt.replace(/, like \$\d+ for preferred providers/, "")) + "</li>";
+          return "<li>" + (showCopays ? pt : pt.replace(/, like \$\d+ for a primary care visit/, "")) + "</li>";
         }).join("") + "</ul>" +
         '<button class="learn-done" type="button" data-learn-close>Got it</button>',
       trigger
@@ -1360,8 +1311,8 @@
   }
 
   var BADGE_NOTE = [
-    "The purple badge on the avatar marks an IH Preferred Provider; the Care Key icon by the name marks Care Key providers.",
-    "The purple badge on the avatar marks an IH Preferred Provider.",
+    "The quality tag marks providers who meet Included Health's highest quality standards; the Care Key icon by the name marks Care Key providers.",
+    "The quality tag marks providers who meet Included Health's highest quality standards.",
   ];
 
   function baseSteps(cfg) {
@@ -1380,8 +1331,8 @@
           cfg.planKey && inNetworkList
             ? [
                 [
-                  "Changed from V2: the plan, IH Preferred Providers and Care Key cards are combined into one Plan Key below the map.",
-                  "Changed from V2: the plan and IH Preferred Providers cards are combined into one Plan Key below the map.",
+                  "Changed from V2: the plan and Care Key cards are combined into one plan card below the map.",
+                  "Changed from V2: the plan info is one plan card below the map.",
                 ],
                 "Like V2, the list is in-network by default and the Network filter can include out-of-network providers.",
                 BADGE_NOTE,
@@ -1414,8 +1365,8 @@
         notes: cfg.planInfo
           ? [
               cfg.summaryAboveMap
-                ? "Changed from Plain text: the deductible note moves from the Plan Key to a plan summary above the map on desktop (above the first provider on mobile)."
-                : "Changed from Plain text: the deductible note moves from the Plan Key to a plan summary right above the first provider, so it's read before any copay.",
+                ? "Changed from Plain text: the deductible note moves from the plan card to a plan summary above the map on desktop (above the first provider on mobile)."
+                : "Changed from Plain text: the deductible note moves from the plan card to a plan summary right above the first provider, so it's read before any copay.",
               cfg.planInfo === "summary-progress"
                 ? "Deductible progress ($1,250 of $3,000, placeholder) shows how close copays are to applying."
                 : "No amounts: it just says the plan has a deductible and copays apply after it's met.",
@@ -1433,11 +1384,11 @@
             name: "Badges",
             address: ADDRESS,
             instruction: careKeyText(
-              "Tap a badge on a card, or in the legend, to see what IH Preferred and Care Key mean.",
-              "Tap a badge on a card, or in the legend, to see what IH Preferred means."
+              "Tap a badge on a card, or in the legend, to see what the quality tag and Care Key mean.",
+              "Tap the info icon by the quality tag to see what it means."
             ),
             notes: careKeyNotes([
-              "Changed from Plain text: no Plan Key. Each badge is a button that opens its explainer right where it appears.",
+              "Changed from Plain text: no plan card. Each badge is a button that opens its explainer right where it appears.",
               cfg.legendInSummary
                 ? "A legend inside the plan summary names each badge in text, so meaning never depends on the icon alone."
                 : "A legend under the description names each badge in text, so meaning never depends on the icon alone.",
@@ -1447,18 +1398,18 @@
             onShow: scrollTo("top-matches"),
           }
         : {
-            name: "Preferred providers",
+            name: "Quality",
             address: ADDRESS,
             instruction: careKeyText(
-              "See how IH Preferred Providers and Care Keys lower costs.",
-              "See how IH Preferred Providers lower costs."
+              "See which providers meet the highest quality standards, and how Care Keys lower costs.",
+              "See which providers meet the highest quality standards."
             ),
             notes: careKeyNotes([
-              "These providers are recommended by Included Health because their patients have strong outcomes and their care usually costs you less.",
+              "The quality tag marks providers who meet Included Health's highest quality standards. Its info icon explains the rating.",
               ["Providers that are Care Key eligible offer lower-cost visits when you use a Care Key.", null],
             ]),
             render: page,
-            onShow: scrollTo("preferred-card"),
+            onShow: scrollTo("top-matches"),
           },
       {
         name: inNetworkList ? "Other in-network matches" : "Other top matches",
@@ -1467,7 +1418,7 @@
           ? "Scroll to Other in-network matches. Select View more to load more providers."
           : "Scroll to Other top matches. Select View more to load more providers.",
         notes: [
-          "These providers are in-network but not preferred, so copays are higher ($100 vs $10).",
+          "These providers are in-network too, without the quality tag.",
           "View more paginates the list instead of loading everything at once.",
         ],
         render: page,
@@ -1553,8 +1504,8 @@
         section: "top",
         menu: true,
         options: [
-          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q5", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
-          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, tierChips: false, photoRing: true, photoBadge: false } } },
+          { id: "v1", label: "V1", apply: { switches: { page: "v1", quality: "q5", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "above-avatar", qualityPlaceMobile: "above-avatar", save: "top", saveMobile: "corner", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, photoRing: true, photoBadge: false } } },
+          { id: "v2", label: "V2", apply: { switches: { page: "v1", quality: "q1", qualityCopy: "c3", qualityIcon: "star", qualityPlace: "top-right", qualityPlaceMobile: "above-avatar", save: "name", saveMobile: "name", card: "v1" }, toggles: { deductible: false, careKeys: false, copays: false, photoRing: true, photoBadge: false } } },
         ],
       },
       {
@@ -1682,7 +1633,7 @@
         menu: true,
         showIf: { key: "search", id: "providers" },
         options: [
-          { id: "v1", label: "V1", description: "The current card: tier chip with the copay." },
+          { id: "v1", label: "V1", description: "The current card." },
           { id: "v2", label: "V2 · Attribute line", description: "Plain text by distance and availability, like \"Top quality for primary care.\"" },
           { id: "v3", label: "V3 · Why this provider", description: "A row that opens to the quality reason, keeping the default card clean." },
           { id: "v4", label: "V4 · Recommended chip", description: "V1 plus a blue-to-purple \"Recommended\" chip at the top right." },
@@ -1721,7 +1672,6 @@
       { key: "deductible", label: "Show deductible", checked: false },
       { key: "careKeys", label: "Show Care Keys", checked: false },
       { key: "copays", label: "Show copays", checked: false },
-      { key: "tierChips", label: "Show tier chips", checked: false },
       { key: "photoRing", label: "Photo ring", checked: true },
       { key: "photoBadge", label: "Photo badge", checked: false },
     ],
@@ -1732,8 +1682,8 @@
     },
     versionsLabel: "Plan info",
     versions: [
-      { id: "plain", label: "Plain text", description: "The Figma design, with an In-network chip on every card and the Plan Key below the map.", steps: baseSteps(V1) },
-      { id: "modals", label: "Modals", description: "No Plan Key: a plan summary above the map, and badges that explain themselves.", steps: baseSteps(V3) },
+      { id: "plain", label: "Plain text", description: "The Figma design, with an In-network chip on every card and a plan card below the map.", steps: baseSteps(V1) },
+      { id: "modals", label: "Modals", description: "No plan card: a plan summary above the map, and badges that explain themselves.", steps: baseSteps(V3) },
       { id: "tracker", label: "Deductible tracker", description: "Like Modals, plus deductible progress.", steps: baseSteps(V2) },
     ],
   });
