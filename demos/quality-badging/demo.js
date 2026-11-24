@@ -184,6 +184,12 @@
   var QUALITY_GROUP = "Orthopedists";
   var qualityGradientId = 0;
 
+  var INFO_CIRCLE_PATHS = [
+    "M12 0C18.6274 0 24 5.37259 24 12C24 18.6274 18.6274 24 12 24C5.37259 24 0 18.6274 0 12C0 5.37259 5.37259 0 12 0ZM12 1.5C6.20101 1.5 1.5 6.20101 1.5 12C1.5 17.799 6.20101 22.5 12 22.5C17.799 22.5 22.5 17.799 22.5 12C22.5 6.20101 17.799 1.5 12 1.5Z",
+    "M10.5 7.125C10.5 6.50366 11.0037 6 11.625 6C12.2463 6 12.75 6.50366 12.75 7.125C12.75 7.74634 12.2463 8.25 11.625 8.25C11.0037 8.25 10.5 7.74634 10.5 7.125Z",
+    "M11.5 10C12.3284 10 13 10.6716 13 11.5V15.25C13 15.6642 13.3358 16 13.75 16H14.5C14.9142 16 15.25 16.3358 15.25 16.75C15.25 17.1642 14.9142 17.5 14.5 17.5H10.75C10.3358 17.5 10 17.1642 10 16.75C10 16.3358 10.3358 16 10.75 16H11.5V11.5H10.75C10.3358 11.5 10 11.1642 10 10.75C10 10.3358 10.3358 10 10.75 10H11.5Z",
+  ];
+
   // A small info button after each quality tag (opens qualityLearn), in
   // the tag's own color. gradientId: V1's tag is gradient text, so its icon
   // strokes with the same gradient.
@@ -193,15 +199,16 @@
     if (gradientId) {
       paint = "url(#" + gradientId + ")";
       defs =
-        '<defs><linearGradient id="' + gradientId + '" x1="0.3" y1="8" x2="11.7" y2="4" gradientUnits="userSpaceOnUse">' +
+        '<defs><linearGradient id="' + gradientId + '" x1="0.5" y1="16" x2="23.5" y2="8" gradientUnits="userSpaceOnUse">' +
         '<stop offset="0" stop-color="#0012e7"/><stop offset="1" stop-color="#6a4cde"/></linearGradient></defs>';
     }
+    // The design system's info-circle icon (Style=Regular, Figma 2069:98920),
+    // drawn at 12px.
     return (
       '<button class="quality-info" type="button" data-learn="quality" aria-label="About this quality rating">' +
-      '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">' + defs +
-      '<circle cx="6" cy="6" r="5.25" fill="none" stroke="' + paint + '" stroke-width="1.2"/>' +
-      '<circle cx="6" cy="3.6" r=".75" fill="' + paint + '"/>' +
-      '<path d="M6 5.4v3.2" stroke="' + paint + '" stroke-width="1.2" stroke-linecap="round"/></svg></button>'
+      '<svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">' + defs +
+      INFO_CIRCLE_PATHS.map(function (d) { return '<path d="' + d + '" fill="' + paint + '"/>'; }).join("") +
+      "</svg></button>"
     );
   }
 
