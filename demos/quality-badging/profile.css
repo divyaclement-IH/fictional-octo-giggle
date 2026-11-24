@@ -1,0 +1,650 @@
+/* Provider profile page (Figma Provider Connect 2027, node 85:7933), shared
+   by the Dot and Traditional demos. See profile.js. */
+
+.provider-profile {
+  position: absolute;
+  z-index: 15; /* over the page, under the learn-more modal (20) */
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #fff;
+  font-family: "Figtree", system-ui, sans-serif;
+  font-weight: 500;
+  color: #000;
+  text-align: left;
+}
+
+.provider-profile * {
+  box-sizing: border-box;
+}
+
+.provider-profile p,
+.provider-profile h1,
+.provider-profile h2,
+.provider-profile ul {
+  margin: 0;
+}
+
+.provider-profile img {
+  display: block;
+  flex-shrink: 0;
+}
+
+.provider-profile button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* ---------- Navigation ---------- */
+
+.provider-profile .pp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid #e1e1e1; /* border/weakest */
+}
+
+.provider-profile.is-web .pp-nav {
+  height: 64px;
+}
+
+.provider-profile .pp-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.provider-profile .pp-nav button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+}
+
+.provider-profile .pp-nav button:first-child {
+  justify-content: flex-start;
+}
+
+.provider-profile .pp-nav button:last-child {
+  justify-content: flex-end;
+}
+
+.provider-profile.is-mobile .pp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 4px 16px;
+  border-bottom: 0.5px solid #c6c6c6; /* grey/400 */
+}
+
+.provider-profile.is-mobile .pp-nav button {
+  height: 40px;
+  min-width: 40px;
+}
+
+/* ---------- Layout ---------- */
+
+.provider-profile .pp-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.provider-profile.is-web .pp-content {
+  gap: 24px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.provider-profile.is-mobile {
+  background: #f2f2f2; /* grey/200 */
+}
+
+.provider-profile.is-mobile .pp-content {
+  gap: 8px;
+}
+
+.provider-profile .pp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #fff;
+}
+
+.provider-profile.is-mobile .pp-section {
+  padding: 16px 20px;
+}
+
+.provider-profile .pp-rule {
+  width: 100%;
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid #e1e1e1;
+}
+
+.provider-profile.is-mobile .pp-rule.is-section {
+  display: none; /* the grey gap separates mobile sections */
+}
+
+.provider-profile .pp-title {
+  font-size: 20px; /* Title 3 */
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.provider-profile .pp-label {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.provider-profile .pp-body {
+  font-size: 16px;
+  line-height: 24px;
+  color: #3b3b3b; /* text/neutral/strong */
+}
+
+.provider-profile .pp-body.is-strong {
+  color: #000;
+}
+
+.provider-profile .pp-block {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* ---------- Header ---------- */
+
+/* Highest quality provider: Inline Banner, Compact */
+.provider-profile .pp-quality {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* banner/spacing/compact */
+  padding: 12px; /* banner/padding/compact */
+  background: #f6fafe; /* banner/bg/color/default-inline */
+  border: 1px solid #d0e2ff; /* banner/border/color/default */
+  border-radius: 12px; /* radius/m */
+}
+
+.provider-profile .pp-quality-text {
+  font-size: 14px; /* Body 2 Bold */
+  line-height: 20px;
+  font-weight: 700;
+  color: #002380; /* color/text/brand/strong */
+}
+
+.provider-profile .pp-header {
+  gap: 24px;
+}
+
+.provider-profile.is-mobile .pp-header {
+  gap: 12px;
+}
+
+.provider-profile .pp-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.provider-profile.is-mobile .pp-identity {
+  align-items: center;
+  gap: 12px;
+}
+
+.provider-profile .pp-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #f2f2f2;
+}
+
+.provider-profile.is-mobile .pp-avatar {
+  width: 64px;
+  height: 64px;
+}
+
+.provider-profile .pp-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.provider-profile .pp-avatar.is-initials {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.provider-profile.is-mobile .pp-avatar.is-initials {
+  font-size: 24px;
+}
+
+.provider-profile .pp-identity-text {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.provider-profile .pp-name {
+  font-size: 24px; /* Title 2 */
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.provider-profile.is-mobile .pp-name {
+  font-size: 20px; /* Title 3 */
+}
+
+.provider-profile .pp-specialties {
+  font-size: 16px;
+  line-height: 24px;
+  color: #3b3b3b;
+}
+
+.provider-profile .pp-identity-text .pp-chips {
+  margin-top: 8px;
+}
+
+.provider-profile .pp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.provider-profile .pp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: #eafaf1; /* surface/success/weak */
+  color: #005330; /* text/success/strong */
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.provider-profile .pp-chip.is-neutral {
+  background: #f2f2f2; /* surface/neutral/disabled */
+  color: #000;
+}
+
+.provider-profile .pp-why {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 16px;
+  line-height: 24px;
+  color: #3b3b3b;
+}
+
+.provider-profile .pp-why-title {
+  font-weight: 700;
+  color: #000;
+}
+
+.provider-profile .pp-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.provider-profile .pp-actions .pp-btn {
+  flex: 1 1 0;
+  min-height: 44px;
+}
+
+/* ---------- Buttons ---------- */
+
+.provider-profile .pp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 68px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 24px;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.provider-profile .pp-btn.is-outline {
+  border: 1.5px solid #6d6d6d; /* border/strong */
+  color: #000;
+}
+
+.provider-profile .pp-btn.is-solid {
+  background: #001048;
+  color: #fff;
+}
+
+.provider-profile .pp-btn.is-brand {
+  gap: 6px;
+  border: 1.5px solid #002380; /* border/brand/strong */
+  color: #002380;
+}
+
+.provider-profile .pp-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 12px 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: #002380;
+  text-decoration: underline;
+}
+
+.provider-profile .pp-link img {
+  margin: 2px;
+}
+
+.provider-profile.is-web .pp-link {
+  align-self: center;
+}
+
+.provider-profile.is-mobile .pp-link {
+  align-self: flex-start;
+}
+
+/* ---------- Location ---------- */
+
+.provider-profile .pp-location {
+  gap: 8px;
+}
+
+.provider-profile .pp-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.provider-profile .pp-pagination {
+  display: flex;
+  margin: -8px -12px -8px 0;
+}
+
+.provider-profile.is-mobile .pp-pagination {
+  margin-right: -8px;
+}
+
+.provider-profile .pp-columns {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.provider-profile .pp-columns:last-of-type {
+  margin-bottom: 0;
+}
+
+.provider-profile .pp-details {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.provider-profile .pp-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.provider-profile .pp-address > div {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.provider-profile .pp-distance {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: #00835d; /* text/success/base */
+  white-space: nowrap;
+}
+
+.provider-profile .pp-map {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  aspect-ratio: 335 / 188;
+  overflow: hidden;
+  border: 1px solid #e1e1e1;
+  border-radius: 24px;
+}
+
+.provider-profile.is-mobile .pp-map {
+  flex: none;
+  width: 100%;
+}
+
+.provider-profile .pp-map-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.provider-profile .pp-map-time {
+  position: absolute;
+  left: 11px;
+  bottom: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1.5px solid #002380;
+  border-radius: 24px;
+  background: #fff;
+  color: #002380;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.provider-profile .pp-location-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.provider-profile .pp-hours {
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.provider-profile .pp-hours th,
+.provider-profile .pp-hours td {
+  padding: 0 0 4px;
+  font-weight: 500;
+  text-align: left;
+  vertical-align: top;
+}
+
+.provider-profile .pp-hours th {
+  width: 98px; /* 86px label + 12px gap */
+}
+
+/* ---------- Insurance ---------- */
+
+.provider-profile .pp-insurance-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.provider-profile .pp-insurance-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.provider-profile .pp-links {
+  display: flex;
+  gap: 16px;
+}
+
+.provider-profile .pp-list-item {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #e1e1e1;
+  border-radius: 16px;
+  color: #000;
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+}
+
+.provider-profile .pp-links.is-stacked {
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #e1e1e1;
+  border-radius: 16px;
+}
+
+.provider-profile .pp-links.is-stacked .pp-list-item {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.provider-profile .pp-links-line {
+  height: 1px;
+  background: #e1e1e2; /* border/weaker */
+}
+
+.provider-profile .pp-callout {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fafafa; /* surface/neutral/weakest */
+  color: #3b3b3b;
+  font-size: 12px; /* Caption */
+  line-height: 16px;
+}
+
+.provider-profile.is-mobile .pp-insurance > .pp-btn {
+  width: 100%;
+}
+
+/* ---------- Experience ---------- */
+
+.provider-profile .pp-sub {
+  font-size: 14px;
+  line-height: 20px;
+  color: #3b3b3b;
+}
+
+.provider-profile .pp-exp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.provider-profile .pp-exp {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.provider-profile .pp-exp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  font-size: 14px;
+  line-height: 20px;
+  color: #3b3b3b;
+}
+
+.provider-profile .pp-top10 {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f7fbf9; /* surface/success/weakest */
+  color: #005330;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* ---------- Affiliations, awards, reviews ---------- */
+
+.provider-profile .pp-affiliations,
+.provider-profile .pp-awards {
+  gap: 4px;
+}
+
+.provider-profile.is-mobile .pp-awards {
+  gap: 16px;
+}
+
+.provider-profile .pp-muted {
+  font-size: 16px;
+  line-height: 24px;
+  color: #6d6d6d;
+}
+
+.provider-profile .pp-bullets {
+  padding-left: 24px;
+  font-size: 16px;
+  line-height: 24px;
+  color: #3b3b3b;
+}
+
+.provider-profile .pp-placeholder {
+  background: #fef9f8; /* red/100 (lightest) */
+  font-size: 16px;
+  line-height: 24px;
+  color: #3b3b3b;
+}
+
+.provider-profile .pp-review-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.provider-profile.is-web .pp-review-buttons .pp-btn {
+  width: 320px;
+  flex: 0 1 auto;
+}
+
+.provider-profile.is-mobile .pp-review-buttons .pp-btn {
+  flex: 1 1 0;
+}

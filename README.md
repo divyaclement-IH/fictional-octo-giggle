@@ -79,7 +79,11 @@ Demos:
   the card's top, under the quality tag or V4 chip when there is one) or **Next to name** (16px).
   **Save icon (mobile)** (`&saveMobile=header`) does the same on mobile: **Top right corner**
   (pinned to the card's corner at 20px), **Top right, by the name** (20px), or **Next to name** (16px).
-  Card buttons read **View profile** and **Schedule**.
+  Card buttons read **View profile** and **Schedule**. View profile opens the provider's profile
+  page (Figma Provider Connect 2027, node 85:7933; `demos/quality-badging/profile.js` and
+  `profile.css`, shared by Dot and Traditional): the web layout on desktop, the mobile layout on
+  mobile. Providers with the quality tag get a blue inline banner at the top with a star and the
+  Quality copy wording ("Highest quality provider" by default). Back or Escape closes it.
   Quality is three menus, shown as styled text rather than a chip:
   **Quality style** (`&quality=q1`: Dark gradient, gold, green, accent purple
   (color/text/accentOne/base, #6A4CDE), or brand blue (color/text/brand/base, #0012E7)), **Quality icon** (`&qualityIcon=medal-star`: star, or the design system's

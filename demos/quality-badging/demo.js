@@ -851,7 +851,7 @@
         "</div>" + '<p class="clinic-distance">' + p.distance + "</p></div>") +
       "</div></div>" +
       '<div class="button-stack">' +
-      '<button class="btn-outline" type="button">View profile</button>' +
+      '<button class="btn-outline" type="button" data-profile="' + p.name + '">View profile</button>' +
       '<button class="btn-solid" type="button">Schedule</button>' +
       "</div></article>"
     );
@@ -1233,6 +1233,7 @@
   }
 
   function page(ctx) {
+    if (window.QBProfile) QBProfile.close();
     copayPlan = ctx.toggles.deductible === false;
     showCareKeys = ctx.toggles.careKeys !== false;
     showCopays = ctx.toggles.copays !== false;
@@ -1477,6 +1478,13 @@
     var learn = e.target.closest("[data-learn]");
     if (learn) {
       openLearnMore(learn);
+      return;
+    }
+    var profile = e.target.closest("[data-profile]");
+    if (profile) {
+      var p = PROVIDERS.filter(function (q) { return q.name === profile.getAttribute("data-profile"); })[0];
+      // The profile page (profile.js): web layout on desktop, mobile on mobile.
+      if (p) QBProfile.open(p, { quality: p.preferred && qualityVersion !== "off" ? qualityCopyText() : "" }, profile);
       return;
     }
     if (e.target.closest("[data-learn-close]")) closeLearnMore();

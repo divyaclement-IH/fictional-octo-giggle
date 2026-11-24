@@ -614,7 +614,7 @@
         "</div>" + '<p class="clinic-distance"' + (first ? ' data-color="text/success/strongest"' : "") + ">" + p.distance + "</p></div>") +
       "</div>" +
       '<div class="button-stack"' + (first ? " data-space" : "") + ">" +
-      '<button class="btn-outline" type="button"' + (first ? " data-dim" : "") + ">View profile</button>" +
+      '<button class="btn-outline" type="button" data-profile="' + p.name + '"' + (first ? " data-dim" : "") + ">View profile</button>" +
       '<button class="btn-solid" type="button"' + (first ? ' data-dim data-color="surface/brand/strongest"' : "") + ">Schedule</button>" +
       "</div></article>"
     );
@@ -788,6 +788,7 @@
 
   function resultsPage(ctx, cfg) {
     closeLearnMore();
+    QBProfile.close();
     readScenario(ctx);
     // A step can set the network filter when it's entered; refreshes keep the member's choice.
     var entering = !current || current.ctx.step !== ctx.step;
@@ -1036,6 +1037,14 @@
     );
   }
 
+  // View profile: the provider's profile page (../quality-badging/profile.js).
+  // The quality banner shows for providers with the quality tag.
+  function openProfile(name, trigger) {
+    var p = TOP_MATCHES.concat(OTHER_MATCHES, OUT_OF_NETWORK).filter(function (q) { return q.name === name; })[0];
+    if (!p) return;
+    QBProfile.open(p, { quality: p.preferred && qualityVersion !== "off" ? qualityCopyText() : "", nav: primaryNav() }, trigger);
+  }
+
   // Modal on desktop, slide-up sheet on mobile, over the frame's page area.
   function openModal(body, trigger) {
     var content = document.querySelector(".frame-content");
@@ -1076,6 +1085,11 @@
     var learn = e.target.closest("[data-learn]");
     if (learn) {
       openLearnMore(learn.getAttribute("data-learn"), learn);
+      return;
+    }
+    var profile = e.target.closest("[data-profile]");
+    if (profile) {
+      openProfile(profile.getAttribute("data-profile"), profile);
       return;
     }
     if (e.target.closest("[data-learn-close]")) {
