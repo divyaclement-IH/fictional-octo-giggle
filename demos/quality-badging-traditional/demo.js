@@ -180,9 +180,9 @@
       title: title,
       intro: intro,
       points: [
-        "Patient outcomes: Their past patients have had lower rates of follow-up procedures and complications than patients of similar " + group + ".",
-        "Care guidelines: Their care consistently aligns with evidence-based guidelines.",
-        "Patient ratings: Patients rate their visits highly.",
+        "<b>Patient outcomes:</b> Their past patients have had lower rates of follow-up procedures and complications than patients of similar " + group + ".",
+        "<b>Care guidelines:</b> Their care consistently aligns with evidence-based guidelines.",
+        "<b>Patient ratings:</b> Patients rate their visits highly.",
       ],
     };
   }
