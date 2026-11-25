@@ -223,10 +223,6 @@
   text-wrap: pretty;
 }
 
-.mode-mobile .dot-message {
-  padding-right: 32px;
-}
-
 .dot-message b {
   font-weight: 700;
   color: #000;
