@@ -174,15 +174,15 @@
     var intro = {
       c1: "This provider ranks in the top 10% of " + group + " near you, based on Included Health's review of the quality of their care.",
       c2: "This provider is one of the highest-rated " + group + " near you, based on Included Health's review of the quality of their care.",
-      c3: "This provider meets Included Health's highest quality standards for " + group + ".",
+      c3: "This provider meets Included Health’s highest quality standards for " + group + ", based on a combined assessment of care quality and cost efficiency.",
     }[qualityCopy];
     return {
       title: title,
       intro: intro,
       points: [
-        "Patient outcomes: their patients tend to have fewer repeat visits and complications.",
-        "Care guidelines: they follow proven, evidence-based care.",
-        "Patient ratings: their patients rate their visits highly.",
+        "Patient outcomes: Their past patients have had lower rates of follow-up procedures and complications than patients of similar " + group + ".",
+        "Care guidelines: Their care consistently aligns with evidence-based guidelines.",
+        "Patient ratings: Patients rate their visits highly.",
       ],
     };
   }
