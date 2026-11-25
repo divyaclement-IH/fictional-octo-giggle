@@ -1,0 +1,1082 @@
+/* Dot conversation. Mobile: Figma 2UJLBp93sigLx4o9mXzzFD 1118:28018.
+   Web: "Navigate your care" screenshot. Shared message styles for both. */
+
+.screen {
+  /* Shared card tokens — same values as the provider-search demo. */
+  --text-strongest: #000;
+  --text-strong: #3b3b3b;
+  --text-success-strong: #004f00;
+  --text-success-strongest: #002c00;
+  --text-accentone-strong: #3c1b8f;
+  --text-warning-strong: #662600;
+  --text-brand: #0012e7;
+  --border-weakest: #e1e1e1;
+  --border-brand-strong: #002380;
+  --surface-brand-strongest: #001048;
+  --surface-accentone-weak: #f1f0ff;
+  --surface-warning-weak: #fcf4e6;
+  --surface-success-weak: #edf9ed;
+
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+}
+
+.screen p,
+.screen h1,
+.screen ul {
+  margin: 0;
+}
+
+.screen button {
+  font-family: inherit;
+}
+
+/* ---------- Nav ---------- */
+
+.web-nav {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 32px;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+.web-links {
+  display: flex;
+  gap: 32px;
+  height: 100%;
+}
+
+.web-links a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1a1a23;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.web-links a.is-active {
+  color: #0012e7;
+  box-shadow: inset 0 -3px 0 #0012e7;
+}
+
+.unread {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d0021b;
+}
+
+.web-bar {
+  flex: none;
+  height: 56px;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+.web-bar-inner,
+.chat-column {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.web-bar-inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 100%;
+}
+
+.web-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0012e7;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.web-bar h1,
+.m-nav h1 {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  text-align: center;
+  color: #111827;
+}
+
+.m-nav {
+  display: grid;
+  flex: none;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  height: 56px;
+  padding: 0 12px;
+  border-bottom: 1px solid #e1e1e2;
+}
+
+.m-close {
+  justify-self: end;
+  color: #0012e7;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* ---------- Conversation ---------- */
+
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 0 24px;
+}
+
+.mode-mobile .chat-scroll {
+  padding: 29px 16px 24px;
+}
+
+.chat-column > .turn + .turn,
+.chat-column > .turn + .dot-results,
+.chat-column > .dot-results + .turn {
+  margin-top: 32px;
+}
+
+.chat-column > .turn + .dot-results {
+  margin-top: 16px;
+}
+
+/* Preferred badge note between Dot's reply and the provider cards. */
+.chat-column > .turn + .results-note,
+.chat-column > .results-note + .dot-results {
+  margin-top: 16px;
+}
+
+.note-badge {
+  display: inline-block;
+  vertical-align: -2px;
+}
+
+/* Quick prompts after the results. */
+.chat-column > .dot-results + .chip-buttons-after {
+  margin-top: 16px;
+}
+
+.chat-column > .chip-buttons-after + .turn {
+  margin-top: 32px;
+}
+
+/* New turns settle in instead of the thread repainting all at once. */
+.chat-column > .is-entering {
+  animation: turn-enter 0.2s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@keyframes turn-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-column > .is-entering {
+    animation: none;
+  }
+}
+
+.dot-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dot-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #5d5d69;
+}
+
+.dot-name img {
+  margin-right: 4px;
+}
+
+.dot-message {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #3b3b3b;
+  text-wrap: pretty;
+}
+
+.mode-mobile .dot-message {
+  padding-right: 32px;
+}
+
+.dot-message b {
+  font-weight: 700;
+  color: #000;
+}
+
+.screen .dot-message > * + * {
+  margin-top: 16px;
+}
+
+.dot-message ul {
+  padding-left: 24px;
+}
+
+.chip-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px; /* 16px from the message with the 8px column gap */
+}
+
+.chip-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 1px solid #c6c6c6;
+  border-radius: 24px;
+  background: #fff;
+  color: #0012e7;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip-button:not(:disabled):hover {
+  background: #f6f8ff;
+}
+
+.chip-button:disabled {
+  cursor: default;
+}
+
+/* Multi-select visit types wrap in a row. */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-select.is-selected {
+  border-color: #0012e7;
+  background: #e6effe;
+}
+
+/* The tip is a regular paragraph of Dot's message: same size and color. */
+.screen .dot-message > .select-help {
+  margin-top: 16px;
+}
+
+.member-turn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-left: 48px;
+}
+
+.member-bubble {
+  padding: 16px;
+  border-radius: 24px 24px 0 24px;
+  background: #e6effe;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #000;
+}
+
+/* Send status under the member's newest message: Sending... then Sent. */
+.member-bubble.is-sending {
+  background: #f2f2f2;
+  color: #3b3b3b;
+}
+
+.send-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+
+.send-status.is-sending {
+  font-style: italic;
+  color: #6d6d6d;
+}
+
+.send-status.is-sent {
+  color: #002380;
+  animation: send-status-in 0.2s cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+
+@keyframes send-status-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .send-status.is-sent {
+    animation: none;
+  }
+}
+
+/* Dot thinking: italic "Thinking..." under the header, while the logo's
+   dots move between a cluster of three and a four-dot diamond. */
+.thinking {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  font-style: italic;
+  color: #6d6d6d;
+}
+
+.dot-thinking-logo {
+  flex: none;
+  margin-right: 4px;
+  overflow: visible;
+}
+
+.dot-thinking-logo circle {
+  fill: url(#dot-thinking-fill);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: 1.6s cubic-bezier(0.22, 0.8, 0.24, 1) var(--think-offset, 0s) infinite;
+}
+
+.dot-thinking-logo circle:nth-child(2) { animation-name: dot-think-1; }
+.dot-thinking-logo circle:nth-child(3) { animation-name: dot-think-2; }
+.dot-thinking-logo circle:nth-child(4) { animation-name: dot-think-3; }
+.dot-thinking-logo circle:nth-child(5) { animation-name: dot-think-4; }
+
+/* Cluster: the logo's top, right and left dots (the bottom one tucked away).
+   Diamond: four equal dots. */
+@keyframes dot-think-1 {
+  0%, 100% { transform: translate(-0.6px, -7.5px) scale(2.5); }
+  50% { transform: translate(0, -6.8px) scale(2.6); }
+}
+@keyframes dot-think-2 {
+  0%, 100% { transform: translate(5.7px, -1.25px) scale(3.75); }
+  50% { transform: translate(6.8px, 0) scale(2.6); }
+}
+@keyframes dot-think-3 {
+  0%, 100% { transform: translate(-4.4px, 1.7px) scale(5); }
+  50% { transform: translate(-6.8px, 0) scale(2.6); }
+}
+@keyframes dot-think-4 {
+  0%, 100% { transform: translate(3.2px, 7.5px) scale(0); }
+  50% { transform: translate(0, 6.8px) scale(2.6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot-thinking-logo circle {
+    animation-duration: 0s;
+    animation-iteration-count: 1;
+  }
+}
+
+/* Streamed paragraphs land whole, pale grey to full black, rising a touch. */
+.dot-message .is-streaming,
+.dot-message.is-streaming {
+  animation: stream-in 0.15s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@keyframes stream-in {
+  from { opacity: 0.25; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Result cards in the chat ---------- */
+
+/* Horizontal carousel: cards swipe sideways, the next one peeks in. */
+.dot-results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile: bleed to the screen edges so cards slide under the padding. */
+.mode-mobile .carousel-track {
+  margin: 0 -16px;
+  padding: 0 16px;
+  scroll-padding: 0 16px;
+}
+
+.carousel-item {
+  flex: 0 0 360px;
+  display: flex;
+  scroll-snap-align: start;
+}
+
+.mode-mobile .carousel-item {
+  flex-basis: calc(100% - 40px);
+}
+
+.carousel-item > .provider-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.carousel-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c6c6c6;
+}
+
+.carousel-dots span.is-active {
+  background: #0012e7;
+}
+
+/* Card design shared verbatim with the care-search (provider-search) results. */
+
+.provider-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 24px;
+  /* Figma strokes sit inside the box, so draw them as inset shadows. */
+  box-shadow: inset 0 0 0 1px var(--border-weakest);
+  background: #fff;
+}
+
+.provider-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.provider-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border-weakest);
+  border-radius: 46px;
+}
+
+.avatar-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 46px;
+  object-fit: cover;
+}
+
+.avatar.is-initials {
+  border: 0;
+}
+
+.avatar-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-initials {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px; /* Title 3 */
+  line-height: 32px;
+  font-weight: 700;
+  color: #000;
+}
+
+.badge-verified {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.provider-title {
+  flex: 1 0 0;
+  min-width: 0;
+}
+
+.provider-name {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.care-key-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  vertical-align: -3px;
+}
+
+.provider-specialties {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.bookmark-button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  row-gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chip-copay {
+  background: var(--surface-accentone-weak);
+  color: var(--text-accentone-strong);
+  font-weight: 700;
+}
+
+.chip-regular {
+  font-weight: 500;
+}
+
+/* Standard (non-preferred) in-network copay, matching care search. */
+.chip-copay-high {
+  background: var(--surface-warning-weak);
+  color: var(--text-warning-strong);
+}
+
+.chip-copay-high b {
+  font-weight: 700;
+}
+
+.chip-network {
+  background: var(--surface-success-weak);
+  color: var(--text-success-strong);
+}
+
+.chip-offering.is-neutral {
+  background: #f2f2f2;
+  color: #000;
+}
+
+.chip-offering.is-success {
+  background: var(--surface-success-weak);
+  color: var(--text-success-strong);
+}
+
+.provider-summary {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  margin-top: -1px; /* zero-height divider in Figma; the line sits above it */
+}
+
+.clinic {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.clinic-address {
+  display: flex;
+  flex: 1 0 0;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.clinic-name {
+  font-weight: 700;
+}
+
+.clinic-street {
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.clinic-distance {
+  font-weight: 700;
+  color: var(--text-success-strongest);
+  white-space: nowrap;
+}
+
+.button-stack {
+  display: flex;
+  gap: 8px;
+  /* Cards in a row share the tallest card's height; keep the buttons at the bottom. */
+  margin-top: auto;
+}
+
+.btn-outline,
+.btn-solid {
+  display: flex;
+  flex: 1 0 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 24px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-outline {
+  border: 0;
+  box-shadow: inset 0 0 0 1.5px var(--border-brand-strong);
+  background: #fff;
+  color: var(--surface-brand-strongest);
+}
+
+.btn-solid {
+  border: 0;
+  background: var(--surface-brand-strongest);
+  color: #fff;
+}
+
+/* Facility card variant (same base as provider-card). */
+
+.facility-avatar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+}
+
+.facility-chips {
+  gap: 8px;
+}
+
+.chip-cost {
+  font-weight: 500;
+}
+
+.chip-cost.is-lower {
+  background: var(--surface-accentone-weak);
+  color: var(--text-accentone-strong);
+}
+
+.chip-cost.is-higher {
+  background: var(--surface-warning-weak);
+  color: var(--text-warning-strong);
+}
+
+.chip-cost.is-lower .cost-arrow {
+  transform: rotate(90deg);
+}
+
+.chip-cost.is-higher .cost-arrow {
+  transform: rotate(-90deg);
+}
+
+.facility-address {
+  flex: 1 0 0;
+  min-width: 0;
+  font-weight: 500;
+  color: var(--text-strongest);
+}
+
+.facility-distance {
+  color: #008200;
+}
+
+/* ---------- Chat input ---------- */
+
+.chat-dock {
+  flex: none;
+  padding: 0 0 32px;
+}
+
+.mode-mobile .chat-dock {
+  padding: 0 16px 16px;
+}
+
+.chat-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 8px 8px;
+  border-radius: 24px;
+  background: #fff;
+  filter: drop-shadow(0 0 7.5px rgba(0, 0, 0, 0.12));
+}
+
+.chat-placeholder {
+  padding: 0 16px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #6d6d6d;
+}
+
+.chat-placeholder.is-draft {
+  color: #000;
+}
+
+.chat-send-button {
+  display: flex;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.chat-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 24px;
+  background: #f2f2f2;
+}
+
+/* One recommended imaging center under Dot's reply (facility search card). */
+.clinic-preview {
+  max-width: 360px;
+}
+
+/* Service cards (Figma IsbGOKYwvvVi214VFgPRdA 11845:24200): provider types Dot offers. */
+.dot-results.is-services .carousel-item {
+  flex-basis: 300px;
+}
+
+.service-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border-weakest);
+  border-radius: 24px;
+  background: #fff;
+}
+
+.service-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.service-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+
+.service-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #e6effe;
+  color: #002380;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.service-title {
+  margin: 0;
+  color: #001048;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.service-body {
+  margin: 0;
+  color: #3b3b3b;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.service-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 24px;
+  padding: 12px 16px;
+  border: 1px solid #c6c6c6;
+  border-radius: 24px;
+  background: #fff;
+  color: #0012e7;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.service-cta:not(:disabled):hover {
+  background: #f6f8ff;
+}
+
+.service-cta:disabled {
+  cursor: default;
+}
+
+/* Live chat input on the "what kind of provider" step. */
+.chat-text {
+  width: 100%;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: #000;
+  font: inherit;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  outline: none;
+}
+
+.chat-text::placeholder {
+  color: #6d6d6d;
+}
+
+.chat-input.is-live:focus-within {
+  box-shadow: 0 0 0 2px #0012e7;
+}
+
+/* Cards and prompts revealed after Dot's text: a very subtle fade and rise. */
+.chat-column > .is-revealing,
+.chip-buttons.is-revealing {
+  animation: reveal-in 0.15s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@keyframes reveal-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-column > .is-revealing,
+  .chip-buttons.is-revealing {
+    animation: none;
+  }
+}
+
+/* ---------- Older provider card + Plan Key (Figma 2671:32153) ---------- */
+
+/* Copay chip that names the tier, with the copay in bold. */
+.chip-tier {
+  font-weight: 500;
+  white-space: normal; /* wraps on narrow phone cards */
+  text-align: left;
+}
+
+.chip-tier b {
+  font-weight: 700;
+}
+
+.chip-tier.is-preferred {
+  background: var(--surface-accentone-weak);
+  color: var(--text-accentone-strong);
+}
+
+.chip-tier.is-standard {
+  background: var(--surface-warning-weak);
+  color: var(--text-warning-strong);
+}
+
+/* Avatar badge (Carrum Figma 141:1172): a 16px box; the badge art overflows
+   it by 2.1% top and bottom. */
+.badge-star-verified {
+  position: relative;
+  display: block;
+}
+
+.badge-star-verified img {
+  position: absolute;
+  top: -2.1%;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 104.2%;
+}
+
+/* Longer button labels wrap instead of overflowing narrow cards. */
+.provider-card .btn-outline,
+.provider-card .btn-solid {
+  white-space: normal;
+  text-align: center;
+}
+
+
+/* Older provider cards are 552px wide on desktop, as in the Figma frame. */
+.mode-desktop .dot-results.is-providers .carousel-item {
+  flex-basis: 552px;
+}
+
+/* "Label cost level": "Lower cost facility:" in regular weight, the range in bold. */
+.chip-cost.is-range.has-label {
+  font-weight: 500;
+}
+
+.chip-cost.is-range.has-label b {
+  font-weight: 700;
+}
+
+/* Facility tags with "after deductible" can wrap on narrow cards. */
+.chip-cost.has-after {
+  white-space: normal;
+  text-align: left;
+}
+
+/* Cards in a carousel row share three rows (top, divider + address, buttons),
+   so dividers and buttons line up across cards of different heights. */
+.dot-results:not(.is-services) .carousel-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 360px;
+  grid-template-rows: auto auto auto;
+  row-gap: 0;
+}
+
+.mode-mobile .dot-results:not(.is-services) .carousel-track {
+  grid-auto-columns: calc(100% - 40px);
+}
+
+.dot-results:not(.is-services) .carousel-item {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+}
+
+/* The card's padding moves onto its three parts, so the shared rows don't
+   count it twice. */
+.dot-results:not(.is-services) .carousel-item > .provider-card {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  gap: 0;
+  padding: 0;
+}
+
+.dot-results:not(.is-services) .card-top {
+  padding: 16px 16px 0;
+}
+
+.dot-results:not(.is-services) .carousel-item > .provider-card > .provider-content {
+  display: contents;
+}
+
+.card-top,
+.card-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dot-results:not(.is-services) .card-bottom {
+  padding: 12px 16px 0;
+}
+
+.dot-results:not(.is-services) .carousel-item > .provider-card > .button-stack {
+  margin-top: 0;
+  padding: 16px;
+}
