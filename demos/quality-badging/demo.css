@@ -220,7 +220,7 @@
   line-height: 24px;
   font-weight: 500;
   color: #3b3b3b;
-  text-wrap: pretty;
+  text-wrap: wrap; /* fill each line; no early breaks to avoid a lone last word */
 }
 
 .dot-message b {
